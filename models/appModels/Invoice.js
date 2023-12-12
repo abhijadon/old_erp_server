@@ -9,11 +9,9 @@ const invoiceSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.ObjectId, ref: 'Admin', required: true },
   number: {
     type: Number,
-    required: true,
   },
   year: {
     type: Number,
-    required: true,
   },
   recurring: {
     type: String,
@@ -21,38 +19,31 @@ const invoiceSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true,
   },
   expiredDate: {
     type: Date,
-    required: true,
   },
   client: {
     type: mongoose.Schema.ObjectId,
     ref: 'Client',
-    required: true,
     autopopulate: true,
   },
   items: [
     {
       itemName: {
         type: String,
-        required: true,
       },
       description: {
         type: String,
       },
       quantity: {
         type: Number,
-        required: true,
       },
       price: {
         type: Number,
-        required: true,
       },
       total: {
         type: Number,
-        required: true,
       },
     },
   ],

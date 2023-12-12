@@ -31,6 +31,7 @@
     "mongoose": "^8.0.1",
     "mongoose-autopopulate": "^1.1.0",
     "multer": "^1.4.2",
+    "nodemailer": "^6.9.7",
     "pug": "^3.0.2",
     "resend": "^2.0.0",
     "transliteration": "^2.3.5"

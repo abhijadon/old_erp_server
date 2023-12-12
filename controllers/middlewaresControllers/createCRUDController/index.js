@@ -37,7 +37,7 @@ const createCRUDController = (modelName) => {
 
   crudMethods.filter = async (req, res) => {
     filter(Model, req, res);
-  };
+  };  
 
   return crudMethods;
 };

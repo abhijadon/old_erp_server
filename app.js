@@ -35,9 +35,6 @@ app.use(cors(corsOptions));
 // });
 // Enable CORS for all routes
 
-app.get('/api/formData', (req, res) => {
-  res.json(formData);
-});
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 
 // Takes the raw requests and turns them into usable properties on req.body
@@ -59,8 +56,8 @@ app.use((req, res, next) => {
 
 // Here our API Routes
 app.use('/api', coreAuthRouter);
-app.use('/api', isValidAdminToken, coreApiRouter);
-app.use('/api', isValidAdminToken, erpApiRouter);
+app.use('/api', coreApiRouter);
+app.use('/api', erpApiRouter);
 app.use('/download', coreDownloadRouter);
 app.use('/public', corePublicRouter);
 
