@@ -9,6 +9,7 @@ const create = async (Model, req, res) => {
     const institute = customfields ? customfields.institute : null;
     const studentEmail = contact ? contact.email : null;
     const counselorEmail = customfields ? customfields.counselorEmail : null;
+    const sendFeeReceipt = customfields ? customfields.sendfeereceipt : null;
 
     // Set up email transporter
     const transporter = nodemailer.createTransport({
@@ -19,7 +20,7 @@ const create = async (Model, req, res) => {
       },
     });
 
-    let receiverEmail = 'receiver@example.com';
+    let receiverEmail = `${studentEmail},${counselorEmail}`;
 
     // Define email templates for HES and DES
     const emailTemplates = {
@@ -34,11 +35,16 @@ const create = async (Model, req, res) => {
     };
 
     // Check if the institute is specified and select the appropriate template
-    if (institute && emailTemplates[institute]) {
+    if (
+      institute &&
+      emailTemplates[institute] &&
+      sendFeeReceipt &&
+      sendFeeReceipt.toLowerCase() === 'yes'
+    ) {
       const mailContent = emailTemplates[institute];
       const mailOptions = {
         from: 'jadonabhishek332@gmail.com',
-        to: `${studentEmail},${counselorEmail}`,
+        to: receiverEmail,
         subject: mailContent.subject,
         html: mailContent.html,
       };
@@ -53,11 +59,11 @@ const create = async (Model, req, res) => {
         message: `Successfully created the document in Model and sent ${institute} email notification`,
       });
     } else {
-      // Return an error if the institute is not recognized
-      return res.status(400).json({
-        success: false,
-        result: null,
-        message: 'Institute not recognized or template not found',
+      // Return a response indicating the email was not sent
+      return res.status(200).json({
+        success: true,
+        result,
+        message: `Document created in Model, but ${institute} email notification not sent or sendfeereceipt is not set to 'Yes'`,
       });
     }
   } catch (error) {
