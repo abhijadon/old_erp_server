@@ -11,6 +11,14 @@ const create = async (Model, req, res) => {
     const counselorEmail = customfields ? customfields.counselorEmail : null;
     const sendFeeReceipt = customfields ? customfields.sendfeereceipt : null;
 
+    // Check if 'education' exists and contains 'course' property
+    const course = education && education.course ? education.course : null;
+    console.log('sendFeeReceipt:', sendFeeReceipt);
+    console.log('institute:', institute);
+    console.log('studentEmail:', studentEmail);
+    console.log('counselorEmail:', counselorEmail);
+    console.log('course:', course);
+
     // Set up email transporter
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -26,20 +34,32 @@ const create = async (Model, req, res) => {
     const emailTemplates = {
       HES: {
         subject: 'HES - New Document Created',
-        html: `<p>This is the HES template for a new document.</p><p>Lead ID: ${req.body.lead_id}</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${education.course}</p><p>Institute: ${education.institute}</p><p>University Name: ${customfields.university_name}</p> ... (add other fields)`,
+        html: `<p>This is the HES template for a new document.</p><p>Lead ID: ${
+          req.body.lead_id
+        }</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${course}</p><p>Institute: ${
+          education ? education.institute : ''
+        }</p><p>University Name: ${
+          customfields ? customfields.university_name : ''
+        }</p> ... (add other fields)`,
       },
       DES: {
         subject: 'DES - New Document Created',
-        html: `<p>This is the DES template for a new document.</p><p>Lead ID: ${req.body.lead_id}</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${education.course}</p><p>Institute: ${education.institute}</p><p>University Name: ${customfields.university_name}</p> ... (add other fields)`,
+        html: `<p>This is the DES template for a new document.</p><p>Lead ID: ${
+          req.body.lead_id
+        }</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${course}</p><p>Institute: ${
+          education ? education.institute : ''
+        }</p><p>University Name: ${
+          customfields ? customfields.university_name : ''
+        }</p> ... (add other fields)`,
       },
     };
 
-    // Check if the institute is specified and select the appropriate template
+    // Check if the institute, sendFeeReceipt, and email templates are specified
     if (
       institute &&
-      emailTemplates[institute] &&
       sendFeeReceipt &&
-      sendFeeReceipt.toLowerCase() === 'yes'
+      sendFeeReceipt.toLowerCase() === 'yes' &&
+      emailTemplates[institute]
     ) {
       const mailContent = emailTemplates[institute];
       const mailOptions = {

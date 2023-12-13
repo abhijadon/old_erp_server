@@ -62,7 +62,6 @@ const applicationSchema = new mongoose.Schema(
       university_name: {
         type: String,
         trim: true,
-        required: true,
       },
       sendfeereceipt: {
         type: String,
