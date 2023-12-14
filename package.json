@@ -25,7 +25,7 @@
     "joi": "^17.10.1",
     "jsonwebtoken": "^9.0.2",
     "latest-version": "^7.0.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
     "moment": "^2.26.0",
     "mongoose": "^8.0.1",

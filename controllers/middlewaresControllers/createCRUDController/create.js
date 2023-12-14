@@ -2,24 +2,29 @@ const nodemailer = require('nodemailer');
 
 const create = async (Model, req, res) => {
   try {
-    // Creating a new document in the collection
     const result = await new Model(req.body).save();
 
-    const { customfields, contact, education } = req.body;
-    const institute = customfields ? customfields.institute : null;
-    const studentEmail = contact ? contact.email : null;
-    const counselorEmail = customfields ? customfields.counselorEmail : null;
-    const sendFeeReceipt = customfields ? customfields.sendfeereceipt : null;
+    const {
+      customfields,
+      contact,
+      education,
+      'contact.email': contactEmail,
+      'customfields.counselorEmail': counselorEmail,
+      'customfields.sendfeereceipt': sendFeeReceipt,
+      'education.course': course,
+      'customfields.institute': institute,
+    } = req.body;
 
-    // Check if 'education' exists and contains 'course' property
-    const course = education && education.course ? education.course : null;
+    const institutes = customfields ? customfields.institute : null;
+    const studentEmail = contactEmail || (contact && contact.email) || null;
+    const courses = education && education.course ? education.course : null;
+
     console.log('sendFeeReceipt:', sendFeeReceipt);
     console.log('institute:', institute);
     console.log('studentEmail:', studentEmail);
     console.log('counselorEmail:', counselorEmail);
     console.log('course:', course);
 
-    // Set up email transporter
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -30,34 +35,20 @@ const create = async (Model, req, res) => {
 
     let receiverEmail = `${studentEmail},${counselorEmail}`;
 
-    // Define email templates for HES and DES
     const emailTemplates = {
       HES: {
         subject: 'HES - New Document Created',
-        html: `<p>This is the HES template for a new document.</p><p>Lead ID: ${
-          req.body.lead_id
-        }</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${course}</p><p>Institute: ${
-          education ? education.institute : ''
-        }</p><p>University Name: ${
-          customfields ? customfields.university_name : ''
-        }</p> ... (add other fields)`,
+        html: `<p>This is the HES template for a new document...</p>`,
       },
       DES: {
         subject: 'DES - New Document Created',
-        html: `<p>This is the DES template for a new document.</p><p>Lead ID: ${
-          req.body.lead_id
-        }</p><p>Full Name: ${req.body.full_name}</p><p>Course: ${course}</p><p>Institute: ${
-          education ? education.institute : ''
-        }</p><p>University Name: ${
-          customfields ? customfields.university_name : ''
-        }</p> ... (add other fields)`,
+        html: `<p>This is the DES template for a new document...</p>`,
       },
     };
 
-    // Check if the institute, sendFeeReceipt, and email templates are specified
     if (
       institute &&
-      sendFeeReceipt &&
+      typeof sendFeeReceipt !== 'undefined' &&
       sendFeeReceipt.toLowerCase() === 'yes' &&
       emailTemplates[institute]
     ) {
@@ -69,17 +60,14 @@ const create = async (Model, req, res) => {
         html: mailContent.html,
       };
 
-      // Send the email
       await transporter.sendMail(mailOptions);
 
-      // Return a successful response with document creation details
       return res.status(200).json({
         success: true,
         result,
         message: `Successfully created the document in Model and sent ${institute} email notification`,
       });
     } else {
-      // Return a response indicating the email was not sent
       return res.status(200).json({
         success: true,
         result,
@@ -87,7 +75,6 @@ const create = async (Model, req, res) => {
       });
     }
   } catch (error) {
-    // Handle errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
