@@ -9,13 +9,13 @@ const create = async (Model, req, res) => {
       contact,
       education,
       'contact.email': contactEmail,
-      'customfields.counselorEmail': counselorEmail,
-      'customfields.sendfeereceipt': sendFeeReceipt,
+      'customfields.counselor_email': counselorEmail,
+      'customfields.send_fee_receipt': sendFeeReceipt,
       'education.course': course,
-      'customfields.institute': institute,
+      'customfields.institute_name': institute,
     } = req.body;
 
-    const institutes = customfields ? customfields.institute : null;
+    const institutes = customfields ? customfields.institute_name : null;
     const studentEmail = contactEmail || (contact && contact.email) || null;
     const courses = education && education.course ? education.course : null;
 
