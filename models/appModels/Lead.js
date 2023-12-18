@@ -154,9 +154,9 @@ const applicationSchema = new mongoose.Schema(
         lowercase: true,
       },
 
-      image: {
-        data: Buffer, // Store the image data as a buffer
-        contentType: String, // Store the content type of the image
+      img: {
+        data: Buffer,
+        contentType: String,
       },
     },
     status: {
