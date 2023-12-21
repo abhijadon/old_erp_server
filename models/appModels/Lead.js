@@ -1,20 +1,5 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-const multer = require('multer');
-const path = require('path');
-
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads'); // Folder where images will be stored
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // Unique file name
-  },
-});
-
-// Upload middleware
-const upload = multer({ storage }).single('image');
 
 const applicationSchema = new mongoose.Schema(
   {
@@ -153,16 +138,16 @@ const applicationSchema = new mongoose.Schema(
         trim: true,
         lowercase: true,
       },
-
-      img: {
-        data: Buffer,
-        contentType: String,
+      status: {
+        type: String,
+        trim: true,
       },
     },
-    status: {
-      type: String,
-      default: 'new',
+    img: {
+      data: Buffer,
+      contentType: String,
     },
+
     created: {
       type: Date,
       default: Date.now,
