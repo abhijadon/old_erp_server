@@ -14,17 +14,14 @@ const clientSchema = new mongoose.Schema({
     type: String,
     trim: true,
     unique: true,
-    required: true,
   },
   managerName: {
     type: String,
     trim: true,
-    required: true,
   },
   managerSurname: {
     type: String,
     trim: true,
-    required: true,
   },
   bankAccount: {
     type: String,
@@ -65,7 +62,6 @@ const clientSchema = new mongoose.Schema({
   phone: {
     type: String,
     trim: true,
-    required: true,
   },
   fax: {
     type: String,

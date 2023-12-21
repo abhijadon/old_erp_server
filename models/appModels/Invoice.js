@@ -6,28 +6,6 @@ const invoiceSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  createdBy: { type: mongoose.Schema.ObjectId, ref: 'Admin', required: true },
-  number: {
-    type: Number,
-  },
-  year: {
-    type: Number,
-  },
-  recurring: {
-    type: String,
-    default: '0',
-  },
-  date: {
-    type: Date,
-  },
-  expiredDate: {
-    type: Date,
-  },
-  client: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Client',
-    autopopulate: true,
-  },
   items: [
     {
       itemName: {
