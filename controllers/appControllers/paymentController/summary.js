@@ -6,59 +6,53 @@ const Model = mongoose.model('Payment');
 const summary = async (req, res) => {
   try {
     let defaultType = 'month';
-
     const { type } = req.query;
 
-    if (type) {
-      if (['week', 'month', 'year'].includes(type)) {
-        defaultType = type;
-      } else {
-        return res.status(400).json({
-          success: false,
-          result: null,
-          message: 'Invalid type',
-        });
-      }
+    if (type && ['week', 'month', 'year'].includes(type)) {
+      defaultType = type;
     }
 
     const currentDate = moment();
-    let startDate = currentDate.clone().startOf(defaultType);
-    let endDate = currentDate.clone().endOf(defaultType);
+    const startDate = currentDate.clone().startOf(defaultType);
+    const endDate = currentDate.clone().endOf(defaultType);
 
-    // get total amount of invoices
     const result = await Model.aggregate([
       {
         $match: {
           removed: false,
-          // date: {
-          //   $gte: startDate.toDate(),
-          //   $lte: endDate.toDate(),
-          // },
+          date: {
+            $gte: startDate.toDate(),
+            $lte: endDate.toDate(),
+          },
         },
       },
       {
         $group: {
-          _id: null, // Group all documents into a single group
-          count: {
-            $sum: 1,
-          },
-          total: {
-            $sum: '$amount',
-          },
+          _id: null,
+          count: { $sum: 1 },
+          total_paid_amount: { $sum: '$total_paid_amount' },
+          paid_amount: { $sum: '$paid_amount' },
         },
       },
       {
         $project: {
-          _id: 0, // Exclude _id from the result
+          _id: 0,
           count: 1,
-          total: 1,
+          total_paid_amount: 1,
+          paid_amount: 1,
+          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
         },
       },
     ]);
 
+    const summaryResult =
+      result.length > 0
+        ? result[0]
+        : { count: 0, total_paid_amount: 0, paid_amount: 0, due_amount: 0 };
+
     return res.status(200).json({
       success: true,
-      result: result.length > 0 ? result[0] : { count: 0, total: 0 },
+      result: summaryResult,
       message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
     });
   } catch (error) {

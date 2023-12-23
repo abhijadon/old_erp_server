@@ -6,40 +6,21 @@ const paymentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  createdBy: { type: mongoose.Schema.ObjectId, ref: 'Admin', autopopulate: true, required: true },
-  number: {
-    type: Number,
-    required: true,
-  },
-  client: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Client',
-    autopopulate: true,
-    required: true,
-  },
-  invoice: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Invoice',
-    required: true,
-    autopopulate: true,
-  },
+
   date: {
     type: Date,
     default: Date.now,
-    required: true,
   },
-  amount: {
+  total_paid_amount: {
     type: Number,
     required: true,
   },
-  paymentMode: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'PaymentMode',
-    autopopulate: true,
+
+  paid_amount: {
+    type: Number,
+    default: 0,
   },
-  ref: {
-    type: String,
-  },
+
   description: {
     type: String,
   },
@@ -52,5 +33,7 @@ const paymentSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-paymentSchema.plugin(require('mongoose-autopopulate'));
-module.exports = mongoose.model('Payment', paymentSchema);
+
+const Payment = mongoose.model('Payment', paymentSchema);
+
+module.exports = { Payment };

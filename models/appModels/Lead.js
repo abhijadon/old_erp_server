@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+const { Payment } = require('./Payment'); // Import the Invoice model
 
 const applicationSchema = new mongoose.Schema(
   {
@@ -117,22 +118,15 @@ const applicationSchema = new mongoose.Schema(
         type: String,
         trim: true,
       },
-
+      // Payment details that need to be saved in the Payment table
       total_paid_amount: {
-        type: String,
-        trim: true,
+        type: Number,
+        default: 0,
       },
-
       paid_amount: {
-        type: String,
-        trim: true,
+        type: Number,
+        default: 0,
       },
-
-      due_amount: {
-        type: String,
-        trim: true,
-      },
-
       counselor_email: {
         type: String,
         trim: true,
@@ -157,10 +151,30 @@ const applicationSchema = new mongoose.Schema(
   { strict: false }
 );
 
-// Middleware to handle dynamic validation based on university selection
-applicationSchema.pre('save', function (next) {
-  // Dynamic validation logic if needed
-  next();
+// Middleware to create or update a Payment record when an Application is updated
+applicationSchema.post('findOneAndUpdate', async function (result) {
+  try {
+    const doc = await this.model.findOne(this.getQuery());
+    if (doc) {
+      // Update existing Payment record or create a new one
+      await Payment.findOneAndUpdate(
+        {
+          /* Define your condition to find the Payment record */
+        },
+        {
+          total_paid_amount: doc.customfields.total_paid_amount,
+          paid_amount: doc.customfields.paid_amount,
+          // ... other fields you want to update in the Payment record
+        },
+        { upsert: true } // Create the Payment record if it doesn't exist
+      );
+    }
+  } catch (error) {
+    console.error('Error updating Payment record:', error);
+  }
 });
 
-module.exports = mongoose.model('Applications', applicationSchema);
+// Define your Applications model
+const Applications = mongoose.model('Applications', applicationSchema);
+
+module.exports = { Applications };
