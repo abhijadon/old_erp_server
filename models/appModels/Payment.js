@@ -15,6 +15,10 @@ const paymentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  lead_id: {
+    type: Number,
+    default: 0,
+  },
   total_paid_amount: {
     type: Number,
     required: true,

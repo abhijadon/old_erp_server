@@ -187,6 +187,7 @@ applicationSchema.pre('save', async function (next) {
     // Create a new Payment record based on the Application ID
     await Payment.create({
       applicationId,
+      lead_id: this.lead_id,
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
       // ... other fields you want to set in the Payment record
@@ -211,6 +212,7 @@ applicationSchema.post('save', async function (doc) {
       {
         $set: {
           applicationId,
+          lead_id: doc.lead_id,
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
           // ... other fields you want to update in the Payment record
