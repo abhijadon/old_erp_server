@@ -150,32 +150,78 @@ const applicationSchema = new mongoose.Schema(
   // Options object should be added here
   { strict: false }
 );
-// Middleware to create or update a Payment record when an Application is updated
-applicationSchema.post('findOneAndUpdate', async function (result) {
-  try {
-    const doc = await this.model.findOne(this.getQuery());
-    if (doc) {
-      const applicationId = doc._id; // Get the ID of the Application
 
-      // Update existing Payment record or create a new one based on the Application ID
-      await Payment.findOneAndUpdate(
-        { applicationId }, // Define your condition to find the Payment record by Application ID
-        {
-          $set: {
-            applicationId, // Set the Application ID in the Payment record
-            total_paid_amount: doc.customfields['total_paid_amount'],
-            paid_amount: doc.customfields['paid_amount'],
-            // ... other fields you want to update in the Payment record
-          },
+applicationSchema.post('findOneAndUpdate', async function (doc) {
+  try {
+    const applicationId = doc._id; // Get the ID of the Application
+
+    // Update existing Payment record based on the Application ID
+    await Payment.findOneAndUpdate(
+      { applicationId }, // Define your condition to find the Payment record by Application ID
+      {
+        $set: {
+          applicationId, // Set the Application ID in the Payment record
+          total_paid_amount: doc.customfields['total_paid_amount'],
+          paid_amount: doc.customfields['paid_amount'],
+          // ... other fields you want to update in the Payment record
         },
-        { upsert: true } // Create the Payment record if it doesn't exist
-      );
-    }
+      },
+      { upsert: true } // Create the Payment record if it doesn't exist
+    );
   } catch (error) {
     console.error('Error updating Payment record:', error);
   }
 });
 
+// Pre-save hook for adding new data
+applicationSchema.pre('save', async function (next) {
+  try {
+    const applicationId = this._id; // Get the ID of the Application
+
+    // Check if the document is new or being updated
+    if (!this.isNew) {
+      // If the document is being updated, trigger the next middleware in the stack
+      return next();
+    }
+
+    // Create a new Payment record based on the Application ID
+    await Payment.create({
+      applicationId,
+      total_paid_amount: this.customfields['total_paid_amount'],
+      paid_amount: this.customfields['paid_amount'],
+      // ... other fields you want to set in the Payment record
+    });
+
+    // Trigger the next middleware in the stack
+    return next();
+  } catch (error) {
+    console.error('Error creating Payment record:', error);
+    return next(error);
+  }
+});
+
+// Post-save hook for updating existing data
+applicationSchema.post('save', async function (doc) {
+  try {
+    const applicationId = doc._id; // Get the ID of the Application
+
+    // Update existing Payment record based on the Application ID
+    await Payment.findOneAndUpdate(
+      { applicationId },
+      {
+        $set: {
+          applicationId,
+          total_paid_amount: doc.customfields['total_paid_amount'],
+          paid_amount: doc.customfields['paid_amount'],
+          // ... other fields you want to update in the Payment record
+        },
+      },
+      { upsert: true } // Create the Payment record if it doesn't exist
+    );
+  } catch (error) {
+    console.error('Error updating Payment record:', error);
+  }
+});
 const Applications = mongoose.model('Applications', applicationSchema);
 
 module.exports = { Applications };
