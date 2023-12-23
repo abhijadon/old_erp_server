@@ -150,21 +150,23 @@ const applicationSchema = new mongoose.Schema(
   // Options object should be added here
   { strict: false }
 );
-
 // Middleware to create or update a Payment record when an Application is updated
 applicationSchema.post('findOneAndUpdate', async function (result) {
   try {
     const doc = await this.model.findOne(this.getQuery());
     if (doc) {
-      // Update existing Payment record or create a new one
+      const applicationId = doc._id; // Get the ID of the Application
+
+      // Update existing Payment record or create a new one based on the Application ID
       await Payment.findOneAndUpdate(
+        { applicationId }, // Define your condition to find the Payment record by Application ID
         {
-          /* Define your condition to find the Payment record */
-        },
-        {
-          total_paid_amount: doc.customfields.total_paid_amount,
-          paid_amount: doc.customfields.paid_amount,
-          // ... other fields you want to update in the Payment record
+          $set: {
+            applicationId, // Set the Application ID in the Payment record
+            total_paid_amount: doc.customfields['total_paid_amount'],
+            paid_amount: doc.customfields['paid_amount'],
+            // ... other fields you want to update in the Payment record
+          },
         },
         { upsert: true } // Create the Payment record if it doesn't exist
       );
@@ -174,7 +176,6 @@ applicationSchema.post('findOneAndUpdate', async function (result) {
   }
 });
 
-// Define your Applications model
 const Applications = mongoose.model('Applications', applicationSchema);
 
 module.exports = { Applications };

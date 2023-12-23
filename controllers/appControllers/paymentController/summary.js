@@ -3,6 +3,28 @@ const moment = require('moment');
 
 const Model = mongoose.model('Payment');
 
+const getTotalPaymentAmount = async () => {
+  try {
+    const result = await Model.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalPaidAmount: { $sum: '$total_paid_amount' },
+        },
+      },
+    ]);
+
+    if (result && result.length > 0) {
+      return result[0].totalPaidAmount;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
 const summary = async (req, res) => {
   try {
     let defaultType = 'month';
@@ -45,10 +67,12 @@ const summary = async (req, res) => {
       },
     ]);
 
+    const totalPaymentAmount = await getTotalPaymentAmount(); // Fetch total payment amount
+
     const summaryResult =
       result.length > 0
-        ? result[0]
-        : { count: 0, total_paid_amount: 0, paid_amount: 0, due_amount: 0 };
+        ? { ...result[0], totalPaymentAmount }
+        : { count: 0, total_paid_amount: 0, paid_amount: 0, due_amount: 0, totalPaymentAmount };
 
     return res.status(200).json({
       success: true,
