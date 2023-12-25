@@ -151,6 +151,8 @@ const applicationSchema = new mongoose.Schema(
   { strict: false }
 );
 
+// for update according application to payment
+
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
     const applicationId = doc._id; // Get the ID of the Application
@@ -163,6 +165,8 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           applicationId, // Set the Application ID in the Payment record
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
+          university_name: customfields['university_name'],
+          institute_name: customfields['institute_name'],
           // ... other fields you want to update in the Payment record
         },
       },
@@ -172,12 +176,12 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
     console.error('Error updating Payment record:', error);
   }
 });
+// for update according application to payment
 
 // Pre-save hook for adding new data
 applicationSchema.pre('save', async function (next) {
   try {
     const applicationId = this._id; // Get the ID of the Application
-
     // Check if the document is new or being updated
     if (!this.isNew) {
       // If the document is being updated, trigger the next middleware in the stack
@@ -190,6 +194,8 @@ applicationSchema.pre('save', async function (next) {
       lead_id: this.lead_id,
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
+      university_name: this.customfields['university_name'],
+      institute_name: this.customfields['institute_name'],
       // ... other fields you want to set in the Payment record
     });
 

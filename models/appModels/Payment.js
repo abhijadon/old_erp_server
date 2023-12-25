@@ -19,6 +19,15 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  institute_name: {
+    type: String,
+    trim: true,
+  },
+  university_name: {
+    type: String,
+    trim: true,
+  },
+
   total_paid_amount: {
     type: Number,
     required: true,
