@@ -117,6 +117,106 @@ const summary = async (req, res) => {
       },
     ]);
 
+    const universityTotalCountData = await Model.aggregate([
+      { $match: { removed: false } }, // Match the criteria for existing records
+      {
+        $group: {
+          _id: '$university_name', // Group by university name
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 }, // Calculate the total count of universities
+        },
+      },
+    ]);
+
+    const universityTotalCount =
+      universityTotalCountData.length > 0 ? universityTotalCountData[0].count : 0;
+
+    // institute count
+    const instituteTotalCountData = await Model.aggregate([
+      { $match: { removed: false } }, // Match the criteria for existing records
+      {
+        $group: {
+          _id: '$institute_name', // Group by university name
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 }, // Calculate the total count of universities
+        },
+      },
+    ]);
+
+    const instituteTotalCount =
+      instituteTotalCountData.length > 0 ? instituteTotalCountData[0].count : 0;
+    // Fetch specific university data based on an array of university names
+    const universityData1 = ['SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
+
+    const universitySpecificData = [];
+    for (const university of universityData1) {
+      const data = await Model.aggregate([
+        {
+          $match: { removed: false, university_name: university },
+        },
+        {
+          $group: {
+            _id: '$university_name',
+            count: { $sum: 1 },
+            totalStudents: { $sum: '$students' },
+            total_paid_amount: { $sum: '$total_paid_amount' },
+            paid_amount: { $sum: '$paid_amount' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            totalStudents: 1,
+            total_paid_amount: 1,
+            paid_amount: 1,
+            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          },
+        },
+      ]);
+      universitySpecificData.push(data);
+    }
+
+    // Fetch specific university data based on an array of university names
+    const instituteData1 = ['HES', 'DES'];
+
+    const instituteSpecificData = [];
+    for (const institute of instituteData1) {
+      const data = await Model.aggregate([
+        {
+          $match: { removed: false, institute_name: institute },
+        },
+        {
+          $group: {
+            _id: '$institute_name',
+            count: { $sum: 1 },
+            totalStudents: { $sum: '$students' },
+            total_paid_amount: { $sum: '$total_paid_amount' },
+            paid_amount: { $sum: '$paid_amount' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            totalStudents: 1,
+            total_paid_amount: 1,
+            paid_amount: 1,
+            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          },
+        },
+      ]);
+      instituteSpecificData.push(data);
+    }
+
     const totalPaymentAmount = await getTotalPaymentAmount();
 
     const formattedInstituteData = instituteData.map((data) => ({
@@ -147,7 +247,16 @@ const summary = async (req, res) => {
             totalPaymentAmount,
           };
 
-    // Check if universityData is empty (meaning the university doesn't exist in the dataset)
+    const universityCounts = {}; // Object to store university counts
+    universityData.forEach((data) => {
+      universityCounts[data._id || 'Unknown University'] = data.count;
+    });
+
+    const instituteCounts = {}; // Object to store institute counts
+    instituteData.forEach((data) => {
+      instituteCounts[data._id || 'Unknown Institute'] = data.count; // Corrected assignment
+    });
+
     if (universityData.length === 0 && university_name) {
       return res.status(200).json({
         success: true,
@@ -158,12 +267,17 @@ const summary = async (req, res) => {
       });
     }
 
-    // Return the summary data
     return res.status(200).json({
       success: true,
       result: summaryResult,
       instituteData: formattedInstituteData,
       universityData: formattedUniversityData,
+      universitySpecificData,
+      instituteSpecificData,
+      universityCounts,
+      instituteCounts, // Include the counts of each university
+      universityTotalCount,
+      instituteTotalCount,
       message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
     });
   } catch (error) {
