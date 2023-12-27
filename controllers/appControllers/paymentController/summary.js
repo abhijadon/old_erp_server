@@ -70,20 +70,23 @@ const summary = async (req, res) => {
         },
       },
     ]);
+
     const instituteData = await Model.aggregate([
       { $match: matchQuery },
       {
         $group: {
           _id: '$institute_name',
+          count: { $sum: 1 }, // Add count attribute to get the number of records per institute
+          totalStudents: { $sum: '$students' },
           total_paid_amount: { $sum: '$total_paid_amount' },
           paid_amount: { $sum: '$paid_amount' },
-          total: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 1,
-          count: 1,
+          count: 1, // Include count in the projected output
+          totalStudents: 1,
           total_paid_amount: 1,
           paid_amount: 1,
           due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
@@ -96,21 +99,24 @@ const summary = async (req, res) => {
       {
         $group: {
           _id: '$university_name',
+          count: { $sum: 1 }, // Add count attribute to get the number of records per university
+          totalStudents: { $sum: '$students' },
           total_paid_amount: { $sum: '$total_paid_amount' },
           paid_amount: { $sum: '$paid_amount' },
-          total: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 1,
-          count: 1,
+          count: 1, // Include count in the projected output
+          totalStudents: 1,
           total_paid_amount: 1,
           paid_amount: 1,
           due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
         },
       },
     ]);
+
     const totalPaymentAmount = await getTotalPaymentAmount();
 
     const formattedInstituteData = instituteData.map((data) => ({
