@@ -25,11 +25,10 @@ const summary = async (req, res) => {
   try {
     let defaultType = 'month';
     const { type, institute_name, university_name } = req.query;
-
+    // Check if the type is provided and valid (week, month, year)
     if (type && ['week', 'month', 'year'].includes(type)) {
       defaultType = type;
     }
-
     const currentDate = moment();
     const startDate = currentDate.clone().startOf(defaultType);
     const endDate = currentDate.clone().endOf(defaultType);
@@ -40,6 +39,8 @@ const summary = async (req, res) => {
         $gte: startDate.toDate(),
         $lte: endDate.toDate(),
       },
+      ...(institute_name && { institute_name }),
+      ...(university_name && { university_name }),
     };
 
     if (institute_name) {
@@ -118,43 +119,40 @@ const summary = async (req, res) => {
     ]);
 
     const universityTotalCountData = await Model.aggregate([
-      { $match: { removed: false } }, // Match the criteria for existing records
-      {
-        $group: {
-          _id: '$university_name', // Group by university name
-        },
-      },
+      { $group: { _id: '$university_name', count: { $sum: 1 } } },
       {
         $group: {
           _id: null,
-          count: { $sum: 1 }, // Calculate the total count of universities
+          totalUniversityCount: {
+            $sum: {
+              $cond: [{ $ne: ['$_id', null] }, '$count', 0], // Exclude Unknown University
+            },
+          },
         },
       },
     ]);
 
-    const universityTotalCount =
-      universityTotalCountData.length > 0 ? universityTotalCountData[0].count : 0;
+    const totalUniversityCount =
+      universityTotalCountData.length > 0 ? universityTotalCountData[0].totalUniversityCount : 0;
 
-    // institute count
     const instituteTotalCountData = await Model.aggregate([
-      { $match: { removed: false } }, // Match the criteria for existing records
-      {
-        $group: {
-          _id: '$institute_name', // Group by university name
-        },
-      },
+      { $group: { _id: '$institute_name', count: { $sum: 1 } } },
       {
         $group: {
           _id: null,
-          count: { $sum: 1 }, // Calculate the total count of universities
+          totalInstituteCount: {
+            $sum: {
+              $cond: [{ $ne: ['$_id', null] }, '$count', 0], // Exclude Unknown Institute
+            },
+          },
         },
       },
     ]);
 
-    const instituteTotalCount =
-      instituteTotalCountData.length > 0 ? instituteTotalCountData[0].count : 0;
+    const totalInstituteCount =
+      instituteTotalCountData.length > 0 ? instituteTotalCountData[0].totalInstituteCount : 0;
     // Fetch specific university data based on an array of university names
-    const universityData1 = ['SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
+    const universityData1 = ['Total_university_count', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
 
     const universitySpecificData = [];
     for (const university of universityData1) {
@@ -186,7 +184,7 @@ const summary = async (req, res) => {
     }
 
     // Fetch specific university data based on an array of university names
-    const instituteData1 = ['HES', 'DES'];
+    const instituteData1 = ['Total_institute_count', 'HES', 'DES'];
 
     const instituteSpecificData = [];
     for (const institute of instituteData1) {
@@ -228,12 +226,8 @@ const summary = async (req, res) => {
       // Add color property here if needed
     }));
     const formattedUniversityData = universityData.map((data) => ({
-      tag: data._id || 'Unknown University',
-      value: data.total,
-      totalPaidAmount: data.total_paid_amount,
-      paidAmount: data.paid_amount,
-      DueAmount: data.due_amount,
-      // Add color property here if needed
+      university: data._id || 'Unknown University',
+      totalCount: data.count,
     }));
 
     const summaryResult =
@@ -269,6 +263,8 @@ const summary = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      totalUniversityCount,
+      totalInstituteCount,
       result: summaryResult,
       instituteData: formattedInstituteData,
       universityData: formattedUniversityData,
@@ -276,8 +272,6 @@ const summary = async (req, res) => {
       instituteSpecificData,
       universityCounts,
       instituteCounts, // Include the counts of each university
-      universityTotalCount,
-      instituteTotalCount,
       message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
     });
   } catch (error) {
