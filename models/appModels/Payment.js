@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
 
 const paymentSchema = new mongoose.Schema({
   applicationId: {
-    // Add the applicationId field
-    type: mongoose.Schema.Types.ObjectId, // Assuming applicationId is an ObjectId
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   removed: {
@@ -19,6 +17,25 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  student_name: {
+    type: String,
+    trim: true,
+  },
+  email: {
+    type: String,
+    trim: true,
+    unique: true,
+    lowercase: true,
+  },
+  phone: {
+    type: Number,
+    trim: true,
+    unique: true,
+  },
+  counselor_email: {
+    type: String,
+    trim: true,
+  },
   institute_name: {
     type: String,
     trim: true,
@@ -27,7 +44,6 @@ const paymentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-
   total_paid_amount: {
     type: Number,
     required: true,
@@ -47,7 +63,37 @@ const paymentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  week: {
+    type: Number,
+  },
+  year: {
+    type: Number,
+  },
 });
+
+// Set week and year based on created date, and update the updated field on every save
+paymentSchema.pre('save', function (next) {
+  const currentDate = Date.now();
+  this.updated = currentDate;
+
+  const createdDate = this.created || currentDate;
+  const date = new Date(createdDate);
+  this.week = date.getWeek();
+  this.year = date.getFullYear();
+  next();
+});
+
+// Function to get week number
+Date.prototype.getWeek = function () {
+  var date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  return (
+    1 +
+    Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7)
+  );
+};
 
 const Payment = mongoose.model('Payment', paymentSchema);
 

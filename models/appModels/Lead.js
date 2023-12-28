@@ -33,6 +33,7 @@ const applicationSchema = new mongoose.Schema(
       phone: {
         type: Number,
         trim: true,
+        unique: true,
       },
       alternate_phone: {
         type: Number,
@@ -167,6 +168,10 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           paid_amount: doc.customfields['paid_amount'],
           university_name: customfields['university_name'],
           institute_name: customfields['institute_name'],
+          counselor_email: customfields['counselor_email'],
+          email: contact['email'],
+          phone: contact['phone'],
+          student_name: full_name,
           // ... other fields you want to update in the Payment record
         },
       },
@@ -192,10 +197,14 @@ applicationSchema.pre('save', async function (next) {
     await Payment.create({
       applicationId,
       lead_id: this.lead_id,
+      student_name: this.full_name,
+      email: this.contact['email'],
+      phone: this.contact['phone'],
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
+      counselor_email: this.customfields['counselor_email'],
       // ... other fields you want to set in the Payment record
     });
 
@@ -219,8 +228,12 @@ applicationSchema.post('save', async function (doc) {
         $set: {
           applicationId,
           lead_id: doc.lead_id,
+          student_name: doc.full_name,
+          email: doc.contact['email'],
+          phone: doc.contact['phone'],
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
+          counselor_email: doc.customfields['counselor_email'],
           // ... other fields you want to update in the Payment record
         },
       },

@@ -20,35 +20,38 @@ const getTotalPaymentAmount = async () => {
     throw error;
   }
 };
-
 const summary = async (req, res) => {
   try {
     let defaultType = 'month';
-    const { type, institute_name, university_name } = req.query;
-    // Check if the type is provided and valid (week, month, year)
+    const { type, institute_name, university_name, counselor_email } = req.query;
+
     if (type && ['week', 'month', 'year'].includes(type)) {
       defaultType = type;
     }
+
     const currentDate = moment();
     const startDate = currentDate.clone().startOf(defaultType);
     const endDate = currentDate.clone().endOf(defaultType);
-
     const matchQuery = {
       removed: false,
       date: {
         $gte: startDate.toDate(),
         $lte: endDate.toDate(),
       },
-      ...(institute_name && { institute_name }),
-      ...(university_name && { university_name }),
     };
-
     if (institute_name) {
       matchQuery.institute_name = institute_name;
     }
 
     if (university_name) {
       matchQuery.university_name = university_name;
+    }
+    if (counselor_email) {
+      // Adjust the filter to consider the nested structure
+      matchQuery.counselor_email = {
+        $exists: true,
+        $eq: counselor_email.toLowerCase(),
+      };
     }
 
     const result = await Model.aggregate([
@@ -119,36 +122,27 @@ const summary = async (req, res) => {
     ]);
 
     const universityTotalCountData = await Model.aggregate([
-      { $group: { _id: '$university_name', count: { $sum: 1 } } },
+      { $group: { _id: '$university_name', count: { $sum: 1 } } }, // Group by university name and count records
       {
         $group: {
           _id: null,
-          totalUniversityCount: {
-            $sum: {
-              $cond: [{ $ne: ['$_id', null] }, '$count', 0], // Exclude Unknown University
-            },
-          },
+          totalUniversityCount: { $sum: '$count' }, // Sum all counts to get total university count
         },
       },
     ]);
 
     const totalUniversityCount =
       universityTotalCountData.length > 0 ? universityTotalCountData[0].totalUniversityCount : 0;
-
+    // institute count
     const instituteTotalCountData = await Model.aggregate([
-      { $group: { _id: '$institute_name', count: { $sum: 1 } } },
+      { $group: { _id: '$institute_name', count: { $sum: 1 } } }, // Group by university name and count records
       {
         $group: {
           _id: null,
-          totalInstituteCount: {
-            $sum: {
-              $cond: [{ $ne: ['$_id', null] }, '$count', 0], // Exclude Unknown Institute
-            },
-          },
+          totalInstituteCount: { $sum: '$count' }, // Sum all counts to get total university count
         },
       },
     ]);
-
     const totalInstituteCount =
       instituteTotalCountData.length > 0 ? instituteTotalCountData[0].totalInstituteCount : 0;
     // Fetch specific university data based on an array of university names
