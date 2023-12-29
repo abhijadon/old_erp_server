@@ -44,6 +44,11 @@ const paymentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  total_course_fee: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   total_paid_amount: {
     type: Number,
     required: true,

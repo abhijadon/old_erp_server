@@ -10,16 +10,26 @@ const getTotalPaymentAmount = async () => {
         $group: {
           _id: null,
           totalPaidAmount: { $sum: '$total_paid_amount' },
+          totalCourseFee: { $sum: '$total_course_fee' }, // Added line for total_course_fee
         },
       },
     ]);
 
-    return result.length > 0 ? result[0].totalPaidAmount : 0;
+    return result.length > 0
+      ? {
+          totalPaidAmount: result[0].totalPaidAmount,
+          totalCourseFee: result[0].totalCourseFee,
+        }
+      : {
+          totalPaidAmount: 0,
+          totalCourseFee: 0,
+        };
   } catch (error) {
     console.error('Error fetching total payment amount:', error);
     throw error;
   }
 };
+
 const summary = async (req, res) => {
   try {
     let defaultType = 'month';
@@ -62,6 +72,7 @@ const summary = async (req, res) => {
           count: { $sum: 1 },
           total_paid_amount: { $sum: '$total_paid_amount' },
           paid_amount: { $sum: '$paid_amount' },
+          total_course_fee: { $sum: '$total_course_fee' }, // Added line for total_course_fee
         },
       },
       {
@@ -70,7 +81,8 @@ const summary = async (req, res) => {
           count: 1,
           total_paid_amount: 1,
           paid_amount: 1,
-          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          due_amount: { $subtract: ['$total_course_fee', '$paid_amount'] },
+          total_course_fee: 1, // Added line for total_course_fee
         },
       },
     ]);
@@ -265,7 +277,8 @@ const summary = async (req, res) => {
       universitySpecificData,
       instituteSpecificData,
       universityCounts,
-      instituteCounts, // Include the counts of each university
+      instituteCounts,
+      totalPaymentAmount,
       message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
     });
   } catch (error) {

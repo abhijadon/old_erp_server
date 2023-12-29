@@ -130,6 +130,25 @@ const create = async (Model, req, res) => {
             message: 'Required fields are not supplied',
             error: error,
           });
+        } else if (error.code === 11000) {
+          const duplicateKeyField = Object.keys(error.keyPattern)[0];
+          const duplicateKeyValue = error.keyValue[duplicateKeyField];
+
+          let errorMessage;
+          if (duplicateKeyField === 'email') {
+            errorMessage = 'This email is duplicate, please try another email.';
+          } else if (duplicateKeyField === 'phone') {
+            errorMessage = 'This phone number is duplicate, please try another phone number.';
+          } else {
+            errorMessage = 'Duplicate key error.';
+          }
+
+          return res.status(400).json({
+            success: false,
+            result: null,
+            message: errorMessage,
+            error: error,
+          });
         } else {
           return res.status(500).json({
             success: false,
