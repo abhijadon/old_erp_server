@@ -80,7 +80,16 @@ const create = async (Model, req, res) => {
             pass: 'zibs iflm rzwv dmgw',
           },
         });
+        // Check if the email is a Gmail address
+        const isGmail = validateGmail(studentEmail);
 
+        if (!isGmail) {
+          return res.status(400).json({
+            success: false,
+            result: null,
+            message: 'Invalid email address. Please use a Gmail address.',
+          });
+        }
         let receiverEmail = `${studentEmail},${counselorEmail}`;
 
         const emailTemplates = {
@@ -168,5 +177,8 @@ const create = async (Model, req, res) => {
     });
   }
 };
-
+const validateGmail = (email) => {
+  const regex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+  return regex.test(email);
+};
 module.exports = create;
