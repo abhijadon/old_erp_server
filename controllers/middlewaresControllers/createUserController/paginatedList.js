@@ -1,21 +1,21 @@
 const mongoose = require('mongoose');
 
-const Model = mongoose.model('Invoice');
+const paginatedList = async (userModel, req, res) => {
+  const User = mongoose.model(userModel);
 
-const paginatedList = async (req, res) => {
   const page = req.query.page || 1;
   const limit = parseInt(req.query.items) || 10;
   const skip = page * limit - limit;
 
   //  Query the database for a list of all results
-  const resultsPromise = Model.find({ removed: false })
+  const resultsPromise = User.find({ removed: false, enabled: true })
     .skip(skip)
     .limit(limit)
     .sort({ created: 'desc' })
-    .populate('createdBy', 'name')
+    .populate()
     .exec();
   // Counting the total documents
-  const countPromise = Model.countDocuments({ removed: false });
+  const countPromise = User.countDocuments({ removed: false });
   // Resolving both promises
   const [result, count] = await Promise.all([resultsPromise, countPromise]);
   // Calculating total pages
@@ -32,7 +32,7 @@ const paginatedList = async (req, res) => {
     });
   } else {
     return res.status(203).json({
-      success: true,
+      success: false,
       result: [],
       pagination,
       message: 'Collection is Empty',
