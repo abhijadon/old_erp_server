@@ -142,7 +142,7 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
     },
   },
-  img: {
+  image: {
     data: Buffer,
     contentType: String,
   },
