@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 const bcrypt = require('bcryptjs');
 
 const AdminPasswordSchema = new Schema({
@@ -34,14 +33,17 @@ const AdminPasswordSchema = new Schema({
 });
 
 // AdminPasswordSchema.index({ user: 1 });
-// generating a hash
-AdminPasswordSchema.methods.generateHash = function (salt, password) {
-  return bcrypt.hashSync(salt + password);
+
+// Generating a hash
+AdminPasswordSchema.methods.generateHash = function (userpassword) {
+  // Use the user's salt and password to generate a hash
+  return bcrypt.hashSync(this.salt + userpassword, bcrypt.genSaltSync(8));
 };
 
-// checking if password is valid
-AdminPasswordSchema.methods.validPassword = function (salt, userpassword) {
-  return bcrypt.compareSync(salt + userpassword, this.password);
+// Checking if the password is valid
+AdminPasswordSchema.methods.validPassword = function (userpassword) {
+  // Compare the entered password with the stored hash
+  return bcrypt.compareSync(this.salt + userpassword, this.password);
 };
 
 module.exports = mongoose.model('AdminPassword', AdminPasswordSchema);
