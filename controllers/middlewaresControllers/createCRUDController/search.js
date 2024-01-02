@@ -6,16 +6,18 @@ const search = async (Model, req, res) => {
         success: false,
         result: [],
         message: 'No document found by this request',
-        count: 0, // Add count property with value 0
+        count: 0,
       })
       .end();
   }
 
-  // Specify the fields you want to search in
+  const isPhoneNumber = /^\+?\d+$/.test(req.query.q);
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.query.q);
+
   const searchFields = [
     { field: 'customfields.counselor_email', message: 'Counselor Email' },
     { field: 'contact.email', message: 'Contact Email' },
-    { field: 'contact.phone', message: 'Contact Phone', type: 'number' },
+    { field: 'contact.phone', message: 'Contact Phone' },
     { field: 'full_name', message: 'Full Name' },
     { field: 'lead_id', message: 'Lead ID' },
     { field: 'customfields.institute_name', message: 'Institute Name' },
@@ -24,19 +26,16 @@ const search = async (Model, req, res) => {
 
   const fields = { $or: [] };
 
-  // Build the $or condition for each search field
-  for (const { field, message, type } of searchFields) {
-    if (type === 'number' && isNaN(Number(req.query.q))) {
-      continue; // Skip the field if it's expected to be a number, but the search term is not a valid number
+  for (const { field } of searchFields) {
+    if (isPhoneNumber && field === 'contact.phone') {
+      fields.$or.push({ [field]: req.query.q });
+    } else if (isEmail && field === 'contact.email') {
+      fields.$or.push({ [field]: req.query.q });
     }
-
-    fields.$or.push({ [field]: { $regex: new RegExp(req.query.q, 'i') } });
   }
 
   try {
-    // Fetch documents based on the specified fields
     let results = await Model.find(fields).where('removed', false).limit(10);
-
     const count = await Model.countDocuments(fields).where('removed', false);
 
     if (results.length >= 1) {
@@ -44,10 +43,9 @@ const search = async (Model, req, res) => {
         success: true,
         result: results,
         message: `Successfully found all documents in ${searchFields
-          .filter(({ field }) => fields.$or.some((condition) => condition[field]))
           .map(({ message }) => message)
           .join(', ')}`,
-        count: count, // Include the count in the response
+        count: count,
       });
     } else {
       return res
@@ -56,7 +54,7 @@ const search = async (Model, req, res) => {
           success: false,
           result: [],
           message: 'No document found by this request',
-          count: 0, // Set count to 0 when no documents are found
+          count: 0,
         })
         .end();
     }
@@ -66,7 +64,7 @@ const search = async (Model, req, res) => {
       result: null,
       message: error.message,
       error: error,
-      count: 0, // Set count to 0 in case of an error
+      count: 0,
     });
   }
 };
