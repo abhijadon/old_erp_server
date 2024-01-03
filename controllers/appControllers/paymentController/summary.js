@@ -185,14 +185,18 @@ const summary = async (req, res) => {
     const universityData1 = ['Total', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
 
     const universitySpecificData = [];
+    let countDataUniversity = 0;
     for (const university of universityData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, university_name: university },
+          $match: {
+            removed: false,
+            university_name: university === 'Total' ? { $exists: true } : university,
+          },
         },
         {
           $group: {
-            _id: '$university_name',
+            _id: university,
             count: { $sum: 1 },
             totalStudents: { $sum: '$students' },
             total_paid_amount: { $sum: '$total_paid_amount' },
@@ -211,20 +215,24 @@ const summary = async (req, res) => {
         },
       ]);
       universitySpecificData.push(data);
+      countDataUniversity += data.length > 0 ? data[0].count : 0;
     }
 
     // Fetch specific university data based on an array of university names
     const instituteData1 = ['Total', 'HES', 'DES'];
-
     const instituteSpecificData = [];
+    let countInstitute = 0;
     for (const institute of instituteData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, institute_name: institute },
+          $match: {
+            removed: false,
+            institute_name: institute === 'Total' ? { $exists: true } : institute,
+          },
         },
         {
           $group: {
-            _id: '$institute_name',
+            _id: institute,
             count: { $sum: 1 },
             totalStudents: { $sum: '$students' },
             total_paid_amount: { $sum: '$total_paid_amount' },
@@ -243,6 +251,8 @@ const summary = async (req, res) => {
         },
       ]);
       instituteSpecificData.push(data);
+
+      countInstitute += data.length > 0 ? data[0].count : 0;
     }
 
     // Fetch specific status data based on an array of status names
