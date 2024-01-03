@@ -10,7 +10,7 @@ const getTotalPaymentAmount = async () => {
         $group: {
           _id: null,
           totalPaidAmount: { $sum: '$total_paid_amount' },
-          totalCourseFee: { $sum: '$total_course_fee' }, // Added line for total_course_fee
+          totalCourseFee: { $sum: '$total_course_fee' },
         },
       },
     ]);
@@ -33,7 +33,7 @@ const getTotalPaymentAmount = async () => {
 const summary = async (req, res) => {
   try {
     let defaultType = 'month';
-    const { type, institute_name, university_name, counselor_email } = req.query;
+    const { type, institute_name, university_name, counselor_email, status } = req.query;
 
     if (type && ['week', 'month', 'year'].includes(type)) {
       defaultType = type;
@@ -57,11 +57,13 @@ const summary = async (req, res) => {
       matchQuery.university_name = university_name;
     }
     if (counselor_email) {
-      // Adjust the filter to consider the nested structure
       matchQuery.counselor_email = {
         $exists: true,
         $eq: counselor_email.toLowerCase(),
       };
+    }
+    if (status) {
+      matchQuery.status = status; // Include dynamic status filtering
     }
 
     const result = await Model.aggregate([
@@ -72,7 +74,7 @@ const summary = async (req, res) => {
           count: { $sum: 1 },
           total_paid_amount: { $sum: '$total_paid_amount' },
           paid_amount: { $sum: '$paid_amount' },
-          total_course_fee: { $sum: '$total_course_fee' }, // Added line for total_course_fee
+          total_course_fee: { $sum: '$total_course_fee' },
         },
       },
       {
@@ -82,7 +84,7 @@ const summary = async (req, res) => {
           total_paid_amount: 1,
           paid_amount: 1,
           due_amount: { $subtract: ['$total_course_fee', '$paid_amount'] },
-          total_course_fee: 1, // Added line for total_course_fee
+          total_course_fee: 1,
         },
       },
     ]);
@@ -109,7 +111,28 @@ const summary = async (req, res) => {
         },
       },
     ]);
-
+    const statusData = await Model.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }, // Add count attribute to get the number of records per institute
+          totalStudents: { $sum: '$students' },
+          total_paid_amount: { $sum: '$total_paid_amount' },
+          paid_amount: { $sum: '$paid_amount' },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          count: 1, // Include count in the projected output
+          totalStudents: 1,
+          total_paid_amount: 1,
+          paid_amount: 1,
+          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+        },
+      },
+    ]);
     const universityData = await Model.aggregate([
       { $match: matchQuery },
       {
@@ -221,6 +244,36 @@ const summary = async (req, res) => {
       instituteSpecificData.push(data);
     }
 
+    const statusData1 = ['New', 'Cancel', 'Alumini'];
+
+    const statusSpecificData = [];
+    for (const status of statusData1) {
+      const data = await Model.aggregate([
+        {
+          $match: { removed: false, status: status, ...matchQuery },
+        },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+            totalStudents: { $sum: '$students' },
+            total_paid_amount: { $sum: '$total_paid_amount' },
+            paid_amount: { $sum: '$paid_amount' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            totalStudents: 1,
+            total_paid_amount: 1,
+            paid_amount: 1,
+            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          },
+        },
+      ]);
+      statusSpecificData.push(data);
+    }
     const totalPaymentAmount = await getTotalPaymentAmount();
 
     const formattedInstituteData = instituteData.map((data) => ({
@@ -272,10 +325,12 @@ const summary = async (req, res) => {
       totalUniversityCount,
       totalInstituteCount,
       result: summaryResult,
+      statusData,
       instituteData: formattedInstituteData,
       universityData: formattedUniversityData,
       universitySpecificData,
       instituteSpecificData,
+      statusSpecificData,
       universityCounts,
       instituteCounts,
       totalPaymentAmount,

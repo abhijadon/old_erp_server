@@ -1,5 +1,8 @@
 require('module-alias/register');
 const mongoose = require('mongoose');
+const { promisify } = require('util');
+const glob = promisify(require('glob'));
+const path = require('path');
 
 // Make sure we are running Node.js version 7.6 or higher
 const [major, minor] = process.versions.node.split('.').map(parseFloat);
@@ -25,22 +28,33 @@ async function connectToDatabase() {
       '🔥 Common Error caused issue → : Check your .env file first and add your MongoDB URL'
     );
     console.error(`🚫 Error → : ${error.message}`);
+    process.exit(1); // Exit with a non-zero code to indicate failure
   }
 }
 
-connectToDatabase();
-
-const glob = require('glob');
-const path = require('path');
-
-// Import all model files
-glob.sync('./models/**/*.js').forEach(function (file) {
-  require(path.resolve(file));
-});
+async function importModels() {
+  try {
+    // Import all model files
+    const files = await glob('./models/**/*.js');
+    files.forEach((file) => {
+      require(path.resolve(file));
+    });
+  } catch (error) {
+    console.error(`Error importing models: ${error.message}`);
+    process.exit(1); // Exit with a non-zero code to indicate failure
+  }
+}
 
 // Start the app
-const app = require('./app');
-app.set('port', process.env.PORT || 8888);
-const server = app.listen(app.get('port'), () => {
-  console.log(`Express running → On PORT: ${server.address().port}`);
-});
+async function startApp() {
+  await connectToDatabase();
+  await importModels();
+
+  const app = require('./app');
+  app.set('port', process.env.PORT || 8888);
+  const server = app.listen(app.get('port'), () => {
+    console.log(`Express running → On PORT: ${server.address().port}`);
+  });
+}
+
+startApp();

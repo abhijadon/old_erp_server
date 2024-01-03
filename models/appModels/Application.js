@@ -173,6 +173,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           university_name: doc.customfields['university_name'],
           institute_name: doc.customfields['institute_name'],
           counselor_email: doc.customfields['counselor_email'],
+          status: doc.customfields['status'],
           email: doc.contact['email'],
           phone: doc.contact['phone'],
           student_name: doc.full_name,
@@ -205,6 +206,7 @@ applicationSchema.pre('save', async function (next) {
       student_name: this.full_name,
       email: this.contact['email'],
       phone: this.contact['phone'],
+      status: this.customfields['status'],
       total_course_fee: this.customfields['total_course_fee'],
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
@@ -241,6 +243,7 @@ applicationSchema.post('save', async function (doc) {
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
           counselor_email: doc.customfields['counselor_email'],
+          status: doc.customfields['status'],
           // ... other fields you want to update in the Payment record
         },
       },
