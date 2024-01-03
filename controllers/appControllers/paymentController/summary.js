@@ -10,7 +10,7 @@ const getTotalPaymentAmount = async () => {
         $group: {
           _id: null,
           totalPaidAmount: { $sum: '$total_paid_amount' },
-          totalCourseFee: { $sum: '$total_course_fee' },
+          totalCourseFee: { $sum: '$total_course_fee' }, // Added line for total_course_fee
         },
       },
     ]);
@@ -57,6 +57,7 @@ const summary = async (req, res) => {
       matchQuery.university_name = university_name;
     }
     if (counselor_email) {
+      // Adjust the filter to consider the nested structure
       matchQuery.counselor_email = {
         $exists: true,
         $eq: counselor_email.toLowerCase(),
@@ -244,17 +245,20 @@ const summary = async (req, res) => {
       instituteSpecificData.push(data);
     }
 
-    const statusData1 = ['New', 'Cancel', 'Alumini'];
+    // Fetch specific status data based on an array of status names
+    const statusData1 = ['Total', 'Cancel', 'Alumini'];
 
     const statusSpecificData = [];
+    let totalStatusCount = 0; // Initialize a variable to store the total count
+
     for (const status of statusData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, status: status, ...matchQuery },
+          $match: { removed: false, status: status === 'Total' ? { $exists: true } : status },
         },
         {
           $group: {
-            _id: '$status',
+            _id: status,
             count: { $sum: 1 },
             totalStudents: { $sum: '$students' },
             total_paid_amount: { $sum: '$total_paid_amount' },
@@ -272,8 +276,13 @@ const summary = async (req, res) => {
           },
         },
       ]);
+
       statusSpecificData.push(data);
+
+      // Increment the total count
+      totalStatusCount += data.length > 0 ? data[0].count : 0;
     }
+
     const totalPaymentAmount = await getTotalPaymentAmount();
 
     const formattedInstituteData = instituteData.map((data) => ({
@@ -309,6 +318,14 @@ const summary = async (req, res) => {
     instituteData.forEach((data) => {
       instituteCounts[data._id || 'Unknown Institute'] = data.count; // Corrected assignment
     });
+    const formattedStatusData = statusData.map((data) => ({
+      tag: data._id || 'Unknown Status',
+      value: data.total,
+      totalPaidAmount: data.total_paid_amount,
+      paidAmount: data.paid_amount,
+      DueAmount: data.due_amount,
+      // Add color property here if needed
+    }));
 
     if (universityData.length === 0 && university_name) {
       return res.status(200).json({
@@ -333,6 +350,7 @@ const summary = async (req, res) => {
       statusSpecificData,
       universityCounts,
       instituteCounts,
+      formattedStatusData,
       totalPaymentAmount,
       message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
     });
