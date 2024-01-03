@@ -182,7 +182,7 @@ const summary = async (req, res) => {
     const totalInstituteCount =
       instituteTotalCountData.length > 0 ? instituteTotalCountData[0].totalInstituteCount : 0;
     // Fetch specific university data based on an array of university names
-    const universityData1 = ['Total_university_count', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
+    const universityData1 = ['Total', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
 
     const universitySpecificData = [];
     for (const university of universityData1) {
@@ -214,7 +214,7 @@ const summary = async (req, res) => {
     }
 
     // Fetch specific university data based on an array of university names
-    const instituteData1 = ['Total_institute_count', 'HES', 'DES'];
+    const instituteData1 = ['Total', 'HES', 'DES'];
 
     const instituteSpecificData = [];
     for (const institute of instituteData1) {
@@ -246,7 +246,7 @@ const summary = async (req, res) => {
     }
 
     // Fetch specific status data based on an array of status names
-    const statusData1 = ['Total', 'Cancel', 'Alumini'];
+    const statusData1 = ['Total', 'New', 'Cancel', 'Alumini'];
 
     const statusSpecificData = [];
     let totalStatusCount = 0; // Initialize a variable to store the total count
