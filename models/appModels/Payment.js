@@ -57,8 +57,9 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  description: {
+  status: {
     type: String,
+    trim: true,
   },
   updated: {
     type: Date,
