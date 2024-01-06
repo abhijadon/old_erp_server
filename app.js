@@ -23,10 +23,10 @@ app.use(cors(corsOptions));
 // setting cors at one place for all the routes
 // putting cors as first in order to avoid unneccessary req uests from unallowed origins
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
-// app.use(express.static(path.join(__dirname, '../client/dist')));
-// app.get('*', function (req, res) {
-//   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-// });
+ app.use(express.static(path.join(__dirname, './client/dist')));
+app.get('*', function (req, res) {
+   res.sendFile(path.join(__dirname, './client/dist/index.html'));
+ });
 // Enable CORS for all routes
 
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
