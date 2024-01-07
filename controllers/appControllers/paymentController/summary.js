@@ -182,7 +182,7 @@ const summary = async (req, res) => {
     const totalInstituteCount =
       instituteTotalCountData.length > 0 ? instituteTotalCountData[0].totalInstituteCount : 0;
     // Fetch specific university data based on an array of university names
-    const universityData1 = ['Total', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
+    const universityData1 = ['Univeristy', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
 
     const universitySpecificData = [];
     let countDataUniversity = 0;
@@ -191,7 +191,7 @@ const summary = async (req, res) => {
         {
           $match: {
             removed: false,
-            university_name: university === 'Total' ? { $exists: true } : university,
+            university_name: university === 'Univeristy' ? { $exists: true } : university,
           },
         },
         {
@@ -219,7 +219,7 @@ const summary = async (req, res) => {
     }
 
     // Fetch specific university data based on an array of university names
-    const instituteData1 = ['Total', 'HES', 'DES'];
+    const instituteData1 = ['Institute', 'HES', 'DES'];
     const instituteSpecificData = [];
     let countInstitute = 0;
     for (const institute of instituteData1) {
@@ -227,7 +227,7 @@ const summary = async (req, res) => {
         {
           $match: {
             removed: false,
-            institute_name: institute === 'Total' ? { $exists: true } : institute,
+            institute_name: institute === 'Institute' ? { $exists: true } : institute,
           },
         },
         {

@@ -2,13 +2,13 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const ejs = require('ejs');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'public/uploads/studentdocument');
   },
   filename: (req, file, cb) => {
-    // Include the file extension in the filename
     const ext = path.extname(file.originalname);
     cb(null, file.fieldname + '_' + Date.now() + ext);
   },
@@ -28,18 +28,13 @@ const create = async (Model, req, res) => {
         });
       }
 
-      // Get image file details
       const file = req.file;
 
       try {
         const newDoc = new Model(req.body);
 
         if (file) {
-          const imgPath = path.join(
-            process.cwd(), // This gets the current working directory
-            'public/uploads/studentdocument',
-            file.filename
-          );
+          const imgPath = path.join(process.cwd(), 'public/uploads/studentdocument', file.filename);
 
           const imgData = fs.readFileSync(imgPath);
 
@@ -51,28 +46,21 @@ const create = async (Model, req, res) => {
 
         const result = await newDoc.save();
 
-        // Rest of logic for sending mail
         const {
-          customfields,
           contact,
-          education,
           'contact.email': contactEmail,
           'customfields.counselor_email': counselorEmail,
           'customfields.send_fee_receipt': sendFeeReceipt,
           'education.course': course,
           'customfields.institute_name': institute,
+          'customfields.father_name': fatherName,
+          'customfields.dob': dob,
+          'contact.phone': phoneNumber,
+          'customfields.total_paid_amount': TotalAmount,
+          'customfields.paid_amount': paidAmount,
         } = req.body;
 
-        const institutes = customfields ? customfields.institute_name : null;
         const studentEmail = contactEmail || (contact && contact.email) || null;
-        const courses = education && education.course ? education.course : null;
-
-        console.log('sendFeeReceipt:', sendFeeReceipt);
-        console.log('institute:', institute);
-        console.log('studentEmail:', studentEmail);
-        console.log('counselorEmail:', counselorEmail);
-        console.log('course:', course);
-
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -80,7 +68,7 @@ const create = async (Model, req, res) => {
             pass: 'zibs iflm rzwv dmgw',
           },
         });
-        // Check if the email is a Gmail address
+
         const isGmail = validateGmail(studentEmail);
 
         if (!isGmail) {
@@ -90,31 +78,57 @@ const create = async (Model, req, res) => {
             message: 'Invalid email address. Please use a Gmail address.',
           });
         }
-        let receiverEmail = `${studentEmail},${counselorEmail}`;
 
-        const emailTemplates = {
-          HES: {
-            subject: 'HES - New Document Created',
-            html: `<p>This is the HES template for a new document...</p>`,
-          },
-          DES: {
-            subject: 'DES - New Document Created',
-            html: `<p>This is the DES template for a new document...</p>`,
-          },
-        };
+        let receiverEmail = `${studentEmail},${counselorEmail}`;
 
         if (
           institute &&
           typeof sendFeeReceipt !== 'undefined' &&
-          sendFeeReceipt.toLowerCase() === 'yes' &&
-          emailTemplates[institute]
+          sendFeeReceipt.toLowerCase() === 'yes'
         ) {
-          const mailContent = emailTemplates[institute];
+          // Load EJS template based on institute
+          const templateFileName = `${institute.toLowerCase()}_template.ejs`;
+          const templatePath = path.join(process.cwd(), 'email_templates', templateFileName);
+
+          const ejsTemplate = fs.readFileSync(templatePath, 'utf-8');
+          const renderedHtml = ejs.render(ejsTemplate, {
+            full_name: req.body.full_name,
+            course: course,
+            father_name: fatherName,
+            dob: dob,
+            Total_Amount: TotalAmount,
+            mobile_number: phoneNumber,
+            email: contactEmail,
+          });
+
           const mailOptions = {
             from: 'jadonabhishek332@gmail.com',
             to: receiverEmail,
-            subject: mailContent.subject,
-            html: mailContent.html,
+            subject: `${institute} - New Document Created`,
+            html: renderedHtml,
+            attachments: [
+              {
+                filename: 'bg2.jpg',
+                path: './email_templates/img/bg2.jpg',
+                cid: 'bgImage', // Use the same CID as referenced in the EJS template
+              },
+              {
+                filename: 'logo-higher.png',
+                path: './email_templates/img/logo-higher.png',
+                cid: 'hesLogo', // Use the same CID as referenced in the EJS template
+              },
+              {
+                filename: 'paid.png',
+                path: './email_templates/img/paid.png',
+                cid: 'hesPaid', // Use the same CID as referenced in the EJS template
+              },
+              {
+                filename: '5.png',
+                path: './email_templates/img/5.png',
+                cid: 'hesImg', // Use the same CID as referenced in the EJS template
+              },
+              // Add more attachments if needed
+            ],
           };
 
           await transporter.sendMail(mailOptions);
@@ -177,8 +191,10 @@ const create = async (Model, req, res) => {
     });
   }
 };
+
 const validateGmail = (email) => {
   const regex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
   return regex.test(email);
 };
+
 module.exports = create;
