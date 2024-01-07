@@ -25,8 +25,8 @@ app.use(cors(corsOptions));
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 // app.use(express.static(path.join(__dirname, './client/dist')));
 app.get('/', function (req, res) {
-  res.status(200).send('This Project is live and Workin fine')
- });
+  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+});
 // Enable CORS for all routes
 
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is

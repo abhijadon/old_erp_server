@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ejs = require('ejs');
+const notificationService = require('./notificationServise');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -18,6 +19,7 @@ const upload = multer({ storage: storage }).single('image');
 
 const create = async (Model, req, res) => {
   try {
+    let studentEmail;
     upload(req, res, async (err) => {
       if (err) {
         return res.status(500).json({
@@ -44,10 +46,7 @@ const create = async (Model, req, res) => {
           };
         }
 
-        const result = await newDoc.save();
-
         const {
-          contact,
           'contact.email': contactEmail,
           'customfields.counselor_email': counselorEmail,
           'customfields.send_fee_receipt': sendFeeReceipt,
@@ -60,7 +59,9 @@ const create = async (Model, req, res) => {
           'customfields.paid_amount': paidAmount,
         } = req.body;
 
-        const studentEmail = contactEmail || (contact && contact.email) || null;
+        // Assign the value to studentEmail here
+        studentEmail = contactEmail || (req.body.contact && req.body.contact.email) || null;
+
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -69,9 +70,8 @@ const create = async (Model, req, res) => {
           },
         });
 
-        const isGmail = validateGmail(studentEmail);
-
-        if (!isGmail) {
+        // Your validation logic for studentEmail or any other fields
+        if (!validateGmail(studentEmail)) {
           return res.status(400).json({
             success: false,
             result: null,
@@ -79,6 +79,34 @@ const create = async (Model, req, res) => {
           });
         }
 
+        await notificationService.addNotification(
+          'document',
+          'add',
+          `${newDoc.full_name}`,
+          studentEmail // Pass studentEmail here
+        );
+
+        // Check if all data is correct
+        if (
+          !contactEmail ||
+          !counselorEmail ||
+          !sendFeeReceipt ||
+          !course ||
+          !institute ||
+          !fatherName ||
+          !dob ||
+          !phoneNumber ||
+          !TotalAmount ||
+          !paidAmount
+        ) {
+          return res.status(400).json({
+            success: false,
+            result: null,
+            message: 'Invalid or incomplete data. Please provide all required fields.',
+          });
+        }
+
+        const result = await newDoc.save();
         let receiverEmail = `${studentEmail},${counselorEmail}`;
 
         if (

@@ -72,8 +72,10 @@ router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
-
-// //_________________________________________________________________API for invoices_____________________
+router.route('/lead/getNotifications').get(catchErrors(leadController.getNotifications));
+router
+  .route('/lead/deleteNotificationByMessage/:message')
+  .delete(catchErrors(leadController.deleteNotificationByMessage)); // //_________________________________________________________________API for invoices_____________________
 router.route('/invoice/create').post(catchErrors(invoiceController.create));
 router.route('/invoice/read/:id').get(catchErrors(invoiceController.read));
 router.route('/invoice/update/:id').patch(catchErrors(invoiceController.update));
