@@ -1,5 +1,4 @@
 const express = require('express');
-
 const { catchErrors } = require('@/handlers/errorHandlers');
 
 const router = express.Router();
@@ -159,6 +158,7 @@ router.route('/payment/list').get(catchErrors(paymentController.list));
 router.route('/payment/filter').get(catchErrors(paymentController.filter));
 router.route('/payment/pdf/:id').get(catchErrors(paymentController.generatePDF));
 router.route('/payment/summary').get(catchErrors(paymentController.summary));
+router.route('/payment/mail').post(catchErrors(paymentController.mail));
 
 //router.route('/payment/mail).post( atchErrors(paymentController.sendMail));
 
