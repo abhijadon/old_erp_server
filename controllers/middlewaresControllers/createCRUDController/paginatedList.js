@@ -1,6 +1,6 @@
 const paginatedList = async (Model, req, res) => {
-  const page = req.query.page || 1;
-  const limit = parseInt(req.query.items) || 10;
+  const page = req.query.page;
+  const limit = parseInt(req.query.items);
   const skip = page * limit - limit;
   try {
     //  Query the database for a list of all results

@@ -1,88 +1,93 @@
 const mongoose = require('mongoose');
 
-const paymentSchema = new mongoose.Schema({
-  applicationId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-  },
-  removed: {
-    type: Boolean,
-    default: false,
-  },
-  date: {
-    type: Date,
-    default: Date.now,
-  },
-  lead_id: {
-    type: Number,
-    default: 0,
-  },
-  student_name: {
-    type: String,
-    trim: true,
-  },
-  email: {
-    type: String,
-    trim: true,
-    unique: true,
-    lowercase: true,
-  },
-  phone: {
-    type: Number,
-    trim: true,
-    unique: true,
-  },
-  counselor_email: {
-    type: String,
-    trim: true,
-  },
-  institute_name: {
-    type: String,
-    trim: true,
-  },
-  university_name: {
-    type: String,
-    trim: true,
-  },
-  total_course_fee: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  total_paid_amount: {
-    type: Number,
-    required: true,
-  },
-  paid_amount: {
-    type: Number,
-    default: 0,
-  },
-  status: {
-    type: String,
-    trim: true,
-  },
-  updated: {
-    type: Date,
-    default: Date.now,
-  },
-  created: {
-    type: Date,
-    default: Date.now,
-  },
-  week: {
-    type: Number,
-  },
-  year: {
-    type: Number,
-  },
-});
+const paymentSchema = new mongoose.Schema(
+  {
+    applicationId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+    removed: {
+      type: Boolean,
+      default: false,
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+    lead_id: {
+      type: Number,
+      default: 0,
+    },
+    student_name: {
+      type: String,
+      trim: true,
+    },
+    email: {
+      type: String,
+      trim: true,
+      unique: true,
+      lowercase: true,
+    },
+    phone: {
+      type: Number,
+      trim: true,
+      unique: true,
+    },
+    counselor_email: {
+      type: String,
+      trim: true,
+    },
+    institute_name: {
+      type: String,
+      trim: true,
+    },
+    university_name: {
+      type: String,
+      trim: true,
+    },
+    total_course_fee: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    total_paid_amount: {
+      type: Number,
+      required: true,
+    },
+    paid_amount: {
+      type: Number,
+      default: 0,
+    },
+    status: {
+      type: String,
+      trim: true,
+    },
+    updated: {
+      type: Date,
+      default: Date.now,
+    },
+    created: {
+      type: Date,
+      default: Date.now,
+    },
+    week: {
+      type: Number,
+    },
 
-// Set week and year based on created date, and update the updated field on every save
+    year: {
+      type: Number,
+    },
+  },
+  {
+    timestamps: true, // Add this here to enable timestamps
+  }
+);
+
+// Set week and year based on created date, and update the updatedAt field on every save
 paymentSchema.pre('save', function (next) {
   const currentDate = Date.now();
-  this.updated = currentDate;
+  this.updatedAt = currentDate;
 
-  const createdDate = this.created || currentDate;
+  const createdDate = this.createdAt || currentDate;
   const date = new Date(createdDate);
   this.week = date.getWeek();
   this.year = date.getFullYear();

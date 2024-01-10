@@ -32,22 +32,9 @@ const getTotalPaymentAmount = async () => {
 
 const summary = async (req, res) => {
   try {
-    let defaultType = 'month';
-    const { type, institute_name, university_name, counselor_email, status } = req.query;
-
-    if (type && ['week', 'month', 'year'].includes(type)) {
-      defaultType = type;
-    }
-
-    const currentDate = moment();
-    const startDate = currentDate.clone().startOf(defaultType);
-    const endDate = currentDate.clone().endOf(defaultType);
+    const { institute_name, university_name, counselor_email, status, week, year } = req.query;
     const matchQuery = {
       removed: false,
-      date: {
-        $gte: startDate.toDate(),
-        $lte: endDate.toDate(),
-      },
     };
     if (institute_name) {
       matchQuery.institute_name = institute_name;
@@ -66,7 +53,10 @@ const summary = async (req, res) => {
     if (status) {
       matchQuery.status = status; // Include dynamic status filtering
     }
-
+    if (week && year) {
+      matchQuery.creationWeek = parseInt(week, 10);
+      matchQuery.creationYear = parseInt(year, 10);
+    }
     const result = await Model.aggregate([
       { $match: matchQuery },
       {
@@ -362,7 +352,7 @@ const summary = async (req, res) => {
       instituteCounts,
       formattedStatusData,
       totalPaymentAmount,
-      message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
+      message: `Successfully retrieved summary data.`,
     });
   } catch (error) {
     console.error('Error in summary:', error);

@@ -24,11 +24,17 @@ app.use(cors(corsOptions));
 // putting cors as first in order to avoid unneccessary req uests from unallowed origins
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 // app.use(express.static(path.join(__dirname, './client/dist')));
-app.get('/', function (req, res) {
-  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
-});
-// Enable CORS for all routes
+// app.get('/', function (req, res) {
+//   res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+// });
 
+// Have Node serve the files for our built React app
+app.use(express.static(path.resolve(__dirname, 'client', 'dist')));
+// Enable CORS for all routes
+// All other GET requests not handled before will return our React app
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'client', 'dist', 'index.html'));
+});
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 
 // Takes the raw requests and turns them into usable properties on req.body

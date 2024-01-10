@@ -87,18 +87,7 @@ const create = async (Model, req, res) => {
         );
 
         // Check if all data is correct
-        if (
-          !contactEmail ||
-          !counselorEmail ||
-          !sendFeeReceipt ||
-          !course ||
-          !institute ||
-          !fatherName ||
-          !dob ||
-          !phoneNumber ||
-          !TotalAmount ||
-          !paidAmount
-        ) {
+        if (!contactEmail || !counselorEmail || !sendFeeReceipt) {
           return res.status(400).json({
             success: false,
             result: null,
