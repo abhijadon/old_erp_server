@@ -29,11 +29,11 @@ app.use(cors(corsOptions));
 // });
 
 // Have Node serve the files for our built React app
-app.use(express.static(path.resolve(__dirname, 'client', 'dist')));
+app.use(express.static(path.resolve(__dirname, '../frontend', 'dist')));
 // Enable CORS for all routes
 // All other GET requests not handled before will return our React app
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'client', 'dist', 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
 });
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 

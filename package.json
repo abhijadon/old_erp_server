@@ -11,11 +11,7 @@
     "production": "NODE_ENV=production",
     "setup": "node setup/setup.js",
     "reset": "node setup/reset.js",
-<<<<<<< HEAD
     "build": "cd client && npm install && npm run build"
-=======
-     "build": "cd client && npm install && npm run build"
->>>>>>> refs/remotes/origin/main
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
