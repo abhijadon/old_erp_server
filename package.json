@@ -10,7 +10,8 @@
     "dev": "nodemon server.js --ignore public/",
     "production": "NODE_ENV=production",
     "setup": "node setup/setup.js",
-    "reset": "node setup/reset.js"
+    "reset": "node setup/reset.js",
+     "build": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
