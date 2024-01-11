@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button,
+[type='button'] {
+  background-color: #1677ff;
+  color: #ffffff;
+}
+button,
+[type='button']:hover {
+  background-color: #1677ffa3;
+  color: #ffffff !important;
+}
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  background-color: #1677ff;
+  color: #ffffff;
+}
+
+.login-form button[type='submit'] {
+  background-color: #1677ff;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

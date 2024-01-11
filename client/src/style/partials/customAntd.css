@@ -1,0 +1,200 @@
+.ant-layout {
+  background: #f9fafc !important;
+}
+.site-layout .site-layout-background {
+  background: #fff;
+}
+[data-theme='dark'] .site-layout .site-layout-background {
+  background: #141414;
+}
+.ant-layout-sider-trigger {
+  background: #fff;
+  border-top: 1px solid #edf0f5;
+  border-right: 1px solid #edf0f5;
+  color: #4f5d75;
+}
+:where(.css-dkbvqv).ant-modal .ant-modal-close-x { color: red !important }
+
+element.style {
+}
+:where(.css-dev-only-do-not-override-2i2tap).ant-picker-dropdown .ant-picker-header > button {
+  color: black !important;
+}
+
+:where(.css-dev-only-do-not-override-2i2tap).ant-modal .ant-modal-close {
+  background: red;
+}
+:where(.css-dev-only-do-not-override-2i2tap).ant-picker-dropdown .ant-picker-header-view {
+  flex: auto;
+  font-weight: 600;
+  line-height: 40px;
+  color: black !important;
+  background: black;
+}
+
+:where(.css-dev-only-do-not-override-2i2tap).ant-picker {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
+  width: 100% !important;
+}
+/* :where(.css-dev-only-do-not-override-2i2tap).ant-btn.ant-btn-icon-only {
+  background: transparent !important;
+  border: none;
+  color: black !important;
+  font-size: large;
+  display: flex;
+} */
+.ant-layout-sider-zero-width-trigger {
+  top: 5px;
+  right: 10px;
+  color: #001529;
+  background: none;
+  font-size: 20px;
+}
+
+.ant-menu-inline,
+.ant-menu-vertical,
+.ant-menu-vertical-left {
+  border: none !important;
+}
+
+.headerIcon .ant-dropdown-menu {
+  border-radius: 6px;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+:where(.css-dev-only-do-not-override-2i2tap).ant-pagination .ant-pagination-prev button {
+  background-color: #1677ff !important;
+}
+
+:where(.css-dev-only-do-not-override-2i2tap).ant-pagination .ant-pagination-next button {
+  background-color: #1677ff !important;
+}
+
+.headerIcon .ant-dropdown-menu-item:hover,
+.headerIcon .ant-dropdown-menu-item.ant-dropdown-menu-item-active {
+  background: none;
+}
+
+.App {
+  text-align: center;
+}
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.login-form button[type='submit'] {
+  margin-bottom: 20px;
+}
+.login-form-forgot {
+  float: right;
+}
+.ant-avatar-lg {
+  cursor: pointer;
+}
+.ant-select-show-search:where(.css-dev-only-do-not-override-2i2tap).ant-select:not(.ant-select-customize-input)
+  .ant-select-selector {
+  cursor: pointer;
+}
+
+.login-form-button {
+  width: 100%;
+}
+.ant-drawer-close {
+  color: #171515 !important;
+}
+
+:where(.css-dev-only-do-not-override-2i2tap).ant-form-vertical .ant-form-item-label,
+:where(.css-dev-only-do-not-override-2i2tap).ant-col-24.ant-form-item-label,
+:where(.css-dev-only-do-not-override-2i2tap).ant-col-xl-24.ant-form-item-label {
+  margin-top: 20px;
+}
+.ant-table-thead > tr > th {
+  font-weight: 700;
+  background-color: #efefef !important;
+}
+
+.ant-table-thead > tr > th {
+  border: 1px solid #ddd;
+}
+.ant-table-tbody > tr > td {
+  border: 1px solid #ddd;
+}
+.ant-table {
+  display: block;
+  overflow-x: scroll;
+  overflow-y: auto;
+  max-height: 400px;
+  white-space: nowrap;
+}
+.ant-typography strong {
+  font-weight: 700;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700 !important;
+}
+.ant-layout-header {
+  padding: 10px 20px !important;
+  background: #1677ff !important;
+  border-top-right-radius: 15px !important;
+  margin-bottom: -16px;
+}
+
+.ant-layout-sider-light {
+  top: 0px !important;
+  border-radius: 0px !important;
+  border-top-left-radius: 15px !important;
+}
+
+.loginpage {
+  background-color: red;
+}
+.layoutPadding {
+  margin: auto !important;
+}
+.ant-menu-inline {
+  padding-bottom: 50px;
+}
+
+.ant-page-header {
+  margin-top: -50px !important;
+}
+
+.tabContent :where(.css-dev-only-do-not-override-2i2tap).ant-tabs-right > .ant-tabs-content-holder,
+.tabContent
+  :where(.css-dev-only-do-not-override-2i2tap).ant-tabs-right
+  > div
+  > .ant-tabs-content-holder {
+  border-right: none;
+}
+
+.tabContent :where(.css-dev-only-do-not-override-2i2tap).ant-tabs .ant-tabs-tab + .ant-tabs-tab {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .tabContent
+    :where(.css-dev-only-do-not-override-2i2tap).ant-tabs-right
+    > .ant-tabs-content-holder
+    > .ant-tabs-content
+    > .ant-tabs-tabpane {
+    padding-right: 0;
+    margin-top: 30px;
+  }
+  .tabContent :where(.css-dev-only-do-not-override-2i2tap).ant-tabs {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
