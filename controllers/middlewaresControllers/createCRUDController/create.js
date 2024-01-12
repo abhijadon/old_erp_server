@@ -86,15 +86,6 @@ const create = async (Model, req, res) => {
           studentEmail // Pass studentEmail here
         );
 
-        // Check if all data is correct
-        if (!contactEmail || !counselorEmail || !sendFeeReceipt) {
-          return res.status(400).json({
-            success: false,
-            result: null,
-            message: 'Invalid or incomplete data. Please provide all required fields.',
-          });
-        }
-
         const result = await newDoc.save();
         let receiverEmail = `${studentEmail},${counselorEmail}`;
 

@@ -10,8 +10,7 @@
     "dev": "nodemon server.js --ignore public/",
     "production": "NODE_ENV=production",
     "setup": "node setup/setup.js",
-    "reset": "node setup/reset.js",
-    "build": "cd client && npm install && npm run build"
+    "reset": "node setup/reset.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,13 +23,14 @@
     "express": "^4.18.1",
     "glob": "7.1.1",
     "helmet": "^4.6.0",
-    "html-pdf": "^1.5.0",
+    "html-pdf": "^3.0.1",
     "joi": "^17.10.1",
     "jsonwebtoken": "^9.0.2",
     "latest-version": "^7.0.0",
     "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
     "moment": "^2.26.0",
+    "mongodb": "^6.3.0",
     "mongoose": "^8.0.3",
     "mongoose-autopopulate": "^1.1.0",
     "mongoose-history": "^0.8.0",
