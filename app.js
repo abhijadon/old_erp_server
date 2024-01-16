@@ -20,7 +20,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-<<<<<<< HEAD
 app.get('/', function (req, res) {
   res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
 });
@@ -29,16 +28,6 @@ app.get('/', function (req, res) {
 // app.get('*', function (req, res) {
 //   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 // });
-=======
-// app.get('/', function (req, res) {
-//   res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
-// });
-
-app.use(express.static(path.join(__dirname, '../client/dist')));
-app.get('*', function (req, res) {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
->>>>>>> refs/remotes/origin/main
 
 app.use(helmet());
 app.use(cookieParser());
