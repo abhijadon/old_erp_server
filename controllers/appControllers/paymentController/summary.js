@@ -32,23 +32,30 @@ const getTotalPaymentAmount = async () => {
 
 const summary = async (req, res) => {
   try {
-    let defaultType = 'month';
-    const { type, institute_name, university_name, counselor_email, status } = req.query;
-
-    if (type && ['week', 'month', 'year'].includes(type)) {
-      defaultType = type;
-    }
-
-    const currentDate = moment();
-    const startDate = currentDate.clone().startOf(defaultType);
-    const endDate = currentDate.clone().endOf(defaultType);
+    const { institute_name, university_name, counselor_email, status, year, month, week, date } =
+      req.query;
     const matchQuery = {
       removed: false,
-      date: {
-        $gte: startDate.toDate(),
-        $lte: endDate.toDate(),
-      },
     };
+
+    if (date) {
+      matchQuery.date = {
+        $gte: new Date(date),
+        $lt: moment(date).add(1, 'days').toDate(),
+      };
+    }
+
+    if (year) {
+      matchQuery.year = parseInt(year, 10);
+    }
+
+    if (month) {
+      matchQuery.month = parseInt(month, 10);
+    }
+
+    if (week) {
+      matchQuery.week = parseInt(week, 10);
+    }
     if (institute_name) {
       matchQuery.institute_name = institute_name;
     }
@@ -89,7 +96,14 @@ const summary = async (req, res) => {
         },
       },
     ]);
-
+    // Check if any data is found based on the filters
+    if (result.length === 0) {
+      return res.status(200).json({
+        success: true,
+        result: null,
+        message: `No data found based on the specified filters.`,
+      });
+    }
     const instituteData = await Model.aggregate([
       { $match: matchQuery },
       {
@@ -182,17 +196,21 @@ const summary = async (req, res) => {
     const totalInstituteCount =
       instituteTotalCountData.length > 0 ? instituteTotalCountData[0].totalInstituteCount : 0;
     // Fetch specific university data based on an array of university names
-    const universityData1 = ['Total_university_count', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
+    const universityData1 = ['Univeristy', 'SPU', 'LPU', 'UPES', 'SGVU', 'CU', 'UU'];
 
     const universitySpecificData = [];
+    let countDataUniversity = 0;
     for (const university of universityData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, university_name: university },
+          $match: {
+            removed: false,
+            university_name: university === 'Univeristy' ? { $exists: true } : university,
+          },
         },
         {
           $group: {
-            _id: '$university_name',
+            _id: university,
             count: { $sum: 1 },
             totalStudents: { $sum: '$students' },
             total_paid_amount: { $sum: '$total_paid_amount' },
@@ -211,20 +229,24 @@ const summary = async (req, res) => {
         },
       ]);
       universitySpecificData.push(data);
+      countDataUniversity += data.length > 0 ? data[0].count : 0;
     }
 
     // Fetch specific university data based on an array of university names
-    const instituteData1 = ['Total_institute_count', 'HES', 'DES'];
-
+    const instituteData1 = ['Institute', 'HES', 'DES'];
     const instituteSpecificData = [];
+    let countInstitute = 0;
     for (const institute of instituteData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, institute_name: institute },
+          $match: {
+            removed: false,
+            institute_name: institute === 'Institute' ? { $exists: true } : institute,
+          },
         },
         {
           $group: {
-            _id: '$institute_name',
+            _id: institute,
             count: { $sum: 1 },
             totalStudents: { $sum: '$students' },
             total_paid_amount: { $sum: '$total_paid_amount' },
@@ -243,10 +265,12 @@ const summary = async (req, res) => {
         },
       ]);
       instituteSpecificData.push(data);
+
+      countInstitute += data.length > 0 ? data[0].count : 0;
     }
 
     // Fetch specific status data based on an array of status names
-    const statusData1 = ['Total', 'Cancel', 'Alumini'];
+    const statusData1 = ['Total', 'New', 'Cancel', 'Alumini'];
 
     const statusSpecificData = [];
     let totalStatusCount = 0; // Initialize a variable to store the total count
@@ -352,7 +376,7 @@ const summary = async (req, res) => {
       instituteCounts,
       formattedStatusData,
       totalPaymentAmount,
-      message: `Successfully fetched the summary of payment invoices for the last ${defaultType}`,
+      message: `Successfully retrieved summary data.`,
     });
   } catch (error) {
     console.error('Error in summary:', error);

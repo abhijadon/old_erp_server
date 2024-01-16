@@ -1,5 +1,4 @@
 const express = require('express');
-
 const { catchErrors } = require('@/handlers/errorHandlers');
 
 const router = express.Router();
@@ -72,8 +71,10 @@ router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
-
-// //_________________________________________________________________API for invoices_____________________
+router.route('/lead/getNotifications').get(catchErrors(leadController.getNotifications));
+router
+  .route('/lead/deleteNotificationByMessage/:message')
+  .delete(catchErrors(leadController.deleteNotificationByMessage)); // //_________________________________________________________________API for invoices_____________________
 router.route('/invoice/create').post(catchErrors(invoiceController.create));
 router.route('/invoice/read/:id').get(catchErrors(invoiceController.read));
 router.route('/invoice/update/:id').patch(catchErrors(invoiceController.update));
@@ -157,6 +158,7 @@ router.route('/payment/list').get(catchErrors(paymentController.list));
 router.route('/payment/filter').get(catchErrors(paymentController.filter));
 router.route('/payment/pdf/:id').get(catchErrors(paymentController.generatePDF));
 router.route('/payment/summary').get(catchErrors(paymentController.summary));
+router.route('/payment/mail').post(catchErrors(paymentController.mail));
 
 //router.route('/payment/mail).post( atchErrors(paymentController.sendMail));
 

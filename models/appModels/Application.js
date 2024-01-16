@@ -137,14 +137,26 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       lowercase: true,
     },
+    upload_fee_receipt_screenshot: [
+      {
+        originalFilename: String,
+        filename: String,
+        _id: String,
+        // Other properties as needed
+      },
+    ],
+    upload_student_document: [
+      {
+        originalFilename: String,
+        filename: String,
+        _id: String,
+        // Other properties as needed
+      },
+    ],
     status: {
       type: String,
       trim: true,
     },
-  },
-  image: {
-    data: Buffer,
-    contentType: String,
   },
 
   created: {

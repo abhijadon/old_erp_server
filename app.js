@@ -3,15 +3,11 @@ const helmet = require('helmet');
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-
 const helpers = require('./helpers');
-
 const coreAuthRouter = require('./routes/coreRoutes/coreAuth');
 const coreApiRouter = require('./routes/coreRoutes/coreApi');
 const coreDownloadRouter = require('./routes/coreRoutes/coreDownloadRouter');
 const corePublicRouter = require('./routes/coreRoutes/corePublicRouter');
-const { isValidAdminToken } = require('./controllers/coreControllers/authJwtController');
-
 const errorHandlers = require('./handlers/errorHandlers');
 const erpApiRouter = require('./routes/appRoutes/appApi');
 
@@ -24,18 +20,14 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// setting cors at one place for all the routes
-// putting cors as first in order to avoid unneccessary requests from unallowed origins
-// serves up static files from the public folder. Anything in public/ will just be served up as the file it is
-// app.use(express.static(path.join(__dirname, './client/dist')));
+app.get('/', function (req, res) {
+  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+});
+
+// app.use(express.static(path.join(__dirname, '../client/dist')));
 // app.get('*', function (req, res) {
-//   res.sendFile(path.join(__dirname, './client/dist/index.html'));
+//   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 // });
-// Enable CORS for all routes
-
-// serves up static files from the public folder. Anything in public/ will just be served up as the file it is
-
-// Takes the raw requests and turns them into usable properties on req.body
 
 app.use(helmet());
 app.use(cookieParser());

@@ -22,7 +22,7 @@ async function connectToDatabase() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('Connected to the database');
+    console.log('====🚀🚀🚀Connected to the database and working fine🚀🚀🚀====');
   } catch (error) {
     console.log(
       '🔥 Common Error caused issue → : Check your .env file first and add your MongoDB URL'
@@ -53,7 +53,9 @@ async function startApp() {
   const app = require('./app');
   app.set('port', process.env.PORT || 8888);
   const server = app.listen(app.get('port'), () => {
-    console.log(`Express running → On PORT: ${server.address().port}`);
+    console.log(` ==============🎉🎉🚀🚀=============
+ Express running → On PORT: ${server.address().port} 
+ ==============🚀🚀🚀🚀=============`);
   });
 }
 

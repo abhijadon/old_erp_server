@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const Model = mongoose.model('Payment');
 const Invoice = mongoose.model('Invoice');
 

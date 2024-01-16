@@ -6,7 +6,7 @@ const summary = require('./summary');
 const update = require('./update');
 const remove = require('./remove');
 const paginatedList = require('./paginatedList');
-const read = require('./read');
+const read = require('../paymentController/read');
 
 methods.sendMail = sendMail;
 methods.create = create;

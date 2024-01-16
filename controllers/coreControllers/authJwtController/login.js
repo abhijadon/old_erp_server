@@ -1,6 +1,9 @@
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Joi = require('joi');
+const { stubFalse } = require('lodash');
+const url = require('url');
+
 const mongoose = require('mongoose');
 
 const Admin = mongoose.model('Admin');
@@ -13,12 +16,12 @@ const login = async (req, res) => {
     const address = req.get('origin');
 
     // Call parse() method using url module
-    const urlObject = new URL(address);
+    let urlObject = url.parse(address, true);
 
-    const originalHostname = urlObject.hostname;
+    const orginalHostname = urlObject.hostname;
 
     let isLocalhost = false;
-    if (originalHostname === 'localhost') {
+    if (orginalHostname === 'localhost') {
       // Connection is from localhost
       isLocalhost = true;
     }
@@ -37,13 +40,13 @@ const login = async (req, res) => {
         success: false,
         result: null,
         error: error,
-        message: 'Invalid Password',
-        errorMessage: error.message, // Provide more detailed error message to the client
+        message: 'Invalid/Missing credentials.',
+        errorMessage: error.message,
       });
     }
 
     const admin = await Admin.findOne({ email: email, removed: false });
-
+    // console.log(admin);
     if (!admin)
       return res.status(404).json({
         success: false,
@@ -52,7 +55,6 @@ const login = async (req, res) => {
       });
 
     const isMatch = await bcrypt.compare(password, admin.password);
-
     if (!isMatch)
       return res.status(403).json({
         success: false,
@@ -60,25 +62,32 @@ const login = async (req, res) => {
         message: 'Invalid credentials.',
       });
 
-    // Set the token expiration time to 1 hour by default
-    const expiresIn = '1h';
-
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn });
+    const token = jwt.sign(
+      {
+        id: admin._id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: req.body.remember ? 365 * 24 + 'h' : '24h' }
+    );
 
     const result = await Admin.findOneAndUpdate(
       { _id: admin._id },
       { $set: { isLoggedIn: 1 }, $push: { loggedSessions: token } },
-      { new: true }
+      {
+        new: true,
+      }
     ).exec();
 
     res
+      .status(200)
       .cookie('token', token, {
-        maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : expiresIn,
+        maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : null,
         sameSite: 'none',
         httpOnly: true,
         secure: true,
         domain: req.hostname,
         path: '/',
+        Partitioned: true,
       })
       .json({
         success: true,

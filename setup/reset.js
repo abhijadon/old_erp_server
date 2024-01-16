@@ -2,7 +2,10 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 require('dotenv').config({ path: __dirname + '/../.env.local' });
 
 const mongoose = require('mongoose');
-mongoose.connect(process.env.DATABASE);
+await mongoose.connect(process.env.DATABASE, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 mongoose.Promise = global.Promise; // Tell Mongoose to use ES6 promises
 
 async function deleteData() {
