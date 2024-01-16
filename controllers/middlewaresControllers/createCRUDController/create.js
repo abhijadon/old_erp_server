@@ -120,7 +120,6 @@ const create = async (Model, req, res) => {
             dob: dob,
             Total_Amount: TotalAmount,
             paidAmount: paidAmount,
-            dueAmount: dueAmount,
             mobile_number: phoneNumber,
             email: contactEmail,
           });
