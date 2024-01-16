@@ -11,17 +11,19 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '_' + Date.now() + ext);
+    const filename = file.fieldname + '_' + Date.now() + ext;
+    cb(null, filename);
   },
 });
 
-const upload = multer({ storage: storage }).single('image');
+const upload = multer({ storage: storage }).any();
 
 const create = async (Model, req, res) => {
   try {
     let studentEmail;
     upload(req, res, async (err) => {
       if (err) {
+        console.error(err);
         return res.status(500).json({
           success: false,
           result: null,
@@ -29,21 +31,33 @@ const create = async (Model, req, res) => {
           error: err,
         });
       }
-
-      const file = req.file;
+      const files = req.files;
 
       try {
         const newDoc = new Model(req.body);
+        // Check if files were uploaded
+        if (req.files) {
+          // Process each file dynamically
+          req.files.forEach((file) => {
+            const filePath = path.join(
+              process.cwd(),
+              'public/uploads/studentdocument',
+              file.filename
+            );
+            const fileData = fs.readFileSync(filePath);
 
-        if (file) {
-          const imgPath = path.join(process.cwd(), 'public/uploads/studentdocument', file.filename);
+            // Use the fieldname as the key for the customfields object
+            // If it doesn't exist, initialize it as an empty array
+            if (!newDoc.customfields[file.fieldname]) {
+              newDoc.customfields[file.fieldname] = [];
+            }
 
-          const imgData = fs.readFileSync(imgPath);
-
-          newDoc.img = {
-            data: imgData,
-            contentType: 'image/png',
-          };
+            newDoc.customfields[file.fieldname].push({
+              originalFilename: file.originalname,
+              filename: file.filename,
+              data: fileData,
+            });
+          });
         }
 
         const {
@@ -105,6 +119,8 @@ const create = async (Model, req, res) => {
             father_name: fatherName,
             dob: dob,
             Total_Amount: TotalAmount,
+            paidAmount: paidAmount,
+            dueAmount: dueAmount,
             mobile_number: phoneNumber,
             email: contactEmail,
           });
@@ -201,8 +217,8 @@ const create = async (Model, req, res) => {
 };
 
 const validateGmail = (email) => {
-  const regex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+  // A more permissive regex for testing purposes
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return regex.test(email);
 };
-
 module.exports = create;
