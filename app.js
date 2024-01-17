@@ -20,14 +20,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// app.get('/', function (req, res) {
-//   res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
-// });
-
-// app.use(express.static(path.join(__dirname, '../client/dist')));
-// app.get('*', function (req, res) {
-//   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-// });
+app.get('/', function (req, res) {
+  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+});
 
 app.use(helmet());
 app.use(cookieParser());
