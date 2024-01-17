@@ -28,18 +28,37 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       unique: true,
       lowercase: true,
+      validate: {
+        validator: async function (value) {
+          const count = await mongoose.models.Applications.countDocuments({
+            'contact.email': value,
+            _id: { $ne: this._id }, // Exclude current document
+          });
+          return count === 0;
+        },
+        message: 'Email already exists',
+      },
     },
     phone: {
       type: Number,
       trim: true,
       unique: true,
+      validate: {
+        validator: async function (value) {
+          const count = await mongoose.models.Applications.countDocuments({
+            'contact.phone': value,
+            _id: { $ne: this._id }, // Exclude current document
+          });
+          return count === 0;
+        },
+        message: 'Phone number already exists',
+      },
     },
     alternate_phone: {
       type: Number,
       trim: true,
     },
   },
-
   education: {
     course: {
       type: String,
@@ -137,14 +156,26 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       lowercase: true,
     },
+    upload_fee_receipt_screenshot: [
+      {
+        originalFilename: String,
+        filename: String,
+        _id: String,
+        // Other properties as needed
+      },
+    ],
+    upload_student_document: [
+      {
+        originalFilename: String,
+        filename: String,
+        _id: String,
+        // Other properties as needed
+      },
+    ],
     status: {
       type: String,
       trim: true,
     },
-  },
-  image: {
-    data: Buffer,
-    contentType: String,
   },
 
   created: {

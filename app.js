@@ -10,7 +10,7 @@ const coreDownloadRouter = require('./routes/coreRoutes/coreDownloadRouter');
 const corePublicRouter = require('./routes/coreRoutes/corePublicRouter');
 const errorHandlers = require('./handlers/errorHandlers');
 const erpApiRouter = require('./routes/appRoutes/appApi');
-
+const bulkData = require('./routes/bulkRoutes/bulkRoutes');
 // create our Express app
 const app = express();
 
@@ -20,6 +20,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+<<<<<<< HEAD
 // setting cors at one place for all the routes
 // putting cors as first in order to avoid unneccessary req uests from unallowed origins
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
@@ -33,6 +34,11 @@ app.use(cors(corsOptions));
 // serves up static files from the public folder. Anything in public/ will just be served up as the file it is
 
 // Takes the raw requests and turns them into usable properties on req.body
+=======
+app.get('/', function (req, res) {
+  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+});
+>>>>>>> refs/remotes/origin/main
 
 app.use(helmet());
 app.use(cookieParser());
@@ -55,7 +61,7 @@ app.use('/api', coreApiRouter);
 app.use('/api', erpApiRouter);
 app.use('/download', coreDownloadRouter);
 app.use('/public', corePublicRouter);
-
+app.use('/api', bulkData);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

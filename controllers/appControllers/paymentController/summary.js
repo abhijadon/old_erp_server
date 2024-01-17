@@ -32,10 +32,30 @@ const getTotalPaymentAmount = async () => {
 
 const summary = async (req, res) => {
   try {
-    const { institute_name, university_name, counselor_email, status, week, year } = req.query;
+    const { institute_name, university_name, counselor_email, status, year, month, week, date } =
+      req.query;
     const matchQuery = {
       removed: false,
     };
+
+    if (date) {
+      matchQuery.date = {
+        $gte: new Date(date),
+        $lt: moment(date).add(1, 'days').toDate(),
+      };
+    }
+
+    if (year) {
+      matchQuery.year = parseInt(year, 10);
+    }
+
+    if (month) {
+      matchQuery.month = parseInt(month, 10);
+    }
+
+    if (week) {
+      matchQuery.week = parseInt(week, 10);
+    }
     if (institute_name) {
       matchQuery.institute_name = institute_name;
     }
@@ -53,10 +73,7 @@ const summary = async (req, res) => {
     if (status) {
       matchQuery.status = status; // Include dynamic status filtering
     }
-    if (week && year) {
-      matchQuery.creationWeek = parseInt(week, 10);
-      matchQuery.creationYear = parseInt(year, 10);
-    }
+
     const result = await Model.aggregate([
       { $match: matchQuery },
       {
@@ -79,7 +96,14 @@ const summary = async (req, res) => {
         },
       },
     ]);
-
+    // Check if any data is found based on the filters
+    if (result.length === 0) {
+      return res.status(200).json({
+        success: true,
+        result: null,
+        message: `No data found based on the specified filters.`,
+      });
+    }
     const instituteData = await Model.aggregate([
       { $match: matchQuery },
       {
