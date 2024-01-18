@@ -23,17 +23,20 @@ exports.uploadData = async (req, res) => {
           Payment.updateOne(
             { applicationId: app._id },
             {
-              $set: {
-                student_name: app.full_name,
-                email: app.contact.email,
-                phone: app.contact.phone,
-                total_course_fee: app.customfields.total_course_fee,
-                total_paid_amount: app.customfields.total_paid_amount,
-                paid_amount: app.customfields.paid_amount,
-                counselor_email: app.customfields.counselor_email,
-                status: app.customfields.status,
-                // Add other fields as needed
-              },
+                $set: {
+                  lead_id: app.lead_id,
+                  student_name: app.full_name,
+                  email: app.contact.email,
+                  phone: app.contact.phone,
+                  total_course_fee: app.customfields.total_course_fee,
+                  total_paid_amount: app.customfields.total_paid_amount,
+                  paid_amount: app.customfields.paid_amount,
+                  counselor_email: app.customfields.counselor_email,
+                  status: app.customfields.status,
+                  institute_name: app.customfields.institute_name,
+                  university_name: app.customfields.university_name,
+                  // Add other fields as needed
+                },
             },
             { upsert: true }
           )

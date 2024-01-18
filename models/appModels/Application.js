@@ -28,31 +28,11 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       unique: true,
       lowercase: true,
-      validate: {
-        validator: async function (value) {
-          const count = await mongoose.models.Applications.countDocuments({
-            'contact.email': value,
-            _id: { $ne: this._id }, // Exclude current document
-          });
-          return count === 0;
-        },
-        message: 'Email already exists',
-      },
     },
     phone: {
       type: Number,
       trim: true,
       unique: true,
-      validate: {
-        validator: async function (value) {
-          const count = await mongoose.models.Applications.countDocuments({
-            'contact.phone': value,
-            _id: { $ne: this._id }, // Exclude current document
-          });
-          return count === 0;
-        },
-        message: 'Phone number already exists',
-      },
     },
     alternate_phone: {
       type: Number,
@@ -86,6 +66,7 @@ const applicationSchema = new mongoose.Schema({
     send_fee_receipt: {
       type: String,
       trim: true,
+      default: 'no',
     },
     father_name: {
       type: String,
@@ -108,9 +89,8 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
     },
     dob: {
-      type: Date,
+      type: String,
       trim: true,
-      default: null,
     },
     remark: {
       type: String,
@@ -126,6 +106,7 @@ const applicationSchema = new mongoose.Schema({
     installment_type: {
       type: String,
       trim: true,
+      default: '1st installmenttype/New',
     },
 
     payment_mode: {
@@ -146,10 +127,6 @@ const applicationSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    total_paid_and_paid_amount: {
-      type: Number,
-      default: 0,
-    },
 
     counselor_email: {
       type: String,
@@ -160,7 +137,6 @@ const applicationSchema = new mongoose.Schema({
       {
         originalFilename: String,
         filename: String,
-        _id: String,
         // Other properties as needed
       },
     ],
@@ -168,7 +144,6 @@ const applicationSchema = new mongoose.Schema({
       {
         originalFilename: String,
         filename: String,
-        _id: String,
         // Other properties as needed
       },
     ],

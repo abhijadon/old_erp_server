@@ -14,7 +14,7 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
     lead_id: {
-      type: Number,
+      type: String,
       default: 0,
     },
     student_name: {
@@ -71,40 +71,31 @@ const paymentSchema = new mongoose.Schema(
     },
     week: {
       type: Number,
+      default: function () {
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        currentDate.setDate(currentDate.getDate() + 3 - ((currentDate.getDay() + 6) % 7));
+        const week1 = new Date(currentDate.getFullYear(), 0, 4);
+        return (
+          1 +
+          Math.round(
+            ((currentDate.getTime() - week1.getTime()) / 86400000 -
+              3 +
+              ((week1.getDay() + 6) % 7)) /
+              7
+          )
+        );
+      },
     },
-
     year: {
       type: Number,
+      default: () => new Date().getFullYear(),
     },
   },
   {
-    timestamps: true, // Add this here to enable timestamps
+    timestamps: true,
   }
 );
-
-// Set week and year based on created date, and update the updatedAt field on every save
-paymentSchema.pre('save', function (next) {
-  const currentDate = Date.now();
-  this.updatedAt = currentDate;
-
-  const createdDate = this.createdAt || currentDate;
-  const date = new Date(createdDate);
-  this.week = date.getWeek();
-  this.year = date.getFullYear();
-  next();
-});
-
-// Function to get week number
-Date.prototype.getWeek = function () {
-  var date = new Date(this.getTime());
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  var week1 = new Date(date.getFullYear(), 0, 4);
-  return (
-    1 +
-    Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7)
-  );
-};
 
 const Payment = mongoose.model('Payment', paymentSchema);
 

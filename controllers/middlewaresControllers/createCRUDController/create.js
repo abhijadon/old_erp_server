@@ -17,6 +17,38 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage }).any();
+const validateAndFormatDOB = (dob) => {
+  if (!dob) {
+    return null; // If dob is not provided, return null
+  }
+
+  // Define regular expressions for the supported date formats
+  const regex1 = /^(\d{2})[-/](\d{2})[-/](\d{4})$/; // DD-MM-YYYY
+  const regex2 = /^(\d{4})[-/](\d{2})[-/](\d{2})$/; // YYYY-MM-DD
+  const regex3 = /^(\d{2})[/](\d{2})[/](\d{4})$/; // DD/MM/YYYY
+  const regex4 = /^(\d{2})[/](\d{2})[/](\d{2})$/; // DD/MM/YY
+  const regex5 = /^(\d{4})[/](\d{2})[/](\d{2})$/; // YYYY/MM/DD
+
+  // Check for a match with any of the date formats
+  const match1 = dob.match(regex1);
+  const match2 = dob.match(regex2);
+  const match3 = dob.match(regex3);
+  const match4 = dob.match(regex4);
+
+  // If a match is found, format the date and return
+  if (match1) {
+    return `${match1[1]}-${match1[2]}-${match1[3]}`;
+  } else if (match2) {
+    return `${match2[1]}-${match2[2]}-20${match2[3]}`;
+  } else if (match3) {
+    return `${match3[1]}/${match3[2]}/${match3[3]}`;
+  } else if (match4) {
+    return `${match4[1]}/${match4[2]}/20${match4[3]}`;
+  }
+
+  // If no match is found, return null (invalid format)
+  return null;
+};
 
 const create = async (Model, req, res) => {
   try {
@@ -31,11 +63,9 @@ const create = async (Model, req, res) => {
           error: err,
         });
       }
-      const files = req.files;
 
       try {
         const newDoc = new Model(req.body);
-        // Check if files were uploaded
         if (req.files) {
           // Process each file dynamically
           req.files.forEach((file) => {
@@ -75,6 +105,19 @@ const create = async (Model, req, res) => {
 
         // Assign the value to studentEmail here
         studentEmail = contactEmail || (req.body.contact && req.body.contact.email) || null;
+
+        // Validate and format the DOB
+        const formattedDOB = validateAndFormatDOB(dob);
+        if (!formattedDOB) {
+          return res.status(400).json({
+            success: false,
+            result: null,
+            message: 'Invalid date of birth format. Please use DD-MM-YYYY or DD/MM/YYYY.',
+          });
+        }
+
+        // Update the DOB in the request body
+        req.dob = formattedDOB;
 
         const transporter = nodemailer.createTransport({
           service: 'gmail',
@@ -220,4 +263,5 @@ const validateGmail = (email) => {
   const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return regex.test(email);
 };
+
 module.exports = create;
