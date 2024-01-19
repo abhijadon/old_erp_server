@@ -91,7 +91,7 @@ const summary = async (req, res) => {
           count: 1,
           total_paid_amount: 1,
           paid_amount: 1,
-          due_amount: { $subtract: ['$total_course_fee', '$paid_amount'] },
+          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
           total_course_fee: 1,
         },
       },
