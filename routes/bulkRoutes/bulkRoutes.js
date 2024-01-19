@@ -8,8 +8,6 @@ const validateSessionMiddleware = require('@/middlewares/sessionMiddleware');
 // Multer setup for file upload
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
-// Define routes
 router.post(
   '/upload',
   upload.single('file'),
@@ -17,5 +15,4 @@ router.post(
   validateSessionMiddleware,
   dataController.uploadData
 );
-
 module.exports = router;

@@ -3,7 +3,7 @@ const { catchErrors } = require('@/handlers/errorHandlers');
 const validateCourseSpecializationMiddleware = require('@/middlewares/coursePermission');
 const validateSessionMiddleware = require('@/middlewares/sessionMiddleware');
 const router = express.Router();
-
+const validateDOBFormatMiddleware = require('@/middlewares/dobCheck');
 const multer = require('multer');
 const path = require('path');
 const setFilePathToBody = require('@/middlewares/uploadMiddleware/setFilePathToBody');
@@ -68,6 +68,7 @@ router.route('/client/summary').get(catchErrors(clientController.summary));
 router
   .route('/lead/create')
   .post(
+    validateDOBFormatMiddleware,
     validateCourseSpecializationMiddleware,
     validateSessionMiddleware,
     catchErrors(leadController.create)

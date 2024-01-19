@@ -32,7 +32,6 @@ const validateCourseSpecializationMiddleware = (req, res, next) => {
     BBA: ['Marketing', 'Human Resources Management', 'Finance', 'International Business'],
     BCOM: [''],
     BCA: [''],
-    BLIS: [''],
     BSW: [''],
     BJMC: [''],
     MBA: [
