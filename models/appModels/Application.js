@@ -80,9 +80,10 @@ const applicationSchema = new mongoose.Schema({
       type: String,
       trim: true,
     },
-    session_type: {
+    admission_type: {
       type: String,
       trim: true,
+      default: 'Fresher',
     },
     enter_specialization: {
       type: String,
