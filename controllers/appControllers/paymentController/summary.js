@@ -32,16 +32,29 @@ const getTotalPaymentAmount = async () => {
 
 const summary = async (req, res) => {
   try {
-    const { institute_name, university_name, counselor_email, status, year, month, week, date } =
-      req.query;
+    const {
+      institute_name,
+      university_name,
+      counselor_email,
+      status,
+      year,
+      month,
+      week,
+      date,
+      time,
+    } = req.query;
+
     const matchQuery = {
       removed: false,
     };
 
     if (date) {
+      const currentDate = new Date(date);
+      const nextDate = moment(currentDate).add(1, 'days').toDate();
+
       matchQuery.date = {
-        $gte: new Date(date),
-        $lt: moment(date).add(1, 'days').toDate(),
+        $gte: currentDate,
+        $lt: nextDate,
       };
     }
 
@@ -56,6 +69,21 @@ const summary = async (req, res) => {
     if (week) {
       matchQuery.week = parseInt(week, 10);
     }
+
+    if (time) {
+      const [hours, minutes] = moment(time, 'hh:mm A').format('HH:mm').split(':').map(Number);
+
+      const timeRangeStart = moment().set({ hours, minutes, seconds: 0, milliseconds: 0 }).toDate();
+      const timeRangeEnd = moment()
+        .set({ hours, minutes, seconds: 59, milliseconds: 999 })
+        .toDate();
+
+      matchQuery.time = {
+        $gte: timeRangeStart,
+        $lte: timeRangeEnd,
+      };
+    }
+
     if (institute_name) {
       matchQuery.institute_name = institute_name;
     }
@@ -122,7 +150,7 @@ const summary = async (req, res) => {
           totalStudents: 1,
           total_paid_amount: 1,
           paid_amount: 1,
-          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
         },
       },
     ]);
@@ -144,7 +172,7 @@ const summary = async (req, res) => {
           totalStudents: 1,
           total_paid_amount: 1,
           paid_amount: 1,
-          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
         },
       },
     ]);
@@ -166,7 +194,7 @@ const summary = async (req, res) => {
           totalStudents: 1,
           total_paid_amount: 1,
           paid_amount: 1,
-          due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
         },
       },
     ]);
@@ -224,7 +252,7 @@ const summary = async (req, res) => {
             totalStudents: 1,
             total_paid_amount: 1,
             paid_amount: 1,
-            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+            due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
           },
         },
       ]);
@@ -260,7 +288,7 @@ const summary = async (req, res) => {
             totalStudents: 1,
             total_paid_amount: 1,
             paid_amount: 1,
-            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+            due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
           },
         },
       ]);
@@ -296,7 +324,7 @@ const summary = async (req, res) => {
             totalStudents: 1,
             total_paid_amount: 1,
             paid_amount: 1,
-            due_amount: { $subtract: ['$total_paid_amount', '$paid_amount'] },
+            due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
           },
         },
       ]);

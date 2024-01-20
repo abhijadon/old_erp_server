@@ -9,10 +9,6 @@ const paymentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    date: {
-      type: Date,
-      default: Date.now,
-    },
     lead_id: {
       type: String,
       default: 0,
@@ -90,6 +86,28 @@ const paymentSchema = new mongoose.Schema(
     year: {
       type: Number,
       default: () => new Date().getFullYear(),
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+      get: function (val) {
+        // Format the date as 'MM/DD/YYYY'
+        return val ? new Date(val).toLocaleDateString('en-US') : '';
+      },
+    },
+    time: {
+      type: Date,
+      default: Date.now,
+      get: function (val) {
+        // Format the time as 'hh:mm A'
+        return val
+          ? new Date(val).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            })
+          : '';
+      },
     },
   },
   {

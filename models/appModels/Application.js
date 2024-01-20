@@ -158,12 +158,53 @@ const applicationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  week: {
+    type: Number,
+    default: function () {
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      currentDate.setDate(currentDate.getDate() + 3 - ((currentDate.getDay() + 6) % 7));
+      const week1 = new Date(currentDate.getFullYear(), 0, 4);
+      return (
+        1 +
+        Math.round(
+          ((currentDate.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) /
+            7
+        )
+      );
+    },
+  },
+  year: {
+    type: Number,
+    default: () => new Date().getFullYear(),
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+    get: function (val) {
+      // Format the date as 'MM/DD/YYYY'
+      return val ? new Date(val).toLocaleDateString('en-US') : '';
+    },
+  },
+  time: {
+    type: Date,
+    default: Date.now,
+    get: function (val) {
+      // Format the time as 'hh:mm A'
+      return val
+        ? new Date(val).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          })
+        : '';
+    },
+  },
 });
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
     const applicationId = doc._id;
-
     // Calculate the sum of total_paid_amount and paid_amount
     const totalPaidAmount = parseFloat(doc.customfields.total_paid_amount) || 0;
     const paidAmount = parseFloat(doc.customfields.paid_amount) || 0;

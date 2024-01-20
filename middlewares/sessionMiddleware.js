@@ -1,8 +1,8 @@
 // middleware.js
 
 const validateSessionMiddleware = (req, res, next) => {
-  // Updated regular expression to match the "jan 20-jan 20" format
-  const sessionFormatRegex = /^[a-zA-Z]+\s\d{1,2}-[a-zA-Z]+\s\d{1,2}$/;
+  // Updated regular expression to allow both "jan 30" and "jan 30 - jan 30" formats
+  const sessionFormatRegex = /^[a-zA-Z]+\s\d{1,2}(\s?-\s?[a-zA-Z]+\s\d{1,2})?$/;
 
   const sessionData = req.body.customfields?.session;
 

@@ -3,25 +3,36 @@ const paginatedList = async (Model, req, res) => {
   const limit = parseInt(req.query.items);
   const skip = page * limit - limit;
   try {
-    //  Query the database for a list of all results
+    // Query the database for a list of all results
     const resultsPromise = Model.find({ removed: false })
       .skip(skip)
       .limit(limit)
       .sort({ created: 'desc' })
       .populate();
+
     // Counting the total documents
     const countPromise = Model.countDocuments({ removed: false });
+
     // Resolving both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
+
     // Calculating total pages
     const pages = Math.ceil(count / limit);
 
     // Getting Pagination Object
     const pagination = { page, pages, count };
+
     if (count > 0) {
+      // Format date and time before sending the response
+      const formattedResults = result.map((item) => ({
+        ...item._doc,
+        date: new Date(item.date).toLocaleDateString('en-US'), // Format as 'MM/DD/YYYY'
+        time: item.time, // Use the existing string value
+      }));
+
       return res.status(200).json({
         success: true,
-        result,
+        result: formattedResults,
         pagination,
         message: 'Successfully found all documents',
       });
