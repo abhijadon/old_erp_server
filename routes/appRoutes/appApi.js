@@ -65,14 +65,7 @@ router.route('/client/summary').get(catchErrors(clientController.summary));
 
 // //_____________________________________ API for leads __________________________________________________
 
-router
-  .route('/lead/create')
-  .post(
-    validateDOBFormatMiddleware,
-    validateCourseSpecializationMiddleware,
-    validateSessionMiddleware,
-    catchErrors(leadController.create)
-  );
+router.route('/lead/create').post(catchErrors(leadController.create));
 router.route('/lead/read/:id').get(catchErrors(leadController.read));
 router
   .route('/lead/update/:id')
@@ -86,7 +79,7 @@ router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
-router.route('/lead/getNotifications').get(catchErrors(leadController.getNotifications));
+router.route('/lead/getAllNotifications').get(catchErrors(leadController.getAllNotifications));
 router
   .route('/lead/deleteNotificationByMessage/:message')
   .delete(catchErrors(leadController.deleteNotificationByMessage)); // //_________________________________________________________________API for invoices_____________________

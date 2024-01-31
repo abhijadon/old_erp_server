@@ -7,7 +7,6 @@ const search = require('./search');
 const filter = require('./filter');
 const listAll = require('./listAll');
 const paginatedList = require('./paginatedList');
-const notificationService = require('./notificationServise'); // Renamed for clarity
 
 const createCRUDController = (modelName) => {
   const Model = mongoose.model(modelName);
@@ -43,26 +42,6 @@ const createCRUDController = (modelName) => {
 
   crudMethods.filter = async (req, res) => {
     filter(Model, req, res);
-  };
-
-  // Expose an API endpoint for getting all notifications
-  crudMethods.getNotifications = async (req, res) => {
-    const allNotifications = notificationService.getNotifications();
-    res.status(200).json({ success: true, notifications: allNotifications });
-  };
-
-  // Expose an API endpoint for deleting a notification by message
-  crudMethods.deleteNotificationByMessage = async (req, res) => {
-    const { message } = req.params;
-
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Message parameter is required.' });
-    }
-
-    notificationService.deleteNotification(message);
-    res
-      .status(200)
-      .json({ success: true, message: `Notification with message "${message}" deleted.` });
   };
 
   return crudMethods;

@@ -11,9 +11,9 @@ const corePublicRouter = require('./routes/coreRoutes/corePublicRouter');
 const errorHandlers = require('./handlers/errorHandlers');
 const erpApiRouter = require('./routes/appRoutes/appApi');
 const bulkData = require('./routes/bulkRoutes/bulkRoutes');
-// create our Express app
-const app = express();
+const remarkHistory = require('./routes/notificationRouter');
 
+const app = express();
 const corsOptions = {
   origin: true,
   credentials: true,
@@ -21,7 +21,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.get('/', function (req, res) {
-  res.status(200).send('This Project is live and Workin fine🚀🚀🚀🚀');
+  res.status(200).send('👍👍This Project is live and Working fine with use websocket🚀🚀🚀🚀');
 });
 
 app.use(helmet());
@@ -46,6 +46,7 @@ app.use('/api', erpApiRouter);
 app.use('/download', coreDownloadRouter);
 app.use('/public', corePublicRouter);
 app.use('/api', bulkData);
+app.use('/api', remarkHistory);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

@@ -1,53 +1,42 @@
+const WebSocket = require('ws');
+const Notification = require('@/models/appModels/Notication');
+
+const server = new WebSocket.Server({ noServer: true });
+
 const notifications = [];
 let notificationCount = 0;
 
-function addNotification(type, action, message, email) {
-  const notification = {
+function addNotification(type, action, full_name, email) {
+  const notification = new Notification({
     type,
     action,
-    message,
+    full_name,
     email,
     timestamp: new Date(),
-  }
+  });
 
-  notifications.push(notification);
-  notificationCount += 1;
+  return notification
+    .save()
+    .then((savedNotification) => {
+      notifications.push(savedNotification);
+      notificationCount += 1;
 
-  // You can customize this part to send notifications to other services or databases.
-  console.log('New Notification:', notification);
+      // Broadcast the new notification to all connected clients
+      server.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(savedNotification));
+        }
+      });
 
-  return notification;
-}
-
-function deleteNotification(message) {
-  const indexToDelete = notifications.findIndex((notification) => notification.message === message);
-
-  if (indexToDelete !== -1) {
-    console.log('Deleting notification:', notifications[indexToDelete]);
-    notifications.splice(indexToDelete, 1);
-    notificationCount -= 1;
-    console.log(`Notification with message "${message}" deleted.`);
-  } else {
-    console.warn(`Notification with message "${message}" not found.`);
-  }
-}
-
-function getNotifications() {
-  return {
-    success: true,
-    notifications: notifications.map((notification) => ({
-      type: notification.type,
-      action: notification.action,
-      message: notification.message,
-      email: notification.email,
-      timestamp: notification.timestamp.toISOString(),
-    })),
-    notificationCount: notificationCount,
-  };
+      return savedNotification;
+    })
+    .catch((err) => {
+      console.error('Error saving notification to the database:', err);
+      throw err;
+    });
 }
 
 module.exports = {
   addNotification,
-  deleteNotification,
-  getNotifications,
+  server, // export the WebSocket server instance
 };

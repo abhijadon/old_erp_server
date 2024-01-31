@@ -18,9 +18,6 @@ const remove = async (req, res) => {
       });
     }
 
-    const { _id: paymentId, amount: previousAmount } = previousPayment;
-    const { id: invoiceId, total, discount, credit: previousCredit } = previousPayment.invoice;
-
     // Find the document by id and delete it
     let updates = {
       removed: true,
@@ -34,29 +31,6 @@ const remove = async (req, res) => {
       }
     ).exec();
     // If no results found, return document not found
-
-    let paymentStatus =
-      total - discount === previousCredit - previousAmount
-        ? 'paid'
-        : previousCredit - previousAmount > 0
-        ? 'partially'
-        : 'unpaid';
-
-    const updateInvoice = await Invoice.findOneAndUpdate(
-      { _id: invoiceId },
-      {
-        $pull: {
-          payment: paymentId,
-        },
-        $inc: { credit: -previousAmount },
-        $set: {
-          paymentStatus: paymentStatus,
-        },
-      },
-      {
-        new: true, // return the new result instead of the old one
-      }
-    ).exec();
 
     return res.status(200).json({
       success: true,
@@ -72,4 +46,5 @@ const remove = async (req, res) => {
     });
   }
 };
+
 module.exports = remove;

@@ -1,13 +1,53 @@
-// controllers/dataController.js
 const { Applications } = require('@/models/appModels/Application');
-const { Payment } = require('@/models/appModels/Payment'); // Update the path based on your project structure
+const { Payment } = require('@/models/appModels/Payment');
 const xlsx = require('xlsx');
+
+// Function to validate data format
+const validateData = (data) => {
+  return data.every((app) => {
+    // Check if education.course is in uppercase
+    if (
+      app.education &&
+      app.education.course &&
+      app.education.course !== app.education.course.toUpperCase()
+    ) {
+      return false;
+    }
+
+    // Check if specialization is capitalized
+    if (
+      app.specialization &&
+      app.specialization !== app.specialization.replace(/\b\w/g, (l) => l.toUpperCase())
+    ) {
+      return false;
+    }
+
+    // Check if customfields.session is in the correct format (e.g., "Jan 20 - 20")
+    const sessionPattern = /^[a-zA-Z]{3}\s\d{2}\s-\s\d{2}$/;
+    if (
+      app.customfields &&
+      app.customfields.session &&
+      !sessionPattern.test(app.customfields.session)
+    ) {
+      return false;
+    }
+
+    // Add other validation checks as needed
+
+    return true;
+  });
+};
 
 exports.uploadData = async (req, res) => {
   try {
     const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
     const sheet_name_list = workbook.SheetNames;
     const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+
+    // Validate data format before insertion
+    if (!validateData(data)) {
+      return res.status(400).json({ message: 'Invalid data format' });
+    }
 
     const applicationResult = await Applications.insertMany(data);
 
@@ -43,7 +83,6 @@ exports.uploadData = async (req, res) => {
         )
       );
     }
-
     res.status(200).json({ message: 'Data uploaded successfully', applicationResult });
   } catch (error) {
     res.status(500).send(error.message);

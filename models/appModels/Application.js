@@ -1,6 +1,44 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 mongoose.Promise = global.Promise;
-const { Payment } = require('./Payment'); // Import the Invoice model
+const { Payment } = require('./Payment');
+// Inside the RemarkHistory schema
+const remarkHistorySchema = new Schema({
+  applicationId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Applications',
+  },
+  remark: {
+    type: String,
+    trim: true,
+  },
+  updatedBy: {
+    type: String,
+    trim: true,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  // Add completion status and counselor fields
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+  completedBy: {
+    type: String,
+    trim: true,
+    default: null,
+  },
+  completedAt: {
+    type: Date,
+    default: null,
+  },
+});
+
+const RemarkHistory = mongoose.model('RemarkHistory', remarkHistorySchema);
+
+// Import the Invoice model
 
 const applicationSchema = new mongoose.Schema({
   removed: {
@@ -151,6 +189,12 @@ const applicationSchema = new mongoose.Schema({
     status: {
       type: String,
       trim: true,
+      default: 'New',
+    },
+    lms: {
+      type: String,
+      trim: true,
+      default: 'N/A',
     },
   },
 
@@ -200,6 +244,22 @@ const applicationSchema = new mongoose.Schema({
         : '';
     },
   },
+});
+applicationSchema.post('findOneAndUpdate', async function (doc) {
+  try {
+    const applicationId = doc._id;
+    const remark = doc.customfields.remark;
+    const updatedBy = 'system'; // You may want to specify the user/system that made the update
+
+    // Save the remark history
+    await RemarkHistory.create({
+      applicationId,
+      remark,
+      updatedBy,
+    });
+  } catch (error) {
+    console.error('Error saving remark history:', error);
+  }
 });
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
@@ -303,4 +363,4 @@ applicationSchema.post('save', async function (doc) {
 });
 const Applications = mongoose.model('Applications', applicationSchema);
 
-module.exports = { Applications };
+module.exports = { Applications, RemarkHistory };

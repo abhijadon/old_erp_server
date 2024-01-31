@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const path = require('path');
-
+const http = require('http');
+const {
+  server,
+} = require('@/controllers/middlewaresControllers/createCRUDController/notificationServise');
+// create our Express app
 // Make sure we are running Node.js version 7.6 or higher
 const [major, minor] = process.versions.node.split('.').map(parseFloat);
 if (major < 16 || (major === 16 && minor < 20)) {
@@ -51,11 +55,22 @@ async function startApp() {
   await importModels();
 
   const app = require('./app');
-  app.set('port', process.env.PORT || 8888);
-  const server = app.listen(app.get('port'), () => {
-    console.log(` ==============🎉🎉🚀🚀=============
- Express running → On PORT: ${server.address().port} 
- ==============🚀🚀🚀🚀=============`);
+  const httpServer = http.createServer(app);
+
+  /* websocket try for  notification */
+
+  httpServer.on('upgrade', (request, socket, head) => {
+    server.handleUpgrade(request, socket, head, (ws) => {
+      server.emit('connection', ws, request);
+    });
+  });
+  /* websocket try for  notification */
+
+  httpServer.listen(process.env.PORT, () => {
+    console.log(
+      '👍👍This Project is live and Working fine with use websocket🚀🚀🚀🚀',
+      process.env.PORT
+    );
   });
 }
 
