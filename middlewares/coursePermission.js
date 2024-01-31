@@ -36,6 +36,9 @@ const validateCourseSpecializationMiddleware = (req, res, next) => {
       'Digital Marketing',
     ],
     BCA: ['General', 'Cloud and Security', 'Data Analytics'],
+
+    BTECH: ['Mechanical', 'Computer science', 'IT'],
+
     BCOM: [
       'General',
       'Finance',
