@@ -40,6 +40,10 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    payment_type: {
+      type: String,
+      trim: true,
+    },
     total_course_fee: {
       type: Number,
       required: true,

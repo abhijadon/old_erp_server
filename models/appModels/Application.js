@@ -152,7 +152,10 @@ const applicationSchema = new mongoose.Schema({
       type: String,
       trim: true,
     },
-
+    payment_type: {
+      type: String,
+      trim: true,
+    },
     total_course_fee: {
       type: String,
       trim: true,
@@ -265,16 +268,13 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
     const applicationId = doc._id;
-    // Calculate the sum of total_paid_amount and paid_amount
-    const totalPaidAmount = parseFloat(doc.customfields.total_paid_amount) || 0;
-    const paidAmount = parseFloat(doc.customfields.paid_amount) || 0;
-    const totalPaidAndPaidAmount = totalPaidAmount + paidAmount;
 
     await Payment.findOneAndUpdate(
       { applicationId },
       {
         $set: {
           applicationId,
+          payment_type: doc.customfields['payment_type'],
           total_course_fee: doc.customfields['total_course_fee'],
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
@@ -285,7 +285,6 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           email: doc.contact['email'],
           phone: doc.contact['phone'],
           student_name: doc.full_name,
-          total_paid_and_paid_amount: totalPaidAndPaidAmount, // Add this line
           // ... other fields you want to update in the Payment record
         },
       },
@@ -315,6 +314,7 @@ applicationSchema.pre('save', async function (next) {
       email: this.contact['email'],
       phone: this.contact['phone'],
       status: this.customfields['status'],
+      payment_type: this.customfields['payment_type'],
       total_course_fee: this.customfields['total_course_fee'],
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
@@ -347,6 +347,7 @@ applicationSchema.post('save', async function (doc) {
           student_name: doc.full_name,
           email: doc.contact['email'],
           phone: doc.contact['phone'],
+          payment_type: doc.customfields['payment_type'],
           total_course_fee: doc.customfields['total_course_fee'],
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],

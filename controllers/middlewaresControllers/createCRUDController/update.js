@@ -5,7 +5,6 @@ const update = async (Model, req, res) => {
       new: true, // return the new result instead of the old one
       runValidators: true,
     }).exec();
-
     if (!result) {
       return res.status(404).json({
         success: false,
@@ -13,22 +12,10 @@ const update = async (Model, req, res) => {
         message: 'No document found by this id: ' + req.params.id,
       });
     } else {
-      // Check if the paid_amount field is present in the request body
-      if (req.body.customfields && req.body.customfields.paid_amount !== undefined) {
-        // Convert req.body.customfields.paid_amount to a number
-        const paidAmount = parseFloat(req.body.customfields.paid_amount);
-
-        // Update total_paid_amount based on the current paid amount
-        result.customfields.total_paid_amount += paidAmount;
-
-        // Save the updated document
-        await result.save();
-      }
-
       return res.status(200).json({
         success: true,
         result,
-        message: 'We update this document by this id: ' + req.params.id,
+        message: 'we update this document by this id: ' + req.params.id,
       });
     }
   } catch (error) {

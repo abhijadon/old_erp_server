@@ -33,6 +33,7 @@ const getTotalPaymentAmount = async () => {
 const summary = async (req, res) => {
   try {
     const {
+      payment_type,
       institute_name,
       university_name,
       counselor_email,
@@ -97,6 +98,9 @@ const summary = async (req, res) => {
         $exists: true,
         $eq: counselor_email.toLowerCase(),
       };
+    }
+    if (payment_type) {
+      matchQuery.payment_type = payment_type;
     }
     if (status) {
       matchQuery.status = status; // Include dynamic status filtering

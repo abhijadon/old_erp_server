@@ -1,9 +1,9 @@
 const { formatDistanceToNow } = require('date-fns');
-const Model = require('@/models/appModels/Notication'); // Adjust the path based on your project structure
+const Notification = require('@/models/appModels/Notication'); // Adjust the path based on your project structure
 
 const getAllNotifications = async (req, res) => {
   try {
-    const notifications = await Model.find().exec();
+    const notifications = await Notification.find().exec();
 
     // Format timestamps to human-readable format
     const formattedNotifications = notifications.map((notification) => {
@@ -34,7 +34,7 @@ const deleteNotificationById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedNotification = await Model.findByIdAndDelete(id).exec();
+    const deletedNotification = await Notification.findByIdAndDelete(id).exec();
 
     if (!deletedNotification) {
       return res.status(404).json({
@@ -42,6 +42,12 @@ const deleteNotificationById = async (req, res) => {
         error: 'Notification not found',
       });
     }
+
+    // Notify clients about the deleted notification (you may send this notification through WebSocket)
+    // Example WebSocket code:
+    // wss.clients.forEach(client => {
+    //   client.send(JSON.stringify({ type: 'notificationDeleted', data: deletedNotification }));
+    // });
 
     return res.json({
       success: true,

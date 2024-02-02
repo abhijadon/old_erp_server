@@ -1,17 +1,29 @@
 const paginatedList = async (Model, req, res) => {
-  const page = req.query.page;
-  const limit = parseInt(req.query.items);
-  const skip = page * limit - limit;
+  const page = req.query.page || 1;
+  const limit = parseInt(req.query.items) || 10;
+  const skip = (page - 1) * limit;
+  const instituteName = req.query.instituteName;
+  const universityName = req.query.universityName;
+
   try {
-    // Query the database for a list of all results
-    const resultsPromise = Model.find({ removed: false })
+    // Constructing the query based on institute and university names
+    const query = { removed: false };
+    if (instituteName) {
+      query['customfields.institute_name'] = instituteName;
+    }
+    if (universityName) {
+      query['customfields.university_name'] = universityName;
+    }
+
+    // Query the database for a list of results
+    const resultsPromise = Model.find(query)
       .skip(skip)
       .limit(limit)
       .sort({ created: 'desc' })
       .populate();
 
     // Counting the total documents
-    const countPromise = Model.countDocuments({ removed: false });
+    const countPromise = Model.countDocuments(query);
 
     // Resolving both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
@@ -26,8 +38,8 @@ const paginatedList = async (Model, req, res) => {
       // Format date and time before sending the response
       const formattedResults = result.map((item) => ({
         ...item._doc,
-        date: new Date(item.date).toLocaleDateString('en-US'), // Format as 'MM/DD/YYYY'
-        time: item.time, // Use the existing string value
+        date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
+        time: item.time,
       }));
 
       return res.status(200).json({
@@ -37,11 +49,11 @@ const paginatedList = async (Model, req, res) => {
         message: 'Successfully found all documents',
       });
     } else {
-      return res.status(203).json({
+      return res.status(200).json({
         success: true,
         result: [],
         pagination,
-        message: 'Collection is Empty',
+        message: 'No data found for the specified criteria',
       });
     }
   } catch (error) {
