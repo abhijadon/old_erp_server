@@ -20,8 +20,9 @@ const upload = multer({ storage: storage }).any();
 
 const create = async (Model, req, res) => {
   try {
-    const userId = req.user.id; 
+    const userId = req.user.id;
     let studentEmail;
+
     upload(req, res, async (err) => {
       if (err) {
         console.error(err);
@@ -34,7 +35,7 @@ const create = async (Model, req, res) => {
       }
 
       try {
-       const newDoc = new Model({ ...req.body, userId });
+        const newDoc = new Model({ ...req.body, userId });
         if (req.files) {
           // Process each file dynamically
           req.files.forEach((file) => {
@@ -74,14 +75,14 @@ const create = async (Model, req, res) => {
 
         // Assign the value to studentEmail here
         studentEmail = contactEmail || (req.body.contact && req.body.contact.email) || null;
-const existingEmail = await Model.findOne({ 'contact.email': studentEmail });
+        const existingEmail = await Model.findOne({ 'contact.email': studentEmail });
 
-if (existingEmail) {
-    return res.status(400).json({
-        success: false,
-        message: 'This email is already registered.',
-    });
-}
+        if (existingEmail) {
+          return res.status(400).json({
+            success: false,
+            message: 'This email is already registered.',
+          });
+        }
 
         // Validation logic for phone uniqueness
         const existingPhone = await Model.findOne({
@@ -227,4 +228,3 @@ if (existingEmail) {
 };
 
 module.exports = create;
-
