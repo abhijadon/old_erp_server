@@ -24,12 +24,14 @@ mongoose.Promise = global.Promise;
 
 async function setupApp() {
   try {
-    const Admin = require('../models/coreModels/Admin');
+    const Admin = require('../models/User');
     const newAdmin = new Admin();
-    const passwordHash = newAdmin.generateHash('Abhishek12345');
+    const passwordHash = newAdmin.generateHash('abhishek@2024');
 
     await new Admin({
-      email: 'jadonabhishek332@gmail.com',
+      fullname: 'Abhishek Jadon',
+      phone: '8964893164',
+      username: 'jadonabhishek332@gmail.com',
       password: passwordHash,
       name: 'Abhishek',
       surname: 'Jadon',
@@ -38,8 +40,8 @@ async function setupApp() {
 
     console.log('👍 Admin created : Done!');
 
-    const Setting = require('../models/coreModels/Setting');
-    const Email = require('../models/coreModels/Email');
+    const Setting = require('../models/appModels/coreModels/Setting');
+    const Email = require('../models/appModels/coreModels/Email');
 
     const readJsonFile = (filename) => {
       const filePath = path.join(__dirname, 'config', `${filename}.json`);

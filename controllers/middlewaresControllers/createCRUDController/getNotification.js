@@ -1,5 +1,5 @@
 const { formatDistanceToNow } = require('date-fns');
-const Notification = require('@/models/appModels/Notication'); // Adjust the path based on your project structure
+const Notification = require('@/models/Notication'); // Adjust the path based on your project structure
 
 const getAllNotifications = async (req, res) => {
   try {

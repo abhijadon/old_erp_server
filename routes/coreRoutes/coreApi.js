@@ -16,6 +16,8 @@ const {
   singleStorageUpload,
   setFilePathToBody,
 } = require('@/middlewares/uploadMiddleware');
+const authenticate = require('@/middlewares/authenticate');
+const checkUserRole = require('@/middlewares/checkUserRole');
 
 // //_______________________________ Admin management_______________________________
 
@@ -36,7 +38,7 @@ router
   );
 router.route('/admin/delete/:id').delete(catchErrors(adminController.delete));
 router.route('/admin/search').get(catchErrors(adminController.search));
-router.route('/admin/list').get(catchErrors(adminController.list));
+router.route('/admin/list').get(authenticate, checkUserRole, catchErrors(adminController.list));
 router.route('/admin/profile').get(catchErrors(adminController.profile));
 router.route('/admin/status/:id').patch(catchErrors(adminController.status));
 router

@@ -34,6 +34,7 @@ const summary = async (req, res) => {
   try {
     const {
       payment_type,
+      payment_mode,
       institute_name,
       university_name,
       counselor_email,
@@ -101,6 +102,9 @@ const summary = async (req, res) => {
     }
     if (payment_type) {
       matchQuery.payment_type = payment_type;
+    }
+      if (payment_mode) {
+      matchQuery.payment_mode = payment_mode;
     }
     if (status) {
       matchQuery.status = status; // Include dynamic status filtering
@@ -237,16 +241,13 @@ const summary = async (req, res) => {
       'CU',
       'UU',
       'JAIN',
-      'SVSU',
-      'NMIMS',
+      'DPU',
+      'SVSU',      
       'VIGNAN',
-      'HINDUSTAN',
       'MANIPAL',
       'SMU',
       'HU',
       'BOSSE',
-      'SABARMATI',
-      'MRU',
       'MANGALAYATAN',
       'MANGALAYATAN ONLINE',
     ];

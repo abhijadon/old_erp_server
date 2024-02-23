@@ -1,4 +1,4 @@
-const Upload = require('@/models/coreModels/Upload');
+const Upload = require('@/models/appModels/coreModels/Upload');
 
 // middleware to upload the public document
 const createMultipleUpload = async (req, res, next) => {

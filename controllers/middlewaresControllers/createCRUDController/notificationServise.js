@@ -1,13 +1,14 @@
 const WebSocket = require('ws');
-const Notification = require('@/models/appModels/Notication');
+const Notification = require('@/models/Notication');
 
 const server = new WebSocket.Server({ noServer: true });
 
 const notifications = [];
 let notificationCount = 0;
 
-function addNotification(type, action, full_name, email) {
+function addNotification(userID, type, action, full_name, email) {
   const notification = new Notification({
+    userID,
     type,
     action,
     full_name,

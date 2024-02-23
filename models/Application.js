@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 mongoose.Promise = global.Promise;
 const { Payment } = require('./Payment');
+const mongooseHistory = require('mongoose-history');
 // Inside the RemarkHistory schema
 const remarkHistorySchema = new Schema({
   applicationId: {
@@ -41,6 +42,10 @@ const RemarkHistory = mongoose.model('RemarkHistory', remarkHistorySchema);
 // Import the Invoice model
 
 const applicationSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
   removed: {
     type: Boolean,
     default: false,
@@ -61,22 +66,20 @@ const applicationSchema = new mongoose.Schema({
   },
 
   contact: {
-    email: {
-      type: String,
-      trim: true,
-      unique: true,
-      lowercase: true,
-    },
-    phone: {
-      type: Number,
-      trim: true,
-      unique: true,
-    },
-    alternate_phone: {
-      type: Number,
-      trim: true,
-    },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
   },
+  phone: {
+    type: Number,
+    trim: true,
+  },
+  alternate_phone: {
+    type: Number,
+    trim: true,
+  },
+},
   education: {
     course: {
       type: String,
@@ -248,6 +251,8 @@ const applicationSchema = new mongoose.Schema({
     },
   },
 });
+
+applicationSchema.plugin(mongooseHistory, { customCollectionName: 'ApplicationHistory' });
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
     const applicationId = doc._id;
@@ -274,6 +279,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
       {
         $set: {
           applicationId,
+          userId: doc.userId,
           payment_type: doc.customfields['payment_type'],
           total_course_fee: doc.customfields['total_course_fee'],
           total_paid_amount: doc.customfields['total_paid_amount'],
@@ -281,6 +287,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           university_name: doc.customfields['university_name'],
           institute_name: doc.customfields['institute_name'],
           counselor_email: doc.customfields['counselor_email'],
+          payment_mode: doc.customfields['payment_mode'],
           status: doc.customfields['status'],
           email: doc.contact['email'],
           phone: doc.contact['phone'],
@@ -309,6 +316,7 @@ applicationSchema.pre('save', async function (next) {
     // Create a new Payment record based on the Application ID
     await Payment.create({
       applicationId,
+      userId: this.userId,
       lead_id: this.lead_id,
       student_name: this.full_name,
       email: this.contact['email'],
@@ -318,6 +326,7 @@ applicationSchema.pre('save', async function (next) {
       total_course_fee: this.customfields['total_course_fee'],
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
+      payment_mode: this.customfields['payment_mode'],
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       counselor_email: this.customfields['counselor_email'],
@@ -343,6 +352,7 @@ applicationSchema.post('save', async function (doc) {
       {
         $set: {
           applicationId,
+          userId: doc.userId,
           lead_id: doc.lead_id,
           student_name: doc.full_name,
           email: doc.contact['email'],
@@ -350,6 +360,7 @@ applicationSchema.post('save', async function (doc) {
           payment_type: doc.customfields['payment_type'],
           total_course_fee: doc.customfields['total_course_fee'],
           total_paid_amount: doc.customfields['total_paid_amount'],
+          payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
           counselor_email: doc.customfields['counselor_email'],
           status: doc.customfields['status'],

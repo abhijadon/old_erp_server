@@ -2,10 +2,10 @@
 
 const roles = {
   admin: ['create', 'read', 'update', 'delete', 'download', 'upload'],
-  staffAdmin: ['create', 'read', 'update', 'delete', 'download', 'upload'],
-  staff: ['create', 'read', 'update', 'download', 'upload'],
-  createOnly: ['create', 'read', 'download', 'upload'],
-  readOnly: ['read', 'download'],
+  subadmin: ['create', 'read', 'update', 'delete', 'download', 'upload'],
+  teamleader: ['create', 'read', 'update', 'download', 'upload'],
+  user: ['create', 'read'],
+
 };
 exports.roles = roles;
 exports.hasPermission = (permissionName = 'all') => {

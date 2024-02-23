@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Admin = mongoose.model('Admin');
+const Admin = mongoose.model('User');
 
 const listAll = async (req, res) => {
   const limit = parseInt(req.query.items) || 100;

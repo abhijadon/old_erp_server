@@ -1,5 +1,5 @@
-const { Applications } = require('@/models/appModels/Application');
-const { Payment } = require('@/models/appModels/Payment');
+const { Applications } = require('@/models/Application');
+const { Payment } = require('@/models/Payment');
 const xlsx = require('xlsx');
 
 // Function to validate data format

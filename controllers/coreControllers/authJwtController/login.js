@@ -1,109 +1,122 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const { stubFalse } = require('lodash');
-const url = require('url');
-
 const mongoose = require('mongoose');
-
-const Admin = mongoose.model('Admin');
+const User = mongoose.model('User');
+const UserAction = require('@/models/UserAction');
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // URL address
-    const address = req.get('origin');
-
-    // Call parse() method using url module
-    let urlObject = url.parse(address, true);
+    // Validate URL
+    const address = req.get('origin') || 'http://localhost';
+    const urlObject = new URL(address);
 
     const orginalHostname = urlObject.hostname;
+    const isLocalhost = orginalHostname === 'localhost';
 
-    let isLocalhost = false;
-    if (orginalHostname === 'localhost') {
-      // Connection is from localhost
-      isLocalhost = true;
-    }
-
-    // validate
+    // Validate input
     const objectSchema = Joi.object({
-      email: Joi.string()
-        .email({ tlds: { allow: false } })
-        .required(),
+      username: Joi.string().required(),
       password: Joi.string().required(),
     });
 
-    const { error, value } = objectSchema.validate({ email, password });
+    const { error } = objectSchema.validate({ username, password });
     if (error) {
-      return res.status(409).json({
+      return res.status(400).json({
         success: false,
         result: null,
-        error: error,
         message: 'Invalid/Missing credentials.',
         errorMessage: error.message,
       });
     }
 
-    const admin = await Admin.findOne({ email: email, removed: false });
-    // console.log(admin);
-    if (!admin)
-      return res.status(404).json({
-        success: false,
-        result: null,
-        message: 'No account with this email has been registered.',
-      });
+    // Find user by username
+    const user = await User.findOne({ username, removed: false });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch)
-      return res.status(403).json({
+    // Validate user existence and password
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({
         success: false,
         result: null,
         message: 'Invalid credentials.',
       });
+    }
 
+    // Generate JWT token with expiration
     const token = jwt.sign(
       {
-        id: admin._id,
+        id: user._id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: req.body.remember ? 365 * 24 + 'h' : '24h' }
+      { expiresIn: '1h' } // Set expiration to 1 hour
     );
 
-    const result = await Admin.findOneAndUpdate(
-      { _id: admin._id },
-      { $set: { isLoggedIn: 1 }, $push: { loggedSessions: token } },
+    // Fetch user data based on role
+    let userData;
+    if (user.role === 'admin') {
+      // Admin can see data for all users
+      userData = await User.find({ removed: false }).exec();
+    } else {
+      // Regular user can only see their own data
+      userData = [user]; // Wrap the user in an array for consistent data structure
+    }
+
+    // Update user session information
+    const result = await User.findOneAndUpdate(
+      { _id: user._id },
       {
-        new: true,
-      }
+        $set: { isLoggedIn: true, status: 'online' },
+        $push: { loggedSessions: { token, expiration: new Date(Date.now() + 60 * 60 * 1000) } },
+      },
+      { new: true }
     ).exec();
 
-    res
-      .status(200)
-      .cookie('token', token, {
-        maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : null,
-        sameSite: 'none',
-        httpOnly: true,
-        secure: true,
-        domain: req.hostname,
-        path: '/',
-        Partitioned: true,
-      })
-      .json({
-        success: true,
-        result: {
-          _id: result._id,
-          name: result.name,
-          surname: result.surname,
-          role: result.role,
-          email: result.email,
-          photo: result.photo,
-          isLoggedIn: result.isLoggedIn > 0 ? true : false,
-        },
-        message: 'Successfully login admin',
-      });
+    const userAction = new UserAction({
+      userId: req._id,
+      action: 'Login',
+    });
+
+    // Save the user action to the admin's actions array
+    result.actions.push(userAction);
+
+    // Save the updated admin document
+    await result.save();
+
+    res.cookie('token', token, {
+      maxAge: 60 * 60 * 1000, // Set cookie expiration to 1 hour
+      sameSite: 'none',
+      httpOnly: true,
+      secure: true,
+      domain: req.hostname,
+      path: '/',
+      Partitioned: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      result: {
+        _id: result._id,
+        fullname: result.fullname,
+        surname: result.surname,
+        status: result.status,
+        role: result.role,
+        username: result.username,
+        photo: result.photo,
+        isLoggedIn: true,
+        users: userData, // Include the retrieved user data
+      },
+      message: `Welcome, you are successfully logged in, ${result.fullname}.`,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, result: null, message: error.message, error: error });
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      result: null,
+      message: 'Internal server error.',
+      error: error.message,
+    });
   }
 };
 

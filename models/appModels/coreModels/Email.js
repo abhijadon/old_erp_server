@@ -4,13 +4,11 @@ mongoose.Promise = global.Promise;
 const emailSchema = new mongoose.Schema({
   emailKey: {
     type: String,
-    unique: true,
     lowercase: true,
     required: true,
   },
   emailName: {
     type: String,
-    unique:true,
     required:true,
   },
   emailVariables:{

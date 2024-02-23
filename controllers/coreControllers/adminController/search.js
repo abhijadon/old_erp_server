@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Admin = mongoose.model('Admin');
+const Admin = mongoose.model('User');
 
 const search = async (req, res) => {
   // console.log(req.query.fields)

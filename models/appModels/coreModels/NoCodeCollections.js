@@ -14,13 +14,11 @@ const noCodeCollectionsSchema = new mongoose.Schema({
     type: String,
     trim: true,
     required: true,
-    unique: true,
   },
   appId: {
     type: String,
     trim: true,
     required: true,
-    unique: true,
   },
 
   pageUiParms: { type: mongoose.Schema.Types.Mixed },
@@ -71,7 +69,7 @@ const noCodeCollectionsSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true,
-        unique: true,
+  
       },
       label: [
         {

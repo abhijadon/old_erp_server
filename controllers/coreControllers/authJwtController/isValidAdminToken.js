@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const Admin = mongoose.model('Admin');
+const Admin = mongoose.model('User');
 
 const isValidAdminToken = async (req, res, next) => {
   try {

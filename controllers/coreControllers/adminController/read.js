@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Admin = mongoose.model('Admin');
+const Admin = mongoose.model('User');
 
 const read = async (req, res) => {
   try {

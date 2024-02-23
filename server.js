@@ -4,20 +4,22 @@ const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const path = require('path');
 const http = require('http');
-const {
-  server,
-} = require('@/controllers/middlewaresControllers/createCRUDController/notificationServise');
-// create our Express app
+const {server} = require('@/controllers/middlewaresControllers/createCRUDController/notificationServise');
+
+
 // Make sure we are running Node.js version 7.6 or higher
 const [major, minor] = process.versions.node.split('.').map(parseFloat);
 if (major < 16 || (major === 16 && minor < 20)) {
   console.log('Please upgrade your Node.js version to at least 16.20.2 or greater. 👌\n');
   process.exit();
 }
+// Make sure we are running Node.js version 7.6 or higher
 
 // Import environmental variables from .env files
 require('dotenv').config({ path: '.env' });
 require('dotenv').config({ path: '.env.local' });
+// Import environmental variables from .env files
+
 
 // Connect to the Database and handle any bad connections
 async function connectToDatabase() {
@@ -35,10 +37,11 @@ async function connectToDatabase() {
     process.exit(1); // Exit with a non-zero code to indicate failure
   }
 }
+// Connect to the Database and handle any bad connections
 
+// Import all model files
 async function importModels() {
   try {
-    // Import all model files
     const files = await glob('./models/**/*.js');
     files.forEach((file) => {
       require(path.resolve(file));
@@ -48,6 +51,9 @@ async function importModels() {
     process.exit(1); // Exit with a non-zero code to indicate failure
   }
 }
+// Import all model files
+
+
 
 // Start the app
 async function startApp() {
@@ -66,6 +72,8 @@ async function startApp() {
   });
   /* websocket try for  notification */
 
+
+  // server run this 
   httpServer.listen(process.env.PORT, () => {
     console.log(
       '👍👍This Project is live and Working fine with use websocket🚀🚀🚀🚀',
@@ -73,5 +81,5 @@ async function startApp() {
     );
   });
 }
-
 startApp();
+// server run this 

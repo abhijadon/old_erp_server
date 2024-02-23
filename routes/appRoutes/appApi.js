@@ -67,13 +67,7 @@ router.route('/client/summary').get(catchErrors(clientController.summary));
 
 router.route('/lead/create').post(catchErrors(leadController.create));
 router.route('/lead/read/:id').get(catchErrors(leadController.read));
-router
-  .route('/lead/update/:id')
-  .patch(
-    validateCourseSpecializationMiddleware,
-    validateSessionMiddleware,
-    catchErrors(leadController.update)
-  );
+router.route('/lead/update/:id').patch(catchErrors(leadController.update)  );
 router.route('/lead/delete/:id').delete(catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));

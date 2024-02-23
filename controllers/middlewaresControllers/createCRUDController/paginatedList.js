@@ -1,42 +1,15 @@
 const paginatedList = async (Model, req, res) => {
-  const page = req.query.page || 1;
-  const limit = parseInt(req.query.items) || 10;
-  const skip = (page - 1) * limit;
-  const instituteName = req.query.instituteName;
-  const universityName = req.query.universityName;
-
   try {
-    // Constructing the query based on institute and university names
-    const query = { removed: false };
-    if (instituteName) {
-      query['customfields.institute_name'] = instituteName;
-    }
-    if (universityName) {
-      query['customfields.university_name'] = universityName;
-    }
-
-    // Query the database for a list of results
-    const resultsPromise = Model.find(query)
-      .skip(skip)
-      .limit(limit)
+    const resultsPromise = Model.find(req.queryConditions)
       .sort({ created: 'desc' })
-      .populate();
+      .populate({ path: 'userId', select: req.user.role === 'admin' ? '' : '-password' });
 
-    // Counting the total documents
-    const countPromise = Model.countDocuments(query);
+    const countPromise = Model.countDocuments(req.queryConditions);
 
-    // Resolving both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
-    // Calculating total pages
-    const pages = Math.ceil(count / limit);
-
-    // Getting Pagination Object
-    const pagination = { page, pages, count };
-
     if (count > 0) {
-      // Format date and time before sending the response
-      const formattedResults = result.map((item) => ({
+      const formattedResults = result.map(item => ({
         ...item._doc,
         date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
         time: item.time,
@@ -45,14 +18,14 @@ const paginatedList = async (Model, req, res) => {
       return res.status(200).json({
         success: true,
         result: formattedResults,
-        pagination,
+        count,
         message: 'Successfully found all documents',
       });
     } else {
       return res.status(200).json({
         success: true,
         result: [],
-        pagination,
+        count: 0,
         message: 'No data found for the specified criteria',
       });
     }

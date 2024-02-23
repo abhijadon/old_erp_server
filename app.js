@@ -12,6 +12,8 @@ const errorHandlers = require('./handlers/errorHandlers');
 const erpApiRouter = require('./routes/appRoutes/appApi');
 const bulkData = require('./routes/bulkRoutes/bulkRoutes');
 const remarkHistory = require('./routes/notificationRouter');
+const authenticate = require('./middlewares/authenticate');
+const checkUserRoleMiddleware = require('@/middlewares/checkUserRole');
 
 const app = express();
 const corsOptions = {
@@ -41,12 +43,13 @@ app.use((req, res, next) => {
 
 // Here our API Routes
 app.use('/api', coreAuthRouter);
-app.use('/api', coreApiRouter);
-app.use('/api', erpApiRouter);
+app.use('/api',authenticate,checkUserRoleMiddleware, coreApiRouter);
+app.use('/api',authenticate,checkUserRoleMiddleware, erpApiRouter);
 app.use('/download', coreDownloadRouter);
 app.use('/public', corePublicRouter);
 app.use('/api', bulkData);
 app.use('/api', remarkHistory);
+app.use('/api', require("@/routes/teamApi/teamRoutes"))
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

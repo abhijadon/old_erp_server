@@ -13,7 +13,6 @@ const clientSchema = new mongoose.Schema({
   company: {
     type: String,
     trim: true,
-    unique: true,
   },
   managerName: {
     type: String,
@@ -75,7 +74,6 @@ const clientSchema = new mongoose.Schema({
     type: String,
     trim: true,
     lowercase: true,
-    unique: true,
   },
   website: {
     type: String,

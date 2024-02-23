@@ -20,6 +20,7 @@ const upload = multer({ storage: storage }).any();
 
 const create = async (Model, req, res) => {
   try {
+    const userId = req.user.id; 
     let studentEmail;
     upload(req, res, async (err) => {
       if (err) {
@@ -33,7 +34,7 @@ const create = async (Model, req, res) => {
       }
 
       try {
-        const newDoc = new Model(req.body);
+       const newDoc = new Model({ ...req.body, userId });
         if (req.files) {
           // Process each file dynamically
           req.files.forEach((file) => {
@@ -73,6 +74,28 @@ const create = async (Model, req, res) => {
 
         // Assign the value to studentEmail here
         studentEmail = contactEmail || (req.body.contact && req.body.contact.email) || null;
+const existingEmail = await Model.findOne({ 'contact.email': studentEmail });
+
+if (existingEmail) {
+    return res.status(400).json({
+        success: false,
+        message: 'This email is already registered.',
+    });
+}
+
+        // Validation logic for phone uniqueness
+        const existingPhone = await Model.findOne({
+          'contact.phone': phoneNumber,
+        });
+
+        if (existingPhone) {
+          return res.status(400).json({
+            success: false,
+            result: null,
+            message: 'This phone number is already in use. Please try another phone number.',
+          });
+        }
+
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -80,15 +103,6 @@ const create = async (Model, req, res) => {
             pass: 'zibs iflm rzwv dmgw',
           },
         });
-
-        // Your validation logic for studentEmail or any other fields
-        if (!validateGmail(studentEmail)) {
-          return res.status(400).json({
-            success: false,
-            result: null,
-            message: 'Invalid email address. Please use a Gmail address.',
-          });
-        }
 
         await notificationService.addNotification(
           'document',
@@ -212,10 +226,5 @@ const create = async (Model, req, res) => {
   }
 };
 
-const validateGmail = (email) => {
-  // A more permissive regex for testing purposes
-  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return regex.test(email);
-};
-
 module.exports = create;
+

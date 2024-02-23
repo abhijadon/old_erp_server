@@ -1,9 +1,13 @@
 const mongoose = require('mongoose');
-
+const mongooseHistory = require('mongoose-history');
 const paymentSchema = new mongoose.Schema(
   {
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
+    },
+     userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     removed: {
       type: Boolean,
@@ -20,13 +24,11 @@ const paymentSchema = new mongoose.Schema(
     email: {
       type: String,
       trim: true,
-      unique: true,
       lowercase: true,
     },
     phone: {
       type: Number,
       trim: true,
-      unique: true,
     },
     counselor_email: {
       type: String,
@@ -56,6 +58,10 @@ const paymentSchema = new mongoose.Schema(
     paid_amount: {
       type: Number,
       default: 0,
+    },
+    payment_mode: {
+      type: String,
+      trim: true,
     },
     status: {
       type: String,
@@ -118,6 +124,8 @@ const paymentSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+paymentSchema.plugin(mongooseHistory, { customCollectionName: 'PaymentHistory' });
 
 const Payment = mongoose.model('Payment', paymentSchema);
 
