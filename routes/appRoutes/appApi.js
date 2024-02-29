@@ -64,7 +64,7 @@ router.route('/client/filter').get(catchErrors(clientController.filter));
 router.route('/client/summary').get(catchErrors(clientController.summary));
 
 // //_____________________________________ API for leads __________________________________________________
-
+ 
 router.route('/lead/create').post(catchErrors(leadController.create));
 router.route('/lead/read/:id').get(catchErrors(leadController.read));
 router.route('/lead/update/:id').patch(catchErrors(leadController.update)  );

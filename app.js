@@ -45,11 +45,14 @@ app.use((req, res, next) => {
 app.use('/api', coreAuthRouter);
 app.use('/api',authenticate,checkUserRoleMiddleware, coreApiRouter);
 app.use('/api',authenticate,checkUserRoleMiddleware, erpApiRouter);
-app.use('/download', coreDownloadRouter);
-app.use('/public', corePublicRouter);
-app.use('/api', bulkData);
-app.use('/api', remarkHistory);
-app.use('/api', require("@/routes/teamApi/teamRoutes"))
+app.use('/download',authenticate,checkUserRoleMiddleware, coreDownloadRouter);
+app.use('/public',authenticate,checkUserRoleMiddleware,corePublicRouter);
+app.use('/api',authenticate,checkUserRoleMiddleware, bulkData);
+app.use('/api',authenticate,checkUserRoleMiddleware,remarkHistory); 
+app.use('/api', authenticate ,checkUserRoleMiddleware, require("@/routes/teamApi/teamRoutes")) 
+app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/teamApi/team")) 
+
+
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

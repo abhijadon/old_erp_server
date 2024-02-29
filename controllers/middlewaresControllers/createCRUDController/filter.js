@@ -3,26 +3,34 @@ const filter = async (Model, req, res) => {
     const filterConditions = {};
 
     if (req.query.university_name !== undefined) {
-      filterConditions['customfields.university_name'] = req.query.university_name;
+      filterConditions['university_name'] = req.query.university_name;
     }
 
     if (req.query.institute_name !== undefined) {
-      filterConditions['customfields.institute_name'] = req.query.institute_name;
+      filterConditions['institute_name'] = req.query.institute_name;
     }
 
     if (req.query.counselor_name !== undefined) {
-      filterConditions['customfields.counselor_name'] = req.query.counselor_name;
+      filterConditions['counselor_name'] = req.query.counselor_name;
     }
 
     if (req.query.session !== undefined) {
-      filterConditions['customfields.session'] = req.query.session;
+      filterConditions['session'] = req.query.session;
     }
 
     if (req.query.status !== undefined) {
-      filterConditions['customfields.status'] = req.query.status;
+      filterConditions['status'] = req.query.status;
     }
 
-    const results = await Model.find({ removed: false, ...filterConditions });
+    // Additional filter based on userId
+    if (req.query.userId !== undefined) {
+      filterConditions['userId'] = req.query.userId;
+    }
+
+    const results = await Model.find({ removed: false, ...filterConditions })
+      .sort({ date: -1, time: -1 }) // Sort by date and time in descending order
+      .populate('userId');
+
     const count = await Model.countDocuments({ removed: false, ...filterConditions });
 
     const filterMessage = Object.keys(filterConditions)

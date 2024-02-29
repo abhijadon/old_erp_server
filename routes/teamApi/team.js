@@ -1,41 +1,25 @@
-// Import necessary modules
+// Import necessary modules and models
 const express = require('express');
 const router = express.Router();
-const Team = require('@/models/Team');
-const { Applications } = require('@/models/Application'); // Adjust the path accordingly
-const authenticate = require('@/middlewares/authenticate');
-const checkUserRole = require('@/middlewares/checkUserRole');
+const checkUserRoleMiddleware = require('@/middlewares/checkUserRole');
+const paginatedList = require('@/controllers/middlewaresControllers/createCRUDController/paginatedList');
+const YourModel = require('@/models/Application'); // Replace with your actual Mongoose model
 
-// Team route
-router.get('/teams', authenticate, checkUserRole, async (req, res) => {
+// Define a route to get data for a specific user
+router.get('/data/:userId', async (req, res) => {
   try {
-    const user = req.user;
+    // Assuming req.params.userId contains the user ID you want to filter by
+    req.queryConditions.userId = req.params.userId;
 
-    if (user.role === 'admin') {
-      // Fetch all teams for admin
-      const teams = await Team.find();
-      return res.json(teams);
-    }
-
-    if (user.role === 'teamleader') {
-      // Fetch team data for the team leader
-      const team = await Team.findOne({ user: user._id }).populate('teamMembers');
-
-      // Extract user IDs from the team members
-      const teamMemberIds = team.teamMembers.map(member => member._id);
-
-      // Fetch applications for team members
-      const applications = await Applications.find({ userId: { $in: teamMemberIds } });
-
-      return res.json({ team, applications });
-    }
-
-    // Handle other roles as needed
-
+    // Now req.queryConditions will include both the role-based conditions and the user-specific condition
+    await paginatedList(YourModel, req, res);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error in user data route:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 
+// Define other routes as needed
+
+// Export the router to be used in your main application file
 module.exports = router;

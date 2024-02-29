@@ -4,6 +4,7 @@ const paymentSchema = new mongoose.Schema(
   {
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'Application' 
     },
      userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -39,6 +40,10 @@ const paymentSchema = new mongoose.Schema(
       trim: true,
     },
     university_name: {
+      type: String,
+      trim: true,
+    },
+      session: {
       type: String,
       trim: true,
     },

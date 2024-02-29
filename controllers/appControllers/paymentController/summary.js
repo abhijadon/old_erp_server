@@ -90,6 +90,10 @@ const summary = async (req, res) => {
       matchQuery.institute_name = institute_name;
     }
 
+    if (payment_mode) {
+      matchQuery.payment_mode = payment_mode;
+    }
+
     if (university_name) {
       matchQuery.university_name = university_name;
     }
@@ -102,9 +106,6 @@ const summary = async (req, res) => {
     }
     if (payment_type) {
       matchQuery.payment_type = payment_type;
-    }
-      if (payment_mode) {
-      matchQuery.payment_mode = payment_mode;
     }
     if (status) {
       matchQuery.status = status; // Include dynamic status filtering

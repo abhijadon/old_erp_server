@@ -1,15 +1,43 @@
 const paginatedList = async (Model, req, res) => {
+  const user = req.user;
+  const instituteName = req.query.instituteName;
+  const universityName = req.query.universityName;
+
   try {
-    const resultsPromise = Model.find(req.queryConditions)
+    // Constructing the query based on institute and university names and user
+    let query = { removed: false, userId: user._id };
+
+    if (instituteName) {
+      query['customfields.institute_name'] = instituteName;
+    }
+    if (universityName) {
+      query['customfields.university_name'] = universityName;
+    }
+
+    // Additional condition for Team Leader
+    if (user.role === 'teamleader') {
+      const team = await Team.findOne({ user: user._id }).populate('teamMembers');
+
+      if (team) {
+        const teamMemberIds = team.teamMembers.map(member => member._id);
+        query.userId.$in = [...query.userId.$in, ...teamMemberIds];
+      }
+    }
+
+    // Query the database for a list of results
+    const resultsPromise = Model.find(query)
       .sort({ created: 'desc' })
-      .populate({ path: 'userId', select: req.user.role === 'admin' ? '' : '-password' });
+      .populate('userId');
 
-    const countPromise = Model.countDocuments(req.queryConditions);
+    // Counting the total documents
+    const countPromise = Model.countDocuments(query);
 
+    // Resolving both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     if (count > 0) {
-      const formattedResults = result.map(item => ({
+      // Format date and time before sending the response
+      const formattedResults = result.map((item) => ({
         ...item._doc,
         date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
         time: item.time,

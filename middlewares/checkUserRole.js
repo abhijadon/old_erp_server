@@ -2,21 +2,7 @@
 const Team = require('@/models/Team');
 
 const constructQuery = (user, instituteName, universityName) => {
-  let query;
-
-  if (user.role === 'admin') {
-    // Admin can access all data
-    query = {};
-  } else if (user.role === 'teamleader') {
-    // Team leader can access data for themselves and their team members
-    query = { userId: { $in: [user._id, ...user.teamMembers.map(member => member._id)] } };
-  } else if (user.role === 'subadmin') {
-    // Subadmin can access data for their assigned team leaders and team members
-    query = { userId: user._id };
-  } else {
-    // Users can only access their own data
-    query = { userId: user._id };
-  }
+  let query = { userId: user._id };
 
   // Add dynamic institute and university to the query if provided
   if (instituteName) {
@@ -49,7 +35,8 @@ const checkUserRoleMiddleware = async (req, res, next) => {
 
       if (team) {
         const teamMemberIds = team.teamMembers.map(member => member._id);
-        query.userId.$in = [...query.userId.$in, ...teamMemberIds];
+        // Create a copy of the query before modification
+        query.userId = { $in: [user._id, ...teamMemberIds] };
       }
     }
 

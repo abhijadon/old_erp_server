@@ -5,9 +5,7 @@ const create = async (req, res) => {
   try {
     const body = req.body;
 
-    // Assuming the body follows the structure specified in your schema
-
-    const result = await new Model(body).save();
+   const result = await new Model(body).save();
 
     // const updateResult = await Model.findOneAndUpdate(
     //   { _id: result._id },

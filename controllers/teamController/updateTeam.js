@@ -1,7 +1,11 @@
+// teamController.js
+
+const mongoose = require('mongoose');
 const Team = require('@/models/Team');
 
 const updateTeam = async (req, res) => {
   try {
+    const { id } = req.params;
     const { user, teamName, institute, university, teamMembers } = req.body;
 
     if (!user || !teamName) {
@@ -12,15 +16,21 @@ const updateTeam = async (req, res) => {
       });
     }
 
-    const existingTeams = await Team.find({
-      'user.username': user.username,
-      'teamName': { $regex: new RegExp(teamName.trim(), 'i') },
-    }).collation({ locale: 'en', strength: 2 });
+    const existingTeam = await Team.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          user,
+          teamName,
+          institute,
+          university,
+          teamMembers,
+        },
+      },
+      { new: true }
+    );
 
-    console.log('Existing Teams:', existingTeams);
-
-    if (!existingTeams || existingTeams.length === 0) {
-      console.log('Team not found. User:', user.username, 'TeamName:', teamName);
+    if (!existingTeam) {
       return res.status(404).json({
         success: false,
         result: null,
@@ -28,45 +38,9 @@ const updateTeam = async (req, res) => {
       });
     }
 
-    // Assuming you want to update the first team in the array, you can change this as needed.
-    const existingTeam = existingTeams[0];
-
-    console.log('Updating Team:', existingTeam);
-
-    // Check if the user updating is the team leader
-    console.log('User updating:', user);
-    console.log('Existing Team leader:', existingTeam.user);
-
-    if (existingTeam.user.username !== user.username || existingTeam.user.role !== 'teamleader') {
-      console.log('Permission denied. User:', user.username);
-      return res.status(403).json({
-        success: false,
-        result: null,
-        message: 'You do not have permission to update this team.',
-      });
-    }
-
-    // Update team details
-    existingTeam.user.fullname = user.fullname;
-    existingTeam.user.phone = user.phone;
-
-    existingTeam.teamName = teamName;
-    existingTeam.institute = institute;
-    existingTeam.university = university;
-
-    // Update team members
-    if (teamMembers) {
-      // Assuming teamMembers is an array of user IDs
-      existingTeam.teamMembers = teamMembers;
-    }
-
-    const updatedTeam = await existingTeam.save();
-
-    console.log('Updated Team:', updatedTeam);
-
     return res.status(200).json({
       success: true,
-      result: updatedTeam,
+      result: existingTeam,
       message: 'Team updated successfully.',
     });
   } catch (error) {

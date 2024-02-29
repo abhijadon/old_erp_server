@@ -44,34 +44,32 @@ const login = async (req, res) => {
       });
     }
 
-    // Generate JWT token with expiration
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' } // Set expiration to 1 hour
-    );
+   // Generate JWT token with expiration for 360 days
+const token = jwt.sign(
+  {
+    id: user._id,
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: '360d' }  // Set expiration to 360 days
+);
 
-    // Fetch user data based on role
-    let userData;
-    if (user.role === 'admin') {
-      // Admin can see data for all users
-      userData = await User.find({ removed: false }).exec();
-    } else {
-      // Regular user can only see their own data
-      userData = [user]; // Wrap the user in an array for consistent data structure
-    }
+ // Fetch user data based on role
+let userData;
+if (user.role === 'admin') {
+  userData = await User.find({ removed: false }).exec();
+} else {
+  userData = [user];
+}
+   // Update user session information
+const result = await User.findOneAndUpdate(
+  { _id: user._id },
+  {
+    $set: { isLoggedIn: true, status: 'online' },
+     $push: { loggedSessions: { token, expiration: new Date(Date.now() + 360 * 24 * 60 * 60 * 1000) } },
+  },
+  { new: true }
+).exec();
 
-    // Update user session information
-    const result = await User.findOneAndUpdate(
-      { _id: user._id },
-      {
-        $set: { isLoggedIn: true, status: 'online' },
-        $push: { loggedSessions: { token, expiration: new Date(Date.now() + 60 * 60 * 1000) } },
-      },
-      { new: true }
-    ).exec();
 
     const userAction = new UserAction({
       userId: req._id,
@@ -84,15 +82,16 @@ const login = async (req, res) => {
     // Save the updated admin document
     await result.save();
 
-    res.cookie('token', token, {
-      maxAge: 60 * 60 * 1000, // Set cookie expiration to 1 hour
-      sameSite: 'none',
-      httpOnly: true,
-      secure: true,
-      domain: req.hostname,
-      path: '/',
-      Partitioned: true,
-    });
+ // Set cookie with the same expiration time as the token
+res.cookie('token', token, {
+  maxAge: 360 * 24 * 60 * 60 * 1000, // Set cookie expiration to 360 days
+  sameSite: 'none',
+  httpOnly: true,
+  secure: true,
+  domain: req.hostname,
+  path: '/',
+  Partitioned: true,
+});
 
     res.status(200).json({
       success: true,

@@ -17,12 +17,12 @@ const update = async (Model, req, res) => {
       });
     }
 
- // Update total_paid_amount based on paid_amount
-if (req.body.customfields && req.body.customfields.paid_amount) {
-  result.customfields.total_paid_amount =
-    result.customfields.total_paid_amount || 0; // Ensure it's initialized
-  result.customfields.total_paid_amount += parseFloat(req.body.customfields.paid_amount);
-}
+//  // Update total_paid_amount based on paid_amount
+// if (req.body.customfields && req.body.customfields.paid_amount) {
+//   result.customfields.total_paid_amount =
+//     result.customfields.total_paid_amount || 0; // Ensure it's initialized
+//   result.customfields.total_paid_amount += parseFloat(req.body.customfields.paid_amount);
+// }
 
     // Save the changes
     await result.save();
