@@ -37,8 +37,7 @@ const summary = async (req, res) => {
       payment_mode,
       institute_name,
       university_name,
-      counselor_email,
-      status,
+        status,
       year,
       month,
       week,
@@ -97,14 +96,7 @@ const summary = async (req, res) => {
     if (university_name) {
       matchQuery.university_name = university_name;
     }
-    if (counselor_email) {
-      // Adjust the filter to consider the nested structure
-      matchQuery.counselor_email = {
-        $exists: true,
-        $eq: counselor_email.toLowerCase(),
-      };
-    }
-    if (payment_type) {
+     if (payment_type) {
       matchQuery.payment_type = payment_type;
     }
     if (status) {

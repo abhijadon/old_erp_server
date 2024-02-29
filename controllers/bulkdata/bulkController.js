@@ -71,8 +71,7 @@ exports.uploadData = async (req, res) => {
                 total_course_fee: app.customfields.total_course_fee,
                 total_paid_amount: app.customfields.total_paid_amount,
                 paid_amount: app.customfields.paid_amount,
-                counselor_email: app.customfields.counselor_email,
-                status: app.customfields.status,
+                           status: app.customfields.status,
                 institute_name: app.customfields.institute_name,
                 university_name: app.customfields.university_name,
                 // Add other fields as needed

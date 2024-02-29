@@ -245,26 +245,7 @@ const applicationSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-
-    counselor_email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
-    upload_fee_receipt_screenshot: [
-      {
-        originalFilename: String,
-        filename: String,
-        // Other properties as needed
-      },
-    ],
-    upload_student_document: [
-      {
-        originalFilename: String,
-        filename: String,
-        // Other properties as needed
-      },
-    ],
+    
     status: {
       type: String,
       trim: true,
@@ -428,8 +409,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           paid_amount: doc.customfields['paid_amount'],
           university_name: doc.customfields['university_name'],
           institute_name: doc.customfields['institute_name'],
-          counselor_email: doc.customfields['counselor_email'],
-         session: doc.customfields['session'],
+                   session: doc.customfields['session'],
           payment_mode: doc.customfields['payment_mode'],
           status: doc.customfields['status'],
           email: doc.contact['email'],
@@ -484,8 +464,7 @@ applicationSchema.pre('save', async function (next) {
       payment_mode: this.customfields['payment_mode'],
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
-      counselor_email: this.customfields['counselor_email'],
-      // ... other fields you want to set in the Payment record
+           // ... other fields you want to set in the Payment record
     });
 
     // Trigger the next middleware in the stack
@@ -519,8 +498,7 @@ applicationSchema.post('save', async function (doc) {
           total_paid_amount: doc.customfields['total_paid_amount'],
           payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
-          counselor_email: doc.customfields['counselor_email'],
-          status: doc.customfields['status'],
+                    status: doc.customfields['status'],
           // ... other fields you want to update in the Payment record
         },
       },

@@ -10,9 +10,6 @@ const filter = async (Model, req, res) => {
       filterConditions['institute_name'] = req.query.institute_name;
     }
 
-    if (req.query.counselor_name !== undefined) {
-      filterConditions['counselor_name'] = req.query.counselor_name;
-    }
 
     if (req.query.session !== undefined) {
       filterConditions['session'] = req.query.session;

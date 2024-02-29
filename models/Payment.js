@@ -31,10 +31,7 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       trim: true,
     },
-    counselor_email: {
-      type: String,
-      trim: true,
-    },
+   
     institute_name: {
       type: String,
       trim: true,

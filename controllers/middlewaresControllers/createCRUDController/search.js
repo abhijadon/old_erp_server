@@ -15,7 +15,6 @@ const search = async (Model, req, res) => {
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.query.q);
 
   const searchFields = [
-    { field: 'customfields.counselor_email', message: 'Counselor Email' },
     { field: 'contact.email', message: 'Contact Email' },
     { field: 'contact.phone', message: 'Contact Phone' },
     { field: 'full_name', message: 'Full Name' },

@@ -62,8 +62,7 @@ const create = async (Model, req, res) => {
 
         const {
           'contact.email': contactEmail,
-          'customfields.counselor_email': counselorEmail,
-          'customfields.send_fee_receipt': sendFeeReceipt,
+                 'customfields.send_fee_receipt': sendFeeReceipt,
           'education.course': course,
           'customfields.institute_name': institute,
           'customfields.father_name': fatherName,
@@ -113,7 +112,7 @@ const create = async (Model, req, res) => {
         );
 
         const result = await newDoc.save();
-        let receiverEmail = `${studentEmail},${counselorEmail}`;
+        let receiverEmail = `${studentEmail}`;
 
         if (
           institute &&
