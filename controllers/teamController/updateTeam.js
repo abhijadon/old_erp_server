@@ -1,56 +1,50 @@
-// teamController.js
+const Team = require('@/models/Team')
 
-const mongoose = require('mongoose');
-const Team = require('@/models/Team');
-
-const updateTeam = async (req, res) => {
+const update = async ( req, res) => {
   try {
     const { id } = req.params;
-    const { user, teamName, institute, university, teamMembers } = req.body;
 
-    if (!user || !teamName) {
-      return res.status(400).json({
-        success: false,
-        result: null,
-        message: 'user and teamName are required.',
-      });
-    }
+    // Find document by id and updates with the required fields
+    const result = await Team.findOneAndUpdate(
+      { _id: id, removed: false },
+      req.body,
+      { new: true, runValidators: true }
+    ).exec();
 
-    const existingTeam = await Team.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          user,
-          teamName,
-          institute,
-          university,
-          teamMembers,
-        },
-      },
-      { new: true }
-    );
-
-    if (!existingTeam) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         result: null,
-        message: 'Team not found.',
+        message: `No document found by this id: ${id}`,
       });
     }
 
+    await result.save();
+
     return res.status(200).json({
       success: true,
-      result: existingTeam,
-      message: 'Team updated successfully.',
+      result,
+      message: `Document updated successfully by this id: ${id}`,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error,
-    });
+    // If error is thrown by Mongoose due to required validations
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        result: null,
+        message: 'Required fields are not supplied',
+        error: error,
+      });
+    } else {
+      // Server Error
+      return res.status(500).json({
+        success: false,
+        result: null,
+        message: error.message,
+        error: error,
+      });
+    }
   }
 };
 
-module.exports = updateTeam;
+module.exports = update;

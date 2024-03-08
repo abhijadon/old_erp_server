@@ -1,23 +1,27 @@
 const mongoose = require('mongoose');
 const Team = mongoose.model('Team');
 
-const getTeams = async (req, res) => {
+const listAll = async (req, res) => {
   try {
-    const teams = await Team.find().populate('user teamMembers');
+    // Constructing the query based on institute and university names
+    const query = { removed: false };
 
+    // Query the database for a list of results, populating the "user" field
+    const results = await Team.find(query).populate('userId teamMembers');
+ 
     return res.status(200).json({
       success: true,
-      result: teams,
-      message: 'Teams retrieved successfully.',
+      result: results,
+      message: 'Successfully found all documents',
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error,
+      result: [],
+      message: error.message,
+      error: error,
     });
   }
 };
 
-module.exports =  getTeams
+module.exports = listAll;

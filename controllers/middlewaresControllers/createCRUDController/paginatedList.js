@@ -1,3 +1,5 @@
+const Team = require("@/models/Team");
+
 const paginatedList = async (Model, req, res) => {
   const user = req.user;
   const instituteName = req.query.instituteName;
@@ -5,8 +7,9 @@ const paginatedList = async (Model, req, res) => {
 
   try {
     // Constructing the query based on institute and university names and user
-    let query = { removed: false, userId: user._id };
+    let query = { removed: false };
 
+    // Add dynamic institute and university to the query if provided
     if (instituteName) {
       query['customfields.institute_name'] = instituteName;
     }
@@ -20,8 +23,14 @@ const paginatedList = async (Model, req, res) => {
 
       if (team) {
         const teamMemberIds = team.teamMembers.map(member => member._id);
-        query.userId.$in = [...query.userId.$in, ...teamMemberIds];
+        // Limit the query to the team leader and team members
+        query.userId = { $in: [user._id, ...teamMemberIds] };
       }
+    } else if (user.role === 'admin') {
+      // Admin gets all data, so no need to modify the query
+    } else {
+      // For other roles, limit the query to the user's own data
+      query.userId = user._id;
     }
 
     // Query the database for a list of results

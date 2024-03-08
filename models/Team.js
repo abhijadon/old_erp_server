@@ -1,8 +1,7 @@
-// teamModel.js
 const mongoose = require('mongoose');
 
 const teamSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
@@ -12,11 +11,11 @@ const teamSchema = new mongoose.Schema({
   }],
   institute: [{
     type: String,
-    trim: true
+    trim: true,
   }],
   university: [{
     type: String,
-    trim: true
+    trim: true,
   }],
   teamName: {
     type: String,
