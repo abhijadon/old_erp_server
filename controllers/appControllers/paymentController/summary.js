@@ -18,10 +18,8 @@ const summary = async (req, res) => {
       date,
       time,
     } = req.query;
-
-    const matchQuery = {
-      removed: false,
-    };
+  
+    const matchQuery = { removed: false };
 
     if (date) {
       const currentDate = new Date(date);
@@ -75,15 +73,14 @@ const summary = async (req, res) => {
       matchQuery.payment_type = payment_type;
     }
 
-
     if (status) {
       matchQuery.status = status;
     } 
     
 if (userId) {
-  matchQuery['userId.fullname'] = userId;
-}
-
+      // Assuming userId is the ObjectID, if not, adjust accordingly
+      matchQuery.userId = mongoose.Types.ObjectId(userId);
+    }
     const result = await Model.aggregate([
       { $match: matchQuery },
       {

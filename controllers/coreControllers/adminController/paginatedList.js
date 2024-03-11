@@ -1,41 +1,34 @@
-const mongoose = require('mongoose');
-const Admin = mongoose.model('User');
+  const mongoose = require('mongoose');
+  const Admin = mongoose.model('User');
 
-const paginatedList = async (req, res) => {
-  const page = req.query.page || 1;
-  const limit = parseInt(req.query.items) || 10;
-  const skip = page * limit - limit;
+  const paginatedList = async (req, res) => {
+    try {
+      const results = await Admin.find({ removed: false, enabled: true });
 
-  //  Query the database for a list of all results
-  const resultsPromise = Admin.find({ removed: false, enabled: true })
-    .skip(skip)
-    .limit(limit)
-    .sort({ created: 'desc' })
-    .populate();
-  // Counting the total documents
-  const countPromise = Admin.countDocuments({ removed: false });
-  // Resolving both promises
-  const [result, count] = await Promise.all([resultsPromise, countPromise]);
-  // Calculating total pages
-  const pages = Math.ceil(count / limit);
+      // Counting the total documents
+      const count = await Admin.countDocuments({ removed: false });
 
-  // Getting Pagination Object
-  const pagination = { page, pages, count };
-  if (count > 0) {
-    return res.status(200).json({
-      success: true,
-      result,
-      pagination,
-      message: 'Successfully found all documents',
-    });
-  } else {
-    return res.status(203).json({
-      success: false,
-      result: [],
-      pagination,
-      message: 'Collection is Empty',
-    });
-  }
-};
+      if (count > 0) {
+        return res.status(200).json({
+          success: true,
+          result: results,
+          message: 'Successfully found all documents',
+        });
+      } else {
+        return res.status(203).json({
+          success: false,
+          result: [],
+          message: 'Collection is Empty',
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        result: [],
+        message: 'Error retrieving documents',
+        error: error.message,
+      });
+    }
+  };
 
-module.exports = paginatedList;
+  module.exports = paginatedList;
