@@ -1,10 +1,11 @@
+// models/User.js
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
 const mongooseHistory = require('mongoose-history');
 const passportLocalMongoose = require('passport-local-mongoose');
-const adminSchema = new Schema({
 
+const adminSchema = new Schema({
   fullname: {
     type: String,
     required: true,
@@ -14,7 +15,7 @@ const adminSchema = new Schema({
     type: Number,
     trim: true,
     required: true,
-  },  
+  },
   username: {
     type: String,
     lowercase: true,
@@ -33,23 +34,20 @@ const adminSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-role: {
+  role: {
     type: String,
     default: 'user',
-    enum: ['admin', 'subadmin','manager', 'supportiveassociate', 'teamleader', 'user'],
+    enum: ['admin', 'subadmin', 'manager', 'supportiveassociate', 'teamleader', 'user'],
   },
   status: {
     type: String,
     enum: ['online', 'offline'],
     default: 'offline',
   },
-  
-  // team models use
- actions: [{
-  type: mongoose.Schema.Types.ObjectId,
-  ref: 'UserAction',
-}],
-  
+  actions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserAction',
+  }],
   isLoggedIn: {
     type: Boolean,
     default: false,

@@ -21,6 +21,10 @@ const teamSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  divided: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const Team = mongoose.model('Team', teamSchema);

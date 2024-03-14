@@ -1,24 +1,31 @@
-//this middleware will check if the user has permission
+const Permission = require('@/models/Permission');
 
-const roles = {
-  admin: ['create', 'read', 'update', 'delete', 'download', 'upload'],
-  subadmin: ['create', 'read', 'update', 'delete', 'download', 'upload'],
-  teamleader: ['create', 'read', 'update', 'download', 'upload'],
-  user: ['create', 'read'],
+exports.hasPermission = (permissionName = 'none') => {
+  return async function (req, res, next) {
+    try {
+      const currentUserPermissions = await Permission.findOne({
+        user: req.user._id,
+      });
 
-};
-exports.roles = roles;
-exports.hasPermission = (permissionName = 'all') => {
-  return function (req, res, next) {
-    const currentUserRole = req.admin.role;
-
-    if (roles[currentUserRole].includes(permissionName) || req.admin.role === 'admin') {
-      next();
-    } else {
-      return res.status(403).json({
+      if (
+        currentUserPermissions &&
+        currentUserPermissions.permissions.includes(permissionName)
+      ) {
+        next();
+      } else {
+        return res.status(403).json({
+          success: false,
+          result: null,
+          message: 'Access denied: You are not granted permission.',
+        });
+      }
+    } catch (error) {
+      console.error('Permission error:', error);
+      res.status(500).json({
         success: false,
         result: null,
-        message: 'Access denied : you are not granted permission.',
+        message: 'Internal server error. Please try again later.',
+        error: error.message,
       });
     }
   };

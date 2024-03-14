@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
-const Team = mongoose.model('Team'); // Import Team model
+
 
 const create = async (req, res) => {
   try {
@@ -31,7 +31,7 @@ if (!username || !password || !phone)
       });
 
     // Optional: Role validation
-    if (!['admin', 'subadmin', 'teamleader', 'user'].includes(req.body.role)) {
+    if (!['admin', 'subadmin', 'manager', 'supportiveassociate', 'teamleader', 'user'].includes(req.body.role)) {
       return res.status(400).json({
         success: false,
         result: null,

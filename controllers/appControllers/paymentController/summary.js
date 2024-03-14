@@ -15,21 +15,21 @@ const summary = async (req, res) => {
       month,
       userId,
       week,
-      date,
-      time,
+      startDate,
+      endDate,
     } = req.query;
   
     const matchQuery = { removed: false };
 
-    if (date) {
-      const currentDate = new Date(date);
-      const nextDate = moment(currentDate).add(1, 'days').toDate();
+if (startDate) {
+  matchQuery.createdAt = matchQuery.createdAt || {};
+  matchQuery.createdAt.$gte = new Date(startDate);
+}
 
-      matchQuery.date = {
-        $gte: currentDate,
-        $lt: nextDate,
-      };
-    }
+if (endDate) {
+  matchQuery.createdAt = matchQuery.createdAt || {};
+  matchQuery.createdAt.$lt = new Date(endDate);
+}
 
     if (year) {
       matchQuery.year = parseInt(year, 10);
@@ -43,19 +43,6 @@ const summary = async (req, res) => {
       matchQuery.week = parseInt(week, 10);
     }
 
-    if (time) {
-      const [hours, minutes] = moment(time, 'hh:mm A').format('HH:mm').split(':').map(Number);
-
-      const timeRangeStart = moment().set({ hours, minutes, seconds: 0, milliseconds: 0 }).toDate();
-      const timeRangeEnd = moment()
-        .set({ hours, minutes, seconds: 59, milliseconds: 999 })
-        .toDate();
-
-      matchQuery.time = {
-        $gte: timeRangeStart,
-        $lte: timeRangeEnd,
-      };
-    }
 
     if (institute_name) {
       matchQuery.institute_name = institute_name;
@@ -81,28 +68,31 @@ if (userId) {
       // Assuming userId is the ObjectID, if not, adjust accordingly
       matchQuery.userId = mongoose.Types.ObjectId(userId);
     }
-    const result = await Model.aggregate([
-      { $match: matchQuery },
-      {
-        $group: {
-          _id: null,
-          count: { $sum: 1 },
-          total_paid_amount: { $sum: '$total_paid_amount' },
-          paid_amount: { $sum: '$paid_amount' },
-          total_course_fee: { $sum: '$total_course_fee' },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          count: 1,
-          total_paid_amount: 1,
-          paid_amount: 1,
-          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
-          total_course_fee: 1,
-        },
-      },
-    ]);
+   // Add log statements for debugging
+const result = await Model.aggregate([
+  { $match: matchQuery },
+  {
+    $group: {
+      _id: null,
+      count: { $sum: 1 },
+      total_course_fee: { $sum: '$total_course_fee' },
+      total_paid_amount: { $sum: '$total_paid_amount' },
+      paid_amount: { $sum: '$paid_amount' },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      count: 1,
+      total_paid_amount: 1,
+      paid_amount: 1,
+      due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
+      total_course_fee: 1,
+    },
+  },
+]);
+
+
     const universityData1 = [
       'University',
       'SPU',
