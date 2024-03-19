@@ -19,56 +19,22 @@ const paginatedList = async (Model, req, res) => {
       let team = await Team.findOne({ userId: user._id }).populate('teamMembers');
 
       if (team) {
+        query['customfields.institute_name'] = { $in: team.institute }   
+        query['customfields.university_name'] = { $in: team.university }   
+        query['university_name'] = { $in: team.university }   
+        query['institute_name'] = { $in: team.institute }      
+               } 
+    } else if (user.role === 'supportiveassociate') {
+      let team = await Team.findOne({ userId: user._id }).populate('teamMembers');
+
+      if (team) {
+        const teamMemberIds = team.teamMembers.map(member => member._id);
+        query.userId = { $in: [user._id, ...teamMemberIds] };
         query['customfields.institute_name'] = { $in: team.institute };
-        query['institute_name'] = { $in: team.institute };
-      } 
-   } else if (user.role === 'supportiveassociate') {
-  let team = await Team.findOne({ userId: user._id }).populate('teamMembers');
-
-  if (team) {
-    query['customfields.institute_name'] = { $in: team.institute };
-    query['customfields.university_name'] = { $in: team.university };
-    query['divided'] = team.divided;
-
-    const supportiveAssociatesCount = await Team.countDocuments({
-      divided: { $gt: 0 },
-    });
-
-    const totalCount = await Model.countDocuments(query);
-
-    const documentsPerSupportiveAssociate = Math.ceil(totalCount / supportiveAssociatesCount);
-    const skip = team.divided * documentsPerSupportiveAssociate;
-
-    const resultsPromise = Model.find(query)
-      .sort({ created: 'desc' })
-      .skip(skip)
-      .limit(documentsPerSupportiveAssociate)
-      .populate('userId');
-
-    const result = await resultsPromise;
-
-    await Team.updateOne({ userId: user._id }, { $inc: { divided: 1 } });
-
-    const formattedResults = result.map((item) => ({
-      ...item._doc,
-      date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
-      time: item.time,
-    }));
-
-    return res.status(200).json({
-      success: true,
-      result: formattedResults,
-      count: result.length,
-      message: 'Successfully found documents for the supportive associate',
-    });
-  } else {
-    return res.status(200).json({
-      success: true,
-      result: [],
-      count: 0,
-      message: 'No team found for the supportive associate',
-    });
-  }
+        query['customfields.university_name'] = { $in: team.university }; 
+        query['institute_name'] = { $in: team.institute }; 
+        query['university_name'] = { $in: team.university };
+      }
     } else if (user.role === 'teamleader') {
       const team = await Team.findOne({ userId: user._id }).populate('teamMembers');
 

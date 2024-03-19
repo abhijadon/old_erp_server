@@ -13,9 +13,9 @@ const update = async (req, res) => {
     // }
     let updates = {
       role: req.body.role,
-      email: req.body.email,
-      name: req.body.name,
-      surname: req.body.surname,
+      username: req.body.username,
+      fullname: req.body.fullname,
+      phone: req.body.phone,
       photo: req.body.photo,
     };
 
@@ -40,9 +40,9 @@ const update = async (req, res) => {
       result: {
         _id: result._id,
         enabled: result.enabled,
-        email: result.email,
-        name: result.name,
-        surname: result.surname,
+        username: result.username,
+        fullname: result.fullname,
+        phone: result.phone,
         photo: result.photo,
         role: result.role,
       },

@@ -21,15 +21,16 @@ const summary = async (req, res) => {
   
     const matchQuery = { removed: false };
 
-if (startDate) {
-  matchQuery.createdAt = matchQuery.createdAt || {};
-  matchQuery.createdAt.$gte = new Date(startDate);
-}
-
-if (endDate) {
-  matchQuery.createdAt = matchQuery.createdAt || {};
-  matchQuery.createdAt.$lt = new Date(endDate);
-}
+ if (startDate && endDate) {
+      matchQuery.created = {
+        $gte: new Date(startDate), // Greater than or equal to startDate
+        $lt: new Date(endDate),    // Less than endDate
+      };
+    } else if (startDate) {
+      matchQuery.created = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      matchQuery.created = { $lt: new Date(endDate) };
+    }
 
     if (year) {
       matchQuery.year = parseInt(year, 10);

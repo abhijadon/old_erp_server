@@ -2,7 +2,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
-const mongooseHistory = require('mongoose-history');
 const passportLocalMongoose = require('passport-local-mongoose');
 
 const adminSchema = new Schema({
@@ -65,7 +64,6 @@ const adminSchema = new Schema({
 });
 
 adminSchema.plugin(require('mongoose-autopopulate'));
-adminSchema.plugin(mongooseHistory, { customCollectionName: 'AdminHistory' });
 
 adminSchema.methods.generateHash = function (password) {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(), null);

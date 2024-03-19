@@ -2,61 +2,29 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 mongoose.Promise = global.Promise;
 const { Payment } = require('./Payment');
-const mongooseHistory = require('mongoose-history');
-
-
-// History Entry Schema
-const historyEntrySchema = new Schema({
-  documentId: Schema.Types.ObjectId,
-  changes: {
-    type: Map,
-    of: {
-      oldValue: Schema.Types.Mixed,
-      newValue: Schema.Types.Mixed,
-      timestamp: { type: Date, default: Date.now },
-      updatedBy: String, // Add user information
-    },
-  },
-});
-
-const HistoryEntry = mongoose.model('HistoryEntry', historyEntrySchema);
-
-// Remark History Schema
-const remarkHistorySchema = new Schema({
+const applicationHistorySchema = new mongoose.Schema({
   applicationId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Applications',
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Applications'
   },
-  remark: {
-    type: String,
-    trim: true,
+  updatedFields: {
+    type: Object,
+    required: true
   },
   updatedBy: {
     type: String,
-    trim: true,
+    required: true
   },
   updatedAt: {
     type: Date,
-    default: Date.now,
-  },
-  completed: {
-    type: Boolean,
-    default: false,
-  },
-  completedBy: {
-    type: String,
-    trim: true,
-    default: null,
-  },
-  completedAt: {
-    type: Date,
-    default: null,
-  },
+    default: Date.now
+  }
 });
 
-const RemarkHistory = mongoose.model('RemarkHistory', remarkHistorySchema);
+const ApplicationHistory = mongoose.model('ApplicationHistory', applicationHistorySchema);
 
-// Application Schema
+
+
 const applicationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -80,64 +48,7 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-
-  
-    history: {
-    total_course_fee: [
-      {
-        value: String,
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        date: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    total_paid_amount: [
-      {
-        value: Number,
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        date: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    paid_amount: [
-      {
-        value: Number,
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        date: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    installment_type: [
-      {
-        value: String,
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        date: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-  },
-
-
+ 
   contact: {
   email: {
     type: String,
@@ -256,140 +167,41 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       default: 'N/A',
     },
-  },
-
+  }, 
   created: {
     type: Date,
     default: Date.now,
   },
-  week: {
-    type: Number,
-    default: function () {
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-      currentDate.setDate(currentDate.getDate() + 3 - ((currentDate.getDay() + 6) % 7));
-      const week1 = new Date(currentDate.getFullYear(), 0, 4);
-      return (
-        1 +
-        Math.round(
-          ((currentDate.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) /
-            7
-        )
-      );
-    },
-  },
-  year: {
-    type: Number,
-    default: () => new Date().getFullYear(),
-  },
-  date: {
-    type: Date,
-    default: Date.now,
-    get: function (val) {
-      // Format the date as 'MM/DD/YYYY'
-      return val ? new Date(val).toLocaleDateString('en-US') : '';
-    },
-  },
-  time: {
-    type: Date,
-    default: Date.now,
-    get: function (val) {
-      // Format the time as 'hh:mm A'
-      return val
-        ? new Date(val).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          })
-        : '';
-    },
-  },
 });
 
-applicationSchema.plugin(mongooseHistory, { customCollectionName: 'ApplicationHistory' });
- 
-applicationSchema.pre('save', async function (next) {
-  try {
-    const userId = this.userId;
-    if (!this.isNew) {
-      this.history.total_course_fee.push({
-        value: this.customfields['total_course_fee'],
-        userId,
-      });
-      this.history.total_paid_amount.push({
-        value: this.customfields['total_paid_amount'],
-        userId,
-      });
-      this.history.paid_amount.push({
-        value: this.customfields['paid_amount'],
-      });
-      this.history.installment_type.push({
-        value: this.customfields['installment_type'],
-        userId,
-      });
-    }
-    next();
-  } catch (error) {
-    console.error('Error updating history fields:', error);
-    next(error);
-  }
+applicationSchema.pre('findOneAndUpdate', async function () {
+  this._original = await this.model.findOne(this.getQuery()).lean();
 });
-
-
-
-
-
-applicationSchema.pre('save', async function (next) {
-  try {
-    const documentId = this._id;
-    const changes = {};
-    if (!this.isNew) {
-      const originalDocument = await this.constructor.findOne({ _id: this._id });
-
-      Object.keys(this._doc).forEach((field) => {
-        const originalValue = originalDocument[field];
-        const currentValue = this._doc[field];
-
-        if (originalValue !== currentValue) {
-          changes[field] = {
-            oldValue: originalValue,
-            newValue: currentValue,
-          };
-        }
-      });
-    }
-
-    if (Object.keys(changes).length > 0) {
-      await HistoryEntry.create({
-        documentId,
-        changes,
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Error saving history entry:', error);
-    next(error);
-  }
-});
-
-
-
-
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
-    const applicationId = doc._id;
-    const remark = doc.customfields.remark;
-    const updatedBy = 'system';
+    const originalDoc = this._original;
+    delete this._original;
 
-    await RemarkHistory.create({
-      applicationId,
-      remark,
-      updatedBy,
-    });
+    const updatedFields = {};
+    for (const key of Object.keys(originalDoc)) {
+      if (JSON.stringify(originalDoc[key]) !== JSON.stringify(doc[key])) {
+        updatedFields[key] = {
+          oldValue: originalDoc[key],
+          newValue: doc[key]
+        };
+      }
+    }
+
+    if (Object.keys(updatedFields).length > 0) {
+      await ApplicationHistory.create({
+        applicationId: doc._id,
+        updatedFields,
+        updatedBy: 'system'// You can specify who updated the record here
+      });
+    }
   } catch (error) {
-    console.error('Error saving remark history:', error);
+    console.error('Error creating application history:', error);
   }
 });
 
@@ -415,22 +227,12 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           email: doc.contact['email'],
           phone: doc.contact['phone'],
           student_name: doc.full_name,
+          created: doc.created,
           // ... other fields you want to update in the Payment record
         },
       },
       { upsert: true }
     );
-
-    const userId = doc.userId;
-    const changes = {
-      paymentUpdatedBy: userId,
-      paymentUpdatedAt: Date.now(),
-    };
-
-    await HistoryEntry.create({
-      documentId: applicationId,
-      changes,
-    });
   } catch (error) {
     console.error('Error updating Payment record:', error);
   }
@@ -464,6 +266,7 @@ applicationSchema.pre('save', async function (next) {
       payment_mode: this.customfields['payment_mode'],
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
+      created: this.created,
            // ... other fields you want to set in the Payment record
     });
 
@@ -474,8 +277,6 @@ applicationSchema.pre('save', async function (next) {
     return next(error);
   }
 });
-
-
 // Post-save hook for updating existing data
 applicationSchema.post('save', async function (doc) {
   try {
@@ -498,7 +299,8 @@ applicationSchema.post('save', async function (doc) {
           total_paid_amount: doc.customfields['total_paid_amount'],
           payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
-                    status: doc.customfields['status'],
+          status: doc.customfields['status'],
+           created: doc.created,
           // ... other fields you want to update in the Payment record
         },
       },
@@ -508,7 +310,8 @@ applicationSchema.post('save', async function (doc) {
     console.error('Error updating Payment record:', error);
   }
 });
+
 const Applications = mongoose.model('Applications', applicationSchema);
 
-module.exports = { Applications, RemarkHistory, HistoryEntry };
+module.exports = { Applications, ApplicationHistory };
 

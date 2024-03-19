@@ -1,5 +1,29 @@
+// models/payment.js
+
 const mongoose = require('mongoose');
-const mongooseHistory = require('mongoose-history');
+
+// Define a schema for the payment history
+const paymentHistorySchema = new mongoose.Schema({
+  paymentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment'
+  },
+  updatedFields: {
+    type: Object,
+    required: true
+  },
+  updatedBy: {
+    type: String,
+    required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+const PaymentHistory = mongoose.model('PaymentHistory', paymentHistorySchema);
+
+
 const paymentSchema = new mongoose.Schema(
   {
     applicationId: {
@@ -48,7 +72,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    total_course_fee: {
+    total_course_fee: { 
       type: Number,
       required: true,
       default: 0,
@@ -77,58 +101,63 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    week: {
-      type: Number,
-      default: function () {
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-        currentDate.setDate(currentDate.getDate() + 3 - ((currentDate.getDay() + 6) % 7));
-        const week1 = new Date(currentDate.getFullYear(), 0, 4);
-        return (
-          1 +
-          Math.round(
-            ((currentDate.getTime() - week1.getTime()) / 86400000 -
-              3 +
-              ((week1.getDay() + 6) % 7)) /
-              7
-          )
-        );
-      },
-    },
-    year: {
-      type: Number,
-      default: () => new Date().getFullYear(),
-    },
-    date: {
-      type: Date,
-      default: Date.now,
-      get: function (val) {
-        // Format the date as 'MM/DD/YYYY'
-        return val ? new Date(val).toLocaleDateString('en-US') : '';
-      },
-    },
-    time: {
-      type: Date,
-      default: Date.now,
-      get: function (val) {
-        // Format the time as 'hh:mm A'
-        return val
-          ? new Date(val).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            })
-          : '';
-      },
-    },
   },
-  {
-    timestamps: true,
-  }
 );
 
-paymentSchema.plugin(mongooseHistory, { customCollectionName: 'PaymentHistory' });
+// Middleware for tracking changes and creating history
+paymentSchema.post('findOneAndUpdate', async function (doc) {
+  try {
+    const paymentId = doc._id;
+    const originalDoc = await this.model.findOne({ _id: paymentId }).lean();
+
+    const updatedFields = {};
+    for (const key of Object.keys(originalDoc)) {
+      if (JSON.stringify(originalDoc[key]) !== JSON.stringify(doc[key])) {
+        updatedFields[key] = {
+          oldValue: originalDoc[key],
+          newValue: doc[key]
+        };
+      }
+    }
+
+    if (Object.keys(updatedFields).length > 0) {
+      await PaymentHistory.create({
+        paymentId,
+        updatedFields,
+        updatedBy: 'System' // You can specify who updated the record here
+      });
+    }
+  } catch (error) {
+    console.error('Error creating payment history:', error);
+  }
+});
+
+// Middleware for tracking creation of new documents
+paymentSchema.post('save', async function (doc) {
+  try {
+    await PaymentHistory.create({
+      paymentId: doc._id,
+      updatedFields: doc.toObject(),
+      updatedBy: 'System' // You can specify who created the record here
+    });
+  } catch (error) {
+    console.error('Error creating payment history:', error);
+  }
+});
+
+// Middleware for tracking removal of documents
+paymentSchema.post('findOneAndRemove', async function (doc) {
+  try {
+    await PaymentHistory.create({
+      paymentId: doc._id,
+      updatedFields: { removed: true },
+      updatedBy: 'System' // You can specify who removed the record here
+    });
+  } catch (error) {
+    console.error('Error creating payment history:', error);
+  }
+});
 
 const Payment = mongoose.model('Payment', paymentSchema);
 
-module.exports = { Payment };
+module.exports = { Payment, PaymentHistory };

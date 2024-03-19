@@ -50,9 +50,9 @@ app.use('/public',authenticate,checkUserRoleMiddleware,corePublicRouter);
 app.use('/api',authenticate,checkUserRoleMiddleware, bulkData);
 app.use('/api',authenticate,checkUserRoleMiddleware,remarkHistory); 
 app.use('/api', authenticate ,checkUserRoleMiddleware, require("@/routes/api/teamRoutes")) 
-app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/team")) 
+app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/history")) 
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/permissionapi")) 
-
+app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/history")) 
 
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);

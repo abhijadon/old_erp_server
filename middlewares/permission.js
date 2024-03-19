@@ -4,7 +4,7 @@ exports.hasPermission = (permissionName = 'none') => {
   return async function (req, res, next) {
     try {
       const currentUserPermissions = await Permission.findOne({
-        user: req.user._id,
+        userId: req.user._id, // Change 'user' to 'userId' to match the schema
       });
 
       if (

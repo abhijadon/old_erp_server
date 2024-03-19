@@ -7,7 +7,7 @@ const list = async (req, res) => {
     const query = { removed: false };
 
     // Query the database for a list of results, populating the "user" field
-    const results = await Permission.find(query).populate('user');
+    const results = await Permission.find(query).populate('userId');
  
     return res.status(200).json({
       success: true,

@@ -1,26 +1,26 @@
-const Permission = require('@/models/Permission')
+const Permission = require('@/models/Permission');
 
 const create = async (req, res) => {
   try {
-    // Check if a team with the same user already exists
-    const existingTeam = await Permission.findOne({ user: req.body.user });
+    // Check if permissions for the provided userId already exist
+    const existingPermissions = await Permission.findOne({ userId: req.body.userId });
 
-    if (existingTeam) {
-      // Team with the same user already exists
+    if (existingPermissions) {
+      // Permissions for the provided userId already exist
       return res.status(400).json({
         success: false,
-        message: 'Permissions with the provided user already exists',
+        message: 'Permissions for the provided user already exist',
         error: null,
       });
     }
 
-    // Create a new team if user is not duplicate
+    // Create new permissions if no existing permissions found for the provided userId
     const result = await Permission.create(req.body);
 
     res.status(200).json({
       success: true,
       result: result,
-      message: 'Permission are ready',
+      message: 'Permissions created successfully',
     });
   } catch (error) {
     console.error('Error saving to the database:', error);
@@ -28,14 +28,14 @@ const create = async (req, res) => {
     if (error.name === 'ValidationError') {
       res.status(400).json({
         success: false,
-        result,
+        result: null,
         message: 'Required fields are not supplied',
         error: error,
       });
     } else {
       res.status(500).json({
         success: false,
-        result,
+        result: null,
         message: error.message,
         error: error,
       });
