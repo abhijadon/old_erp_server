@@ -1,10 +1,10 @@
-// PaymentHistory.js
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const userHistorySchema = new mongoose.Schema({
-  userId: {
+const applicationHistorySchema = new mongoose.Schema({
+  applicationId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Applications'
   },
   updatedFields: {
     type: Object,
@@ -20,6 +20,6 @@ const userHistorySchema = new mongoose.Schema({
   }
 });
 
-const UserHistory = mongoose.model('UserHistory', userHistorySchema);
+const ApplicationHistory = mongoose.model('ApplicationHistory', applicationHistorySchema);
 
-module.exports = UserHistory;
+module.exports = ApplicationHistory;

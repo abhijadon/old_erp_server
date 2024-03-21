@@ -1,4 +1,4 @@
-const { ApplicationHistory } = require('@/models/Application');
+const ApplicationHistory = require('@/models/ApplicationHistory');
 
 async function getStudentHistory(studentId) {
   try {
@@ -7,6 +7,7 @@ async function getStudentHistory(studentId) {
         path: 'applicationId',
         match: { _id: studentId } // Filter only entries relevant to the specific student ID
       })
+      .populate('updatedBy') // Populate the updatedBy field with user details
       .sort({ updatedAt: 'desc' })
       .exec();
     

@@ -1,16 +1,26 @@
+const UserHistory = require('@/models/UserHistory');
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
 
+
 const update = async (req, res) => {
   try {
-    // let { email } = req.body;
+    const existingDocument = await Admin.findById(req.params.id); // Find the existing document
 
-    // if (email) {
-    //   const existingAdmin = await Admin.findOne({ email: email });
+    if (!existingDocument) {
+      return res.status(404).json({
+        success: false,
+        result: null,
+        message: 'No document found by this id: ' + req.params.id,
+      });
+    }
 
-    //   if (existingAdmin._id != req.params.id)
-    //     return res.status(400).json({ message: 'An account with this email already exists.' });
-    // }
+    // Include updatedBy field in the request body
+    req.body.updatedBy = req.user._id;
+
+    // Store the old values before updating
+    const oldValues = { ...existingDocument.toObject() };
+
     let updates = {
       role: req.body.role,
       username: req.body.username,
@@ -28,13 +38,29 @@ const update = async (req, res) => {
       }
     ).exec();
 
-    if (!result) {
-      return res.status(404).json({
-        success: false,
-        result: null,
-        message: 'No document found by this id: ' + req.params.id,
+    // Define updatedFields variable
+    const updatedFields = {}; // Initialize empty object
+
+    // Populate updatedFields with updated fields and old values
+    for (const key of Object.keys(req.body)) {
+      if (JSON.stringify(req.body[key]) !== JSON.stringify(oldValues[key])) {
+        // Only include fields that have been updated
+        updatedFields[key] = {
+          oldValue: oldValues[key],
+          newValue: req.body[key]
+        };
+      }
+    }
+
+    // Create application history if there are any updated fields
+    if (Object.keys(updatedFields).length > 0) {
+      await UserHistory.create({
+        userId: req.params.id,
+        updatedFields,
+        updatedBy: req.user._id // Include the updatedBy field
       });
     }
+
     return res.status(200).json({
       success: true,
       result: {
@@ -46,7 +72,7 @@ const update = async (req, res) => {
         photo: result.photo,
         role: result.role,
       },
-      message: 'we update this document by this id: ' + req.params.id,
+      message: 'Document updated successfully with id: ' + req.params.id,
     });
   } catch (error) {
     // Server Error

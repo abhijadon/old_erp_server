@@ -1,29 +1,7 @@
 // models/payment.js
 
 const mongoose = require('mongoose');
-
-// Define a schema for the payment history
-const paymentHistorySchema = new mongoose.Schema({
-  paymentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Payment'
-  },
-  updatedFields: {
-    type: Object,
-    required: true
-  },
-  updatedBy: {
-    type: String,
-    required: true
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-const PaymentHistory = mongoose.model('PaymentHistory', paymentHistorySchema);
-
-
+const PaymentHistory = require('./PaymentHIstory');
 const paymentSchema = new mongoose.Schema(
   {
     applicationId: {
@@ -101,6 +79,10 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+     updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   },
 );
 
@@ -115,7 +97,7 @@ paymentSchema.post('findOneAndUpdate', async function (doc) {
       if (JSON.stringify(originalDoc[key]) !== JSON.stringify(doc[key])) {
         updatedFields[key] = {
           oldValue: originalDoc[key],
-          newValue: doc[key]
+          newValue: doc[key]  
         };
       }
     }
@@ -124,7 +106,7 @@ paymentSchema.post('findOneAndUpdate', async function (doc) {
       await PaymentHistory.create({
         paymentId,
         updatedFields,
-        updatedBy: 'System' // You can specify who updated the record here
+        updatedBy: originalDoc.updatedBy // Use updatedBy from the original document
       });
     }
   } catch (error) {
@@ -132,32 +114,6 @@ paymentSchema.post('findOneAndUpdate', async function (doc) {
   }
 });
 
-// Middleware for tracking creation of new documents
-paymentSchema.post('save', async function (doc) {
-  try {
-    await PaymentHistory.create({
-      paymentId: doc._id,
-      updatedFields: doc.toObject(),
-      updatedBy: 'System' // You can specify who created the record here
-    });
-  } catch (error) {
-    console.error('Error creating payment history:', error);
-  }
-});
-
-// Middleware for tracking removal of documents
-paymentSchema.post('findOneAndRemove', async function (doc) {
-  try {
-    await PaymentHistory.create({
-      paymentId: doc._id,
-      updatedFields: { removed: true },
-      updatedBy: 'System' // You can specify who removed the record here
-    });
-  } catch (error) {
-    console.error('Error creating payment history:', error);
-  }
-});
-
 const Payment = mongoose.model('Payment', paymentSchema);
 
-module.exports = { Payment, PaymentHistory };
+module.exports = { Payment };

@@ -65,6 +65,7 @@ const adminSchema = new Schema({
 
 adminSchema.plugin(require('mongoose-autopopulate'));
 
+
 adminSchema.methods.generateHash = function (password) {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(), null);
 };

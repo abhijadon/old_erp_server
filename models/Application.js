@@ -2,31 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 mongoose.Promise = global.Promise;
 const { Payment } = require('./Payment');
-const applicationHistorySchema = new mongoose.Schema({
-  applicationId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Applications'
-  },
-  updatedFields: {
-    type: Object,
-    required: true
-  },
-  updatedBy: {
-    type: String,
-    required: true
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-
-const ApplicationHistory = mongoose.model('ApplicationHistory', applicationHistorySchema);
-
-
 
 const applicationSchema = new mongoose.Schema({
   userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -174,36 +156,6 @@ const applicationSchema = new mongoose.Schema({
   },
 });
 
-applicationSchema.pre('findOneAndUpdate', async function () {
-  this._original = await this.model.findOne(this.getQuery()).lean();
-});
-
-applicationSchema.post('findOneAndUpdate', async function (doc) {
-  try {
-    const originalDoc = this._original;
-    delete this._original;
-
-    const updatedFields = {};
-    for (const key of Object.keys(originalDoc)) {
-      if (JSON.stringify(originalDoc[key]) !== JSON.stringify(doc[key])) {
-        updatedFields[key] = {
-          oldValue: originalDoc[key],
-          newValue: doc[key]
-        };
-      }
-    }
-
-    if (Object.keys(updatedFields).length > 0) {
-      await ApplicationHistory.create({
-        applicationId: doc._id,
-        updatedFields,
-        updatedBy: 'system'// You can specify who updated the record here
-      });
-    }
-  } catch (error) {
-    console.error('Error creating application history:', error);
-  }
-});
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
@@ -228,6 +180,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           phone: doc.contact['phone'],
           student_name: doc.full_name,
           created: doc.created,
+          updatedBy: doc.updatedBy
           // ... other fields you want to update in the Payment record
         },
       },
@@ -267,6 +220,7 @@ applicationSchema.pre('save', async function (next) {
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       created: this.created,
+       updatedBy: this.updatedBy
            // ... other fields you want to set in the Payment record
     });
 
@@ -301,6 +255,7 @@ applicationSchema.post('save', async function (doc) {
           paid_amount: doc.customfields['paid_amount'],
           status: doc.customfields['status'],
            created: doc.created,
+            updatedBy: doc.updatedBy
           // ... other fields you want to update in the Payment record
         },
       },
@@ -311,7 +266,8 @@ applicationSchema.post('save', async function (doc) {
   }
 });
 
+
 const Applications = mongoose.model('Applications', applicationSchema);
 
-module.exports = { Applications, ApplicationHistory };
+module.exports = { Applications };
 
