@@ -22,6 +22,7 @@ const offerController = require('@/controllers/appControllers/offerController');
 const kycController = require('@/controllers/appControllers/kycController');
 const inventoryController = require('@/controllers/appControllers/inventoryController');
 const { hasPermission } = require('@/middlewares/permission');
+const updatePaymentcontroller = require('@/controllers/middlewaresControllers/createCRUDController/updatePayment')
 // //_________________________________ API for employees_____________________
 router.route('/employee/create').post(hasPermission('create'),catchErrors(employeeController.create));
 router.route('/employee/read/:id').get(hasPermission('read'),catchErrors(employeeController.read));
@@ -62,7 +63,8 @@ router.route('/client/summary').get(catchErrors(clientController.summary));
  
 router.route('/lead/create').post(hasPermission('create'),catchErrors(leadController.create));
 router.route('/lead/read/:id').get(hasPermission('read'),catchErrors(leadController.read));
-router.route('/lead/update/:id').patch(hasPermission('update'),catchErrors(leadController.update)  );
+router.route('/lead/update/:id').patch(hasPermission('update'),catchErrors(leadController.update));
+router.route('/lead/updatePayment/:id').put(hasPermission('update'),catchErrors(updatePaymentcontroller.updatePayment));
 router.route('/lead/delete/:id').delete(hasPermission('delete'),catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));

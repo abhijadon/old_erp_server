@@ -83,7 +83,27 @@ const paymentSchema = new mongoose.Schema(
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  },
+   previousPaidAmounts: [{
+      value: {
+        type: Number,
+        required: true
+      },
+      date: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    previousInstallmentTypes: [{
+      value: {
+        type: String,
+        trim: true
+      },
+      date: {
+        type: Date,
+        default: Date.now
+      }
+    }]
+    },
 );
 
 // Middleware for tracking changes and creating history

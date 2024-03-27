@@ -30,7 +30,7 @@ const createCRUDController = (modelName) => {
 
   crudMethods.list = async (req, res) => {
     paginatedList(Model, req, res);
-  };
+  }; 
 
   crudMethods.listAll = async (req, res) => {
     listAll(Model, req, res);

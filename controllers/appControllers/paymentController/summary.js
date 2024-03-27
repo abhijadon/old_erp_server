@@ -101,6 +101,8 @@ const result = await Model.aggregate([
       'UPES',
       'SGVU',
       'CU',
+      'AMRITA',
+      'AMITY',
       'UU',
       'JAIN',
       'DPU',

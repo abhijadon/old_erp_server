@@ -14,7 +14,7 @@ const bulkData = require('./routes/bulkRoutes/bulkRoutes');
 const remarkHistory = require('./routes/notificationRouter');
 const authenticate = require('./middlewares/authenticate');
 const checkUserRoleMiddleware = require('@/middlewares/checkUserRole');
-
+const menuOptionsRoutes = require('@/routes/api/menuOptionsRoutes');
 const app = express();
 const corsOptions = {
   origin: true,
@@ -52,8 +52,7 @@ app.use('/api',authenticate,checkUserRoleMiddleware,remarkHistory);
 app.use('/api', authenticate ,checkUserRoleMiddleware, require("@/routes/api/teamRoutes")) 
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/history")) 
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/permissionapi")) 
-app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/history")) 
-
+app.use('/api',authenticate, menuOptionsRoutes);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

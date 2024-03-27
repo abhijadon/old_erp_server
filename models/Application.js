@@ -138,7 +138,6 @@ const applicationSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    
     status: {
       type: String,
       trim: true,
@@ -149,7 +148,41 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       default: 'N/A',
     },
-  }, 
+  },  
+     
+ previousPaidAmounts: {
+    type: [
+      {
+        value: Number,
+        date: Date,
+        _id: mongoose.Schema.Types.ObjectId,
+      }
+    ],
+    default: [],
+  },
+
+  previousInstallmentType: {
+   type: [
+      {
+        value: String,
+        date: Date,
+        _id: mongoose.Schema.Types.ObjectId,
+      }
+    ],
+    default: [],
+  },
+
+  previousstatus: {
+  type: [
+      {
+        value: String,
+        date: Date,
+        _id: mongoose.Schema.Types.ObjectId,
+      }
+    ],
+    default: [],
+  },
+
   created: {
     type: Date,
     default: Date.now,
@@ -180,7 +213,10 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           phone: doc.contact['phone'],
           student_name: doc.full_name,
           created: doc.created,
-          updatedBy: doc.updatedBy
+          updatedBy: doc.updatedBy,
+       previousPaidAmounts: doc.previousPaidAmounts,
+       previousInstallmentType: doc.previousInstallmentType,
+       previousstatus: doc.previousstatus,
           // ... other fields you want to update in the Payment record
         },
       },
@@ -220,7 +256,10 @@ applicationSchema.pre('save', async function (next) {
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       created: this.created,
-       updatedBy: this.updatedBy
+       updatedBy: this.updatedBy,
+       previousPaidAmounts: this.previousPaidAmounts,
+       previousInstallmentType: this.previousInstallmentType,
+       previousstatus: this.previousstatus,
            // ... other fields you want to set in the Payment record
     });
 
@@ -254,8 +293,11 @@ applicationSchema.post('save', async function (doc) {
           payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
           status: doc.customfields['status'],
-           created: doc.created,
-            updatedBy: doc.updatedBy
+         created: doc.created,
+          updatedBy: doc.updatedBy,
+          previousPaidAmounts: doc.previousPaidAmounts,
+       previousInstallmentType: doc.previousInstallmentType,
+       previousstatus: doc.previousstatus,
           // ... other fields you want to update in the Payment record
         },
       },
@@ -270,4 +312,3 @@ applicationSchema.post('save', async function (doc) {
 const Applications = mongoose.model('Applications', applicationSchema);
 
 module.exports = { Applications };
-

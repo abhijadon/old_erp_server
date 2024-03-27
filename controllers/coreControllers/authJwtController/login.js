@@ -5,7 +5,6 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
 const UserAction = require('@/models/UserAction');
-const { hasPermission } = require('@/middlewares/permission');
 
 const login = async (req, res) => {
   try {
