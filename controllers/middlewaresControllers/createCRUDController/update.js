@@ -1,4 +1,7 @@
-const ApplicationHistory = require('@/models/ApplicationHistory');
+// update.js
+
+const ApplicationHistory = require('@/models/ApplicationHistory'); // Assuming correct path to ApplicationHistory model
+const { Payment } = require('@/models/Payment'); // Assuming correct path to Payment model
 
 async function update(Model, req, res) {
   try {
@@ -53,12 +56,19 @@ async function update(Model, req, res) {
       });
     }
 
+    // Update the payment model with the same updatedBy value
+    await Payment.findOneAndUpdate(
+      { applicationId: req.params.id },
+      { $set: { updatedBy: req.user._id } }
+    );
+
     // Return success response
     return res.status(200).json({
       success: true,
       result: updatedDocument,
       message: "Document updated successfully",
-    });
+    }); 
+
   } catch (error) {
     console.error("Error updating document:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });

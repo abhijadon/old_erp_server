@@ -206,18 +206,16 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           paid_amount: doc.customfields['paid_amount'],
           university_name: doc.customfields['university_name'],
           institute_name: doc.customfields['institute_name'],
-                   session: doc.customfields['session'],
+          session: doc.customfields['session'],
           payment_mode: doc.customfields['payment_mode'],
           status: doc.customfields['status'],
           email: doc.contact['email'],
           phone: doc.contact['phone'],
           student_name: doc.full_name,
           created: doc.created,
-          updatedBy: doc.updatedBy,
-       previousPaidAmounts: doc.previousPaidAmounts,
+              previousPaidAmounts: doc.previousPaidAmounts,
        previousInstallmentType: doc.previousInstallmentType,
        previousstatus: doc.previousstatus,
-          // ... other fields you want to update in the Payment record
         },
       },
       { upsert: true }
@@ -226,19 +224,14 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
     console.error('Error updating Payment record:', error);
   }
 });
-// for update according application to payment
 
 // Pre-save hook for adding new data
 applicationSchema.pre('save', async function (next) {
   try {
-    const applicationId = this._id; // Get the ID of the Application
-    // Check if the document is new or being updated
+    const applicationId = this._id; 
     if (!this.isNew) {
-      // If the document is being updated, trigger the next middleware in the stack
       return next();
     }
-
-    // Create a new Payment record based on the Application ID
     await Payment.create({
       applicationId,
       userId: this.userId,
@@ -256,14 +249,11 @@ applicationSchema.pre('save', async function (next) {
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       created: this.created,
-       updatedBy: this.updatedBy,
-       previousPaidAmounts: this.previousPaidAmounts,
-       previousInstallmentType: this.previousInstallmentType,
-       previousstatus: this.previousstatus,
-           // ... other fields you want to set in the Payment record
+        previousPaidAmounts: this.previousPaidAmounts,
+     previousInstallmentType: this.previousInstallmentType,
+     previousstatus: this.previousstatus,
     });
 
-    // Trigger the next middleware in the stack
     return next();
   } catch (error) {
     console.error('Error creating Payment record:', error);
@@ -273,9 +263,7 @@ applicationSchema.pre('save', async function (next) {
 // Post-save hook for updating existing data
 applicationSchema.post('save', async function (doc) {
   try {
-    const applicationId = doc._id; // Get the ID of the Application
-
-    // Update existing Payment record based on the Application ID
+    const applicationId = doc._id;
     await Payment.findOneAndUpdate(
       { applicationId },
       {
@@ -293,15 +281,13 @@ applicationSchema.post('save', async function (doc) {
           payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
           status: doc.customfields['status'],
-         created: doc.created,
-          updatedBy: doc.updatedBy,
-          previousPaidAmounts: doc.previousPaidAmounts,
-       previousInstallmentType: doc.previousInstallmentType,
-       previousstatus: doc.previousstatus,
-          // ... other fields you want to update in the Payment record
+          created: doc.created,
+         previousPaidAmounts: doc.previousPaidAmounts,
+         previousInstallmentType: doc.previousInstallmentType,
+          previousstatus: doc.previousstatus,
         },
       },
-      { upsert: true } // Create the Payment record if it doesn't exist
+      { upsert: true }
     );
   } catch (error) {
     console.error('Error updating Payment record:', error);

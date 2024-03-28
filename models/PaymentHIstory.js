@@ -21,6 +21,7 @@ const paymentHistorySchema = new mongoose.Schema({
     }
 });
 
-const PaymentHistory = mongoose.model('PaymentHistory', paymentHistorySchema);
+// Check if the model has already been defined
+const PaymentHistory = mongoose.models.PaymentHistory || mongoose.model('PaymentHistory', paymentHistorySchema);
 
 module.exports = PaymentHistory;

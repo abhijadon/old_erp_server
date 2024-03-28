@@ -1,5 +1,6 @@
 const { Applications } = require('@/models/Application'); // Importing the Applications model
 const ApplicationHistory = require('@/models/ApplicationHistory');
+const { Payment } = require('@/models/Payment'); // Importing the Payment model
 
 async function updatePayment(req, res) {
   try {
@@ -16,7 +17,7 @@ async function updatePayment(req, res) {
     const oldValues = JSON.parse(JSON.stringify(existingApplication._doc));
     
     // Include updatedBy field in the request body
-    req.body.updatedBy = req.user._id;
+    const updatedBy = req.user._id;
 
     if (paid_amount !== undefined) {
       existingApplication.previousPaidAmounts.push({ value: paid_amount, date: new Date() });
@@ -53,12 +54,18 @@ async function updatePayment(req, res) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
         updatedFields,
-        updatedBy: req.user._id // Include the updatedBy field
+        updatedBy // Include the updatedBy field
       });
     }
 
     // Save the changes to the application
     await existingApplication.save();
+
+    // Update the payment model with the same updatedBy value
+    await Payment.findOneAndUpdate(
+      { applicationId },
+      { $set: { updatedBy } }
+    );
 
     return res.status(200).json({ success: true, message: "Application updated successfully" });
   } catch (error) {

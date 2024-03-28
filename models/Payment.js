@@ -1,7 +1,9 @@
 // models/payment.js
 
 const mongoose = require('mongoose');
-const PaymentHistory = require('./PaymentHIstory');
+const PaymentHistory = require('./PaymentHistory')
+
+
 const paymentSchema = new mongoose.Schema(
   {
     applicationId: {
@@ -106,7 +108,6 @@ const paymentSchema = new mongoose.Schema(
     },
 );
 
-// Middleware for tracking changes and creating history
 paymentSchema.post('findOneAndUpdate', async function (doc) {
   try {
     const paymentId = doc._id;
@@ -126,14 +127,13 @@ paymentSchema.post('findOneAndUpdate', async function (doc) {
       await PaymentHistory.create({
         paymentId,
         updatedFields,
-        updatedBy: originalDoc.updatedBy // Use updatedBy from the original document
+        updatedBy: originalDoc.updatedBy,
       });
     }
   } catch (error) {
     console.error('Error creating payment history:', error);
   }
 });
-
 const Payment = mongoose.model('Payment', paymentSchema);
 
 module.exports = { Payment };
