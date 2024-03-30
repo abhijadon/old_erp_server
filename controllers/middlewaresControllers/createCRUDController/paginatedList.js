@@ -54,7 +54,7 @@ const paginatedList = async (Model, req, res) => {
 
     const resultsPromise = Model.find(query)
       .sort({ created: 'desc' })
-      
+      .populate('userId')
     const countPromise = Model.countDocuments(query);
 
     const [result, count] = await Promise.all([resultsPromise, countPromise]);

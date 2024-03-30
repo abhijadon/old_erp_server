@@ -1,14 +1,9 @@
-// update.js
-
-const ApplicationHistory = require('@/models/ApplicationHistory'); // Assuming correct path to ApplicationHistory model
-const { Payment } = require('@/models/Payment'); // Assuming correct path to Payment model
+const ApplicationHistory = require('@/models/ApplicationHistory');
 
 async function update(Model, req, res) {
   try {
-    // Find the document by id
     const existingDocument = await Model.findById(req.params.id).exec();
 
-    // Check if the document exists
     if (!existingDocument) {
       return res.status(404).json({
         success: false,
@@ -17,34 +12,58 @@ async function update(Model, req, res) {
       });
     }
 
-    // Store the old values before updating
-    const oldValues = {};
-    for (const key of Object.keys(existingDocument._doc)) {
-      oldValues[key] = existingDocument[key];
-    }
+    const oldValues = { ...existingDocument._doc };
 
-    // Update the document
     req.body.removed = false;
-    // Include updatedBy field in the request body
     req.body.updatedBy = req.user._id;
+
+    const totalCourseFee = parseFloat(req.body.customfields.total_course_fee) || 0;
+    const totalPaidAmount = parseFloat(req.body.customfields.total_paid_amount) || 0;
+    const dueAmount = totalCourseFee - totalPaidAmount;
+    req.body.customfields.due_amount = dueAmount.toString();
+
     const updatedDocument = await Model.findOneAndUpdate(
       { _id: req.params.id, removed: false },
       req.body,
       { new: true, runValidators: true }
     ).exec();
 
-    // Define updatedFields variable
-    const updatedFields = {}; // Initialize empty object
+    const updatedFields = {};
 
-    // Populate updatedFields with updated fields and old values
-    for (const key of Object.keys(req.body)) {
-      if (JSON.stringify(req.body[key]) !== JSON.stringify(oldValues[key])) {
-        // Only include fields that have been updated
-        updatedFields[key] = {
-          oldValue: oldValues[key],
-          newValue: req.body[key]
-        };
+    // Compare all parameters within customfields, contact, and education for changes
+    const fieldsToCheck = ['customfields', 'contact', 'education'];
+    for (const field of fieldsToCheck) {
+      for (const param of Object.keys(req.body[field])) {
+        if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
+          if (!updatedFields[field]) {
+            updatedFields[field] = {};
+          }
+          updatedFields[field][param] = {
+            oldValue: oldValues[field][param],
+            newValue: req.body[field][param]
+          };
+        }
       }
+    }
+
+    // Check if full_name or lead_id has been updated
+    if (req.body.full_name !== oldValues.full_name) {
+      if (!updatedFields.customfields) {
+        updatedFields.customfields = {};
+      }
+      updatedFields.customfields.full_name = {
+        oldValue: oldValues.full_name,
+        newValue: req.body.full_name
+      };
+    }
+    if (req.body.lead_id !== oldValues.lead_id) {
+      if (!updatedFields.customfields) {
+        updatedFields.customfields = {};
+      }
+      updatedFields.customfields.lead_id = {
+        oldValue: oldValues.lead_id,
+        newValue: req.body.lead_id
+      };
     }
 
     // Create application history if there are any updated fields
@@ -52,22 +71,17 @@ async function update(Model, req, res) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
         updatedFields,
-        updatedBy: req.user._id // Include the updatedBy field
+        updatedBy: req.user._id
       });
     }
 
-    // Update the payment model with the same updatedBy value
-    await Payment.findOneAndUpdate(
-      { applicationId: req.params.id },
-      { $set: { updatedBy: req.user._id } }
-    );
+  
 
-    // Return success response
     return res.status(200).json({
       success: true,
       result: updatedDocument,
       message: "Document updated successfully",
-    }); 
+    });
 
   } catch (error) {
     console.error("Error updating document:", error);

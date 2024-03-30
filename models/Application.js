@@ -114,7 +114,7 @@ const applicationSchema = new mongoose.Schema({
     installment_type: {
       type: String,
       trim: true,
-      default: '1st installmenttype/New',
+      default: '1st installment',
     },
 
     payment_mode: {
@@ -143,44 +143,37 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       default: 'New',
     },
+due_amount: {
+      type: String,
+      trim: true,
+    },
+    paymentStatus: {
+   type: String,
+      trim: true,
+      default: 'N/A',
+  },
+
     lms: {
       type: String,
       trim: true,
       default: 'N/A',
     },
   },  
-     
- previousPaidAmounts: {
+   previousData: {
     type: [
       {
-        value: Number,
-        date: Date,
-        _id: mongoose.Schema.Types.ObjectId,
+        installment_type: String,
+        paymentStatus: String,
+        payment_mode: String,
+        payment_type: String,
+        total_course_fee: String,
+        total_paid_amount: String,
+        paid_amount: Number,
+        due_amount: String,
+        date: Date
       }
     ],
-    default: [],
-  },
-
-  previousInstallmentType: {
-   type: [
-      {
-        value: String,
-        date: Date,
-        _id: mongoose.Schema.Types.ObjectId,
-      }
-    ],
-    default: [],
-  },
-
-  previousstatus: {
-  type: [
-      {
-        value: String,
-        date: Date,
-        _id: mongoose.Schema.Types.ObjectId,
-      }
-    ],
-    default: [],
+    default: []
   },
 
   created: {
@@ -204,6 +197,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           total_course_fee: doc.customfields['total_course_fee'],
           total_paid_amount: doc.customfields['total_paid_amount'],
           paid_amount: doc.customfields['paid_amount'],
+          due_amount: doc.customfields['due_amount'],
           university_name: doc.customfields['university_name'],
           institute_name: doc.customfields['institute_name'],
           session: doc.customfields['session'],
@@ -212,11 +206,9 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           email: doc.contact['email'],
           phone: doc.contact['phone'],
           student_name: doc.full_name,
-          created: doc.created,
-              previousPaidAmounts: doc.previousPaidAmounts,
-       previousInstallmentType: doc.previousInstallmentType,
-       previousstatus: doc.previousstatus,
-        },
+          updatedBy: doc.updatedBy,
+       created: doc.created,
+         },
       },
       { upsert: true }
     );
@@ -245,13 +237,12 @@ applicationSchema.pre('save', async function (next) {
       total_course_fee: this.customfields['total_course_fee'],
       total_paid_amount: this.customfields['total_paid_amount'],
       paid_amount: this.customfields['paid_amount'],
+      due_amount: this.customfields['due_amount'],
       payment_mode: this.customfields['payment_mode'],
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       created: this.created,
-        previousPaidAmounts: this.previousPaidAmounts,
-     previousInstallmentType: this.previousInstallmentType,
-     previousstatus: this.previousstatus,
+       updatedBy: this.updatedBy,
     });
 
     return next();
@@ -280,11 +271,10 @@ applicationSchema.post('save', async function (doc) {
           total_paid_amount: doc.customfields['total_paid_amount'],
           payment_mode: doc.customfields['payment_mode'],
           paid_amount: doc.customfields['paid_amount'],
+          due_amount: doc.customfields['due_amount'],
           status: doc.customfields['status'],
           created: doc.created,
-         previousPaidAmounts: doc.previousPaidAmounts,
-         previousInstallmentType: doc.previousInstallmentType,
-          previousstatus: doc.previousstatus,
+          updatedBy: doc.updatedBy,
         },
       },
       { upsert: true }

@@ -65,6 +65,10 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    due_amount: {
+      type: String,
+      trim: true,
+    },
     payment_mode: {
       type: String,
       trim: true,
@@ -85,26 +89,6 @@ const paymentSchema = new mongoose.Schema(
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-   previousPaidAmounts: [{
-      value: {
-        type: Number,
-        required: true
-      },
-      date: {
-        type: Date,
-        default: Date.now
-      }
-    }],
-    previousInstallmentTypes: [{
-      value: {
-        type: String,
-        trim: true
-      },
-      date: {
-        type: Date,
-        default: Date.now
-      }
-    }]
     },
 );
 

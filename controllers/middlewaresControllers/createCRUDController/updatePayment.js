@@ -5,7 +5,7 @@ const { Payment } = require('@/models/Payment'); // Importing the Payment model
 async function updatePayment(req, res) {
   try {
     const applicationId = req.params.id;
-    const { paid_amount, installment_type, status } = req.body.customfields;
+    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type } = req.body.customfields;
 
     const existingApplication = await Applications.findById(applicationId);
 
@@ -19,22 +19,56 @@ async function updatePayment(req, res) {
     // Include updatedBy field in the request body
     const updatedBy = req.user._id;
 
+    // Define an object to hold all updated fields
+    const updatedCustomFields = {};
+
     if (paid_amount !== undefined) {
-      existingApplication.previousPaidAmounts.push({ value: paid_amount, date: new Date() });
       existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
       existingApplication.customfields.paid_amount = paid_amount; // Update paid_amount directly
+      updatedCustomFields.paid_amount = paid_amount;
     }
 
     if (installment_type !== undefined) {
-      existingApplication.previousInstallmentType.push({ value: installment_type, date: new Date() });
       existingApplication.customfields.installment_type = installment_type;
+      updatedCustomFields.installment_type = installment_type;
     }
 
-    if (status !== undefined) {
-      existingApplication.previousstatus.push({ value: status, date: new Date() });
-      existingApplication.customfields.status = status;
+    if (paymentStatus !== undefined) {
+      existingApplication.customfields.paymentStatus = paymentStatus;
+      updatedCustomFields.paymentStatus = paymentStatus;
+    }
+
+    if (payment_mode !== undefined) {
+      existingApplication.customfields.payment_mode = payment_mode;
+      updatedCustomFields.payment_mode = payment_mode;
     }
      
+    if (payment_type !== undefined) {
+      existingApplication.customfields.payment_type = payment_type;
+      updatedCustomFields.payment_type = payment_type;
+    }
+
+    // Calculate due amount
+    const totalCourseFee = parseFloat(existingApplication.customfields.total_course_fee);
+    const totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
+    const dueAmount = totalCourseFee - totalPaidAmount;
+
+    // Update due amount in customfields
+    existingApplication.customfields.due_amount = dueAmount;
+
+    // Push all previous data together as a single object into previousData array
+    existingApplication.previousData.push({
+      installment_type: installment_type,
+      paymentStatus: paymentStatus,
+      payment_mode: payment_mode,
+      payment_type: payment_type,
+      total_paid_amount: totalPaidAmount, // Save the total paid amount
+      total_course_fee: totalCourseFee,
+      paid_amount: paid_amount, // Save the total course fee
+      due_amount: dueAmount, // Save the due amount
+      date: new Date() // Ensure that date is in the correct format
+    });
+
     // Define updatedFields variable
     const updatedFields = {}; 
 
@@ -77,3 +111,4 @@ async function updatePayment(req, res) {
 module.exports = {
   updatePayment
 };
+

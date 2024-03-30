@@ -47,7 +47,14 @@ const create = async (Model, req, res) => {
           user: 'abhishek@edgetechnosoft.com',
           pass: 'zibs iflm rzwv dmgw',
         },
-      });
+      });  
+
+
+       // Calculate due amount based on total course fee and total paid amount
+      const totalCourseFee = parseFloat(req.body.customfields.total_course_fee) || 0;
+      const totalPaidAmount = parseFloat(req.body.customfields.total_paid_amount) || 0;
+      const dueAmount = totalCourseFee - totalPaidAmount;
+      newDoc.customfields.due_amount = dueAmount.toString();
 
       const result = await newDoc.save();
       const receiverEmail = `${studentEmail}`;
