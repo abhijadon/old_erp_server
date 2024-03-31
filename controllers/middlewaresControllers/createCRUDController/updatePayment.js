@@ -1,6 +1,6 @@
 const { Applications } = require('@/models/Application'); // Importing the Applications model
 const ApplicationHistory = require('@/models/ApplicationHistory');
-const { Payment } = require('@/models/Payment'); // Importing the Payment model
+
 
 async function updatePayment(req, res) {
   try {
@@ -15,17 +15,20 @@ async function updatePayment(req, res) {
       
     // Store the old values before updating
     const oldValues = JSON.parse(JSON.stringify(existingApplication._doc));
-    
+    req.body.removed = false;
     // Include updatedBy field in the request body
     const updatedBy = req.user._id;
 
     // Define an object to hold all updated fields
     const updatedCustomFields = {};
 
-    if (paid_amount !== undefined) {
-      existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
-      existingApplication.customfields.paid_amount = paid_amount; // Update paid_amount directly
-      updatedCustomFields.paid_amount = paid_amount;
+    // Check if paymentStatus is 'approved' or 'rejected' before updating total_paid_amount
+  if (paymentStatus.toLowerCase() === 'payment received') {
+      if (paid_amount !== undefined) {
+        existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
+        existingApplication.customfields.paid_amount = paid_amount; // Update paid_amount directly
+        updatedCustomFields.paid_amount = paid_amount;
+      }
     }
 
     if (installment_type !== undefined) {
@@ -69,18 +72,43 @@ async function updatePayment(req, res) {
       date: new Date() // Ensure that date is in the correct format
     });
 
-    // Define updatedFields variable
-    const updatedFields = {}; 
+     const updatedFields = {};
 
-    // Populate updatedFields with updated fields and old values
-    for (const key of Object.keys(req.body)) {
-      if (JSON.stringify(req.body[key]) !== JSON.stringify(oldValues[key])) {
-        // Only include fields that have been updated
-        updatedFields[key] = {
-          oldValue: oldValues[key],
-          newValue: req.body[key]
+    const fieldsToCheck = ['customfields', 'contact', 'education'];
+for (const field of fieldsToCheck) {
+  if (req.body[field] && typeof req.body[field] === 'object') {
+    for (const param of Object.keys(req.body[field])) {
+      if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
+        if (!updatedFields[field]) {
+          updatedFields[field] = {};
+        }
+        updatedFields[field][param] = {
+          oldValue: oldValues[field][param],
+          newValue: req.body[field][param]
         };
       }
+    }
+  }
+}
+
+    // Check if full_name or lead_id has been updated
+    if (req.body.full_name !== oldValues.full_name) {
+      if (!updatedFields.customfields) {
+        updatedFields.customfields = {};
+      }
+      updatedFields.customfields.full_name = {
+        oldValue: oldValues.full_name,
+        newValue: req.body.full_name
+      };
+    }
+    if (req.body.lead_id !== oldValues.lead_id) {
+      if (!updatedFields.customfields) {
+        updatedFields.customfields = {};
+      }
+      updatedFields.customfields.lead_id = {
+        oldValue: oldValues.lead_id,
+        newValue: req.body.lead_id
+      };
     }
 
     // Create application history if there are any updated fields
@@ -88,18 +116,14 @@ async function updatePayment(req, res) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
         updatedFields,
-        updatedBy // Include the updatedBy field
+        updatedBy: req.user._id
       });
     }
+
 
     // Save the changes to the application
     await existingApplication.save();
 
-    // Update the payment model with the same updatedBy value
-    await Payment.findOneAndUpdate(
-      { applicationId },
-      { $set: { updatedBy } }
-    );
 
     return res.status(200).json({ success: true, message: "Application updated successfully" });
   } catch (error) {
@@ -111,4 +135,5 @@ async function updatePayment(req, res) {
 module.exports = {
   updatePayment
 };
+
 
