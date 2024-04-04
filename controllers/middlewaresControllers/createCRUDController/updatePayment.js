@@ -1,32 +1,43 @@
-const { Applications } = require('@/models/Application'); // Importing the Applications model
+const { Applications } = require('@/models/Application');
 const ApplicationHistory = require('@/models/ApplicationHistory');
-
+const sendEmail = require('@/emailTemplate/SendEmailTemplate');
 
 async function updatePayment(req, res) {
   try {
     const applicationId = req.params.id;
-    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type } = req.body.customfields;
+    const customfields = req.body.customfields;
+
+    // Check if customfields is defined and is an object
+    if (!customfields || typeof customfields !== 'object') {
+      return res.status(400).json({ success: false, message: "Invalid customfields data" });
+    }
+
+    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type } = customfields;
+
+    // Check if paymentStatus is defined and convert to lowercase
+    const status = paymentStatus ? paymentStatus.toLowerCase() : '';
+
+    // Check if paymentStatus is valid
+    if (status !== 'payment approved' && status !== 'payment received' && status !== 'payment rejected') {
+      return res.status(400).json({ success: false, message: "Invalid paymentStatus" });
+    }
 
     const existingApplication = await Applications.findById(applicationId);
 
     if (!existingApplication) {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
-      
-    // Store the old values before updating
+
     const oldValues = JSON.parse(JSON.stringify(existingApplication._doc));
     req.body.removed = false;
-    // Include updatedBy field in the request body
     const updatedBy = req.user._id;
 
-    // Define an object to hold all updated fields
     const updatedCustomFields = {};
 
-    // Check if paymentStatus is 'approved' or 'rejected' before updating total_paid_amount
-  if (paymentStatus.toLowerCase() === 'payment received') {
+    if (status === 'payment received') {
       if (paid_amount !== undefined) {
         existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
-        existingApplication.customfields.paid_amount = paid_amount; // Update paid_amount directly
+        existingApplication.customfields.paid_amount = paid_amount;
         updatedCustomFields.paid_amount = paid_amount;
       }
     }
@@ -36,9 +47,9 @@ async function updatePayment(req, res) {
       updatedCustomFields.installment_type = installment_type;
     }
 
-    if (paymentStatus !== undefined) {
-      existingApplication.customfields.paymentStatus = paymentStatus;
-      updatedCustomFields.paymentStatus = paymentStatus;
+    if (status !== undefined) {
+      existingApplication.customfields.paymentStatus = status;
+      updatedCustomFields.paymentStatus = status;
     }
 
     if (payment_mode !== undefined) {
@@ -51,47 +62,43 @@ async function updatePayment(req, res) {
       updatedCustomFields.payment_type = payment_type;
     }
 
-    // Calculate due amount
     const totalCourseFee = parseFloat(existingApplication.customfields.total_course_fee);
     const totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
     const dueAmount = totalCourseFee - totalPaidAmount;
 
-    // Update due amount in customfields
     existingApplication.customfields.due_amount = dueAmount;
 
-    // Push all previous data together as a single object into previousData array
     existingApplication.previousData.push({
       installment_type: installment_type,
-      paymentStatus: paymentStatus,
+      paymentStatus: status,
       payment_mode: payment_mode,
       payment_type: payment_type,
-      total_paid_amount: totalPaidAmount, // Save the total paid amount
+      total_paid_amount: totalPaidAmount,
       total_course_fee: totalCourseFee,
-      paid_amount: paid_amount, // Save the total course fee
-      due_amount: dueAmount, // Save the due amount
-      date: new Date() // Ensure that date is in the correct format
+      paid_amount: paid_amount,
+      due_amount: dueAmount,
+      date: new Date()
     });
 
-     const updatedFields = {};
+    const updatedFields = {};
 
     const fieldsToCheck = ['customfields', 'contact', 'education'];
-for (const field of fieldsToCheck) {
-  if (req.body[field] && typeof req.body[field] === 'object') {
-    for (const param of Object.keys(req.body[field])) {
-      if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
-        if (!updatedFields[field]) {
-          updatedFields[field] = {};
+    for (const field of fieldsToCheck) {
+      if (req.body[field] && typeof req.body[field] === 'object') {
+        for (const param of Object.keys(req.body[field])) {
+          if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
+            if (!updatedFields[field]) {
+              updatedFields[field] = {};
+            }
+            updatedFields[field][param] = {
+              oldValue: oldValues[field][param],
+              newValue: req.body[field][param]
+            };
+          }
         }
-        updatedFields[field][param] = {
-          oldValue: oldValues[field][param],
-          newValue: req.body[field][param]
-        };
       }
     }
-  }
-}
 
-    // Check if full_name or lead_id has been updated
     if (req.body.full_name !== oldValues.full_name) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
@@ -111,7 +118,6 @@ for (const field of fieldsToCheck) {
       };
     }
 
-    // Create application history if there are any updated fields
     if (Object.keys(updatedFields).length > 0) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
@@ -120,10 +126,22 @@ for (const field of fieldsToCheck) {
       });
     }
 
+    if (status === 'payment approved') {
+      const receiverEmail = existingApplication.contact.email;
+      const formData = {
+        full_name: req.body.full_name,
+        contact: req.body.contact,
+        customfields: req.body.customfields,
+        education: req.body.education || { course: 'Unknown' } // Default value if education is undefined
+      };
+      const dueAmount = existingApplication.customfields.due_amount;
+      
+      let institute = existingApplication.customfields.institute_name === 'HES' ? 'HES' : 'DES';
+      
+      await sendEmail(receiverEmail, institute, formData, dueAmount);
+    }
 
-    // Save the changes to the application
     await existingApplication.save();
-
 
     return res.status(200).json({ success: true, message: "Application updated successfully" });
   } catch (error) {
@@ -135,5 +153,3 @@ for (const field of fieldsToCheck) {
 module.exports = {
   updatePayment
 };
-
-

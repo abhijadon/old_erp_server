@@ -30,10 +30,12 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
       lowercase: true,
+      unique: true,
     },
     phone: {
       type: Number,
       trim: true,
+      unique: true,
     },
    
     institute_name: {

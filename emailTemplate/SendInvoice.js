@@ -1,7 +1,6 @@
 exports.SendInvoice = ({ title = 'Invoice from ERP_SODE', name = '', time = new Date() }) => {
   return `
     <div>
-
         <head data-id="__react-email-head">
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
             <title>${title}</title>

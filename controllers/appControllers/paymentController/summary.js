@@ -18,10 +18,10 @@ const summary = async (req, res) => {
       startDate,
       endDate,
     } = req.query;
-  
+
     const matchQuery = { removed: false };
 
- if (startDate && endDate) {
+    if (startDate && endDate) {
       matchQuery.created = {
         $gte: new Date(startDate), // Greater than or equal to startDate
         $lt: new Date(endDate),    // Less than endDate
@@ -44,14 +44,13 @@ const summary = async (req, res) => {
       matchQuery.week = parseInt(week, 10);
     }
 
-
     if (institute_name) {
       matchQuery.institute_name = institute_name;
     }
 
-      if (payment_mode) {
-        matchQuery.payment_mode = payment_mode;
-      }
+    if (payment_mode) {
+      matchQuery.payment_mode = payment_mode;
+    }
 
     if (university_name) {
       matchQuery.university_name = university_name;
@@ -63,36 +62,35 @@ const summary = async (req, res) => {
 
     if (status) {
       matchQuery.status = status;
-    } 
-    
-if (userId) {
+    }
+
+    if (userId) {
       // Assuming userId is the ObjectID, if not, adjust accordingly
       matchQuery.userId = mongoose.Types.ObjectId(userId);
     }
-   // Add log statements for debugging
-const result = await Model.aggregate([
-  { $match: matchQuery },
-  {
-    $group: {
-      _id: null,
-      count: { $sum: 1 },
-      total_course_fee: { $sum: '$total_course_fee' },
-      total_paid_amount: { $sum: '$total_paid_amount' },
-      paid_amount: { $sum: '$paid_amount' },
-    },
-  },
-  {
-    $project: {
-      _id: 0,
-      count: 1,
-      total_paid_amount: 1,
-      paid_amount: 1,
-      due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
-      total_course_fee: 1,
-    },
-  },
-]);
 
+    const result = await Model.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          total_course_fee: { $sum: '$total_course_fee' },
+          total_paid_amount: { $sum: '$total_paid_amount' },
+          paid_amount: { $sum: '$paid_amount' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 1,
+          total_paid_amount: 1,
+          paid_amount: 1,
+          due_amount: { $subtract: ['$total_course_fee', '$total_paid_amount'] },
+          total_course_fee: 1,
+        },
+      },
+    ]);
 
     const universityData1 = [
       'University',
@@ -125,6 +123,7 @@ const result = await Model.aggregate([
           $match: {
             removed: false,
             university_name: university === 'University' ? { $exists: true } : university,
+            ...matchQuery,
           },
         },
         {
@@ -162,6 +161,7 @@ const result = await Model.aggregate([
           $match: {
             removed: false,
             institute_name: institute === 'Institute' ? { $exists: true } : institute,
+            ...matchQuery,
           },
         },
         {
@@ -197,7 +197,7 @@ const result = await Model.aggregate([
     for (const status of statusData1) {
       const data = await Model.aggregate([
         {
-          $match: { removed: false, status: status === 'Total' ? { $exists: true } : status },
+          $match: { removed: false, status: status === 'Total' ? { $exists: true } : status, ...matchQuery },
         },
         {
           $group: {
@@ -223,6 +223,7 @@ const result = await Model.aggregate([
       statusSpecificData.push(data);
       totalStatusCount += data.length > 0 ? data[0].count : 0;
     }
+
     const summaryResult =
       result.length > 0
         ? { ...result[0]}

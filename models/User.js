@@ -43,24 +43,10 @@ const adminSchema = new Schema({
     enum: ['online', 'offline'],
     default: 'offline',
   },
-  actions: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserAction',
-  }],
   isLoggedIn: {
     type: Boolean,
     default: false,
   },
-  loggedSessions: [
-    {
-      token: {
-        type: String,
-      },
-      expiration: {
-        type: Date,
-      },
-    },
-  ],
 });
 
 adminSchema.plugin(require('mongoose-autopopulate'));
