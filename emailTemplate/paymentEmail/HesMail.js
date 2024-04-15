@@ -10,7 +10,7 @@ const HesMail = async  (studentEmail, institute, dueAmount, fullName, course, fa
         let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
         // Set your Brevo API key
         let apiKey = apiInstance.authentications['apiKey'];
-        apiKey.apiKey = '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';
+        apiKey.apiKey = process.env.APPKEY_HES;
 
         // Create a new SendSmtpEmail object
         let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 

@@ -37,7 +37,7 @@ const create = async (Model, req, res) => {
         
         const result = await newDoc.save();
 
-        let emailSent;
+        let emailSent = false;
 
         if (university && institute) {
             if (institute === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university.toUpperCase())) {
@@ -48,8 +48,6 @@ const create = async (Model, req, res) => {
                 emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
             } else if (institute === 'DES' && university.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
                 emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
-            } else {
-                throw new Error(`Document created in Model, but ${institute} email not sent`);
             }
         } else {
             throw new Error(`Missing university or institute name`);
@@ -62,7 +60,11 @@ const create = async (Model, req, res) => {
                 message: `Successfully created the document in Model and sent ${institute} email notification`,
             });
         } else {
-            throw new Error(`Failed to send email to ${studentEmail}`);
+               return res.status(200).json({
+                success: true,
+                result,
+                message: `Successfully created the document in Model, but failed to send ${institute} email notification`,
+            });
         }
     } catch (error) {
         if (error.name === 'ValidationError') {
