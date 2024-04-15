@@ -3,13 +3,13 @@ const { getStorage, ref, uploadBytes, getDownloadURL } = require('firebase/stora
 const multer = require('multer');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCUZEM4LthLXQq37NJ27LWiA145BBwTIaE",
-  authDomain: "seventh-odyssey-406210.firebaseapp.com",
-  projectId: "seventh-odyssey-406210",
-  storageBucket: "seventh-odyssey-406210.appspot.com",
-  messagingSenderId: "969831481323",
-  appId: "1:969831481323:web:2a1d812857640db07ba3ae",
-  measurementId: "G-9BVEZ8YPGW"
+  apiKey: "AIzaSyDWswHF0Oukc6LNXllkwmx2PWg3dKn62-8",
+  authDomain: "erp-sode.firebaseapp.com",
+  projectId: "erp-sode",
+  storageBucket: "erp-sode.appspot.com",
+  messagingSenderId: "521894701394",
+  appId: "1:521894701394:web:b51774c5764babec77328b",
+  measurementId: "G-VKSBE1PNPK"
 };
 
 // Initialize Firebase app
