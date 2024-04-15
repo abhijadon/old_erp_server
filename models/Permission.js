@@ -6,10 +6,10 @@ const permissionSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  permissions: [{
-    type: String,
+  permissions: {
+    type: Array,
     required: true,
-  }],
+  },
 });
 
 const Permission = mongoose.model('Permission', permissionSchema);

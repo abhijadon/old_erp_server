@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+
 mongoose.Promise = global.Promise;
 const { Payment } = require('./Payment');
 
@@ -50,15 +50,7 @@ const applicationSchema = new mongoose.Schema({
     course: {
       type: String,
       trim: true,
-    },
-    institute: {
-      type: String,
-      trim: true,
-    },
-    specialization: {
-      type: String,
-      trim: true,
-    },
+    }
   },
 
   customfields: {
@@ -69,11 +61,6 @@ const applicationSchema = new mongoose.Schema({
     university_name: {
       type: String,
       trim: true,
-    },
-    send_fee_receipt: {
-      type: String,
-      trim: true,
-      default: 'no',
     },
     father_name: {
       type: String,
@@ -126,7 +113,7 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
     },
     total_course_fee: {
-      type: String,
+      type: Number,
       trim: true,
     },
     // Payment details that need to be saved in the Payment table
@@ -149,16 +136,16 @@ due_amount: {
     },
     paymentStatus: {
    type: String,
-      trim: true,
-      default: 'N/A',
+   trim: true,
+   default: 'N/A',
   },
-
-    lms: {
-      type: String,
-      trim: true,
-      default: 'N/A',
-    },
-  },  
+  },   
+   feeDocument: {
+    type: Array,
+  },
+  studentDocument: {
+    type: Array,
+  },
    previousData: {
     type: [
       {

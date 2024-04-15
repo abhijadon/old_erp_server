@@ -16,8 +16,6 @@ const {
   singleStorageUpload,
   setFilePathToBody,
 } = require('@/middlewares/uploadMiddleware');
-const authenticate = require('@/middlewares/authenticate');
-const checkUserRole = require('@/middlewares/checkUserRole');
 
 // //_______________________________ Admin management_______________________________
 

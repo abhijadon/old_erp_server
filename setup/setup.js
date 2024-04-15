@@ -1,3 +1,5 @@
+// appSetup.js
+
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
@@ -25,6 +27,15 @@ mongoose.Promise = global.Promise;
 async function setupApp() {
   try {
     const Admin = require('../models/User');
+
+    // Check if an admin already exists
+    const existingAdmin = await Admin.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      console.log('An admin already exists. Setup aborted.');
+      process.exit();
+    }
+
+    // If no admin exists, create a new admin
     const newAdmin = new Admin();
     const passwordHash = newAdmin.generateHash('abhishek@2024');
 
@@ -38,7 +49,7 @@ async function setupApp() {
       role: 'admin',
     }).save();
 
-    console.log('👍 Admin created : Done!');
+    console.log('👍 Admin created: Done!');
 
     const Setting = require('../models/appModels/coreModels/Setting');
     const Email = require('../models/appModels/coreModels/Email');
@@ -75,8 +86,8 @@ async function setupApp() {
       Email.insertMany([...readJsonFile('emailTemplate')]),
     ]);
 
-    console.log('👍 Settings created : Done!');
-    console.log('👍 Email Templates Created : Done!');
+    console.log('👍 Settings created: Done!');
+    console.log('👍 Email Templates Created: Done!');
     console.log('🥳 Setup completed: Success!');
     process.exit();
   } catch (e) {

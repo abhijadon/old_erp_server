@@ -1,36 +1,68 @@
-const sendEmail = require('@/emailTemplate/emailSender');
+const HesMail = require('@/emailTemplate/HesMail');
+const DesMail = require('@/emailTemplate/DesMail');
 
 const create = async (Model, req, res) => {
-    try {
-           // Extract userId from req.user
+    try { 
         const userId = req.user._id;
-        let studentEmail = (req.body.contact && req.body.contact.email) || null;
-        const institute = req.body.customfields.institute_name;
-        const totalCourseFee = parseFloat(req.body.customfields.total_course_fee) || 0;
-        const totalPaidAmount = parseFloat(req.body.customfields.total_paid_amount) || 0;
-        const dueAmount = totalCourseFee - totalPaidAmount;
+        const {
+            full_name: fullName,
+            'education.course': course,
+            'contact.email': studentEmail,
+            'customfields.university_name': university,
+            'customfields.session': session,
+            'customfields.dob': dob,
+            'contact.phone': phone,
+            'customfields.installment_type': installmentType,
+            'customfields.father_name': fatherName,
+            'customfields.institute_name': institute,
+            'customfields.total_course_fee': totalCourseFee,
+            'customfields.total_paid_amount': totalPaidAmount,
+            'customfields.paid_amount': paidAmount,
+        } = req.body;
+                  
+        const {feeDocument, studentDocument} = req.imageUrls;
 
-        const newDoc = new Model({ ...req.body, userId, 'customfields.due_amount': dueAmount.toString() });
+        const dueAmount = parseFloat(totalCourseFee) - parseFloat(totalPaidAmount);
+
+        // Create a new document in the Applications collection
+        const newDocData = {
+            ...req.body,
+            userId: userId,
+            'customfields.due_amount': dueAmount.toString(),
+            feeDocument,
+            studentDocument
+        };
+
+        const newDoc = new Model(newDocData);
+        
         const result = await newDoc.save();
 
-        if (institute && req.body.customfields.send_fee_receipt && req.body.customfields.send_fee_receipt.toLowerCase() === 'yes') {
-            const emailSent = await sendEmail(studentEmail, institute, req.body, dueAmount); // Pass dueAmount here
+        let emailSent;
 
-            if (emailSent) {
-                return res.status(200).json({
-                    success: true,
-                    result,
-                    message: `Successfully created the document in Model and sent ${institute} email notification`,
-                });
+        if (university && institute) {
+            if (institute === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university.toUpperCase())) {
+                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
+            } else if (institute === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university.toUpperCase())) {
+                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
+            } else if (institute === 'HES' && university.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
+            } else if (institute === 'DES' && university.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount);
             } else {
-                throw new Error(`Failed to send email to ${studentEmail}`);
+                throw new Error(`Document created in Model, but ${institute} email not sent`);
             }
         } else {
+            throw new Error(`Missing university or institute name`);
+        }
+
+        if (emailSent) {
             return res.status(200).json({
                 success: true,
                 result,
-                message: `Document created in Model, but ${institute} email not sent`,
+                message: `Successfully created the document in Model and sent ${institute} email notification`,
             });
+        } else {
+            throw new Error(`Failed to send email to ${studentEmail}`);
         }
     } catch (error) {
         if (error.name === 'ValidationError') {
@@ -51,4 +83,4 @@ const create = async (Model, req, res) => {
     }
 };
 
-module.exports = create;
+module.exports = { create };

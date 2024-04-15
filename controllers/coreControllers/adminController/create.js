@@ -5,8 +5,8 @@ const Admin = mongoose.model('User');
 const create = async (req, res) => {
   try {
    let { username, password, phone } = req.body;
-if (!username || !password || !phone)
-  return res.status(400).json({
+   if (!username || !password || !phone)
+   return res.status(400).json({
     success: false,
     result: null,
     message: "Username or password or phone fields haven't been entered.",

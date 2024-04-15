@@ -15,7 +15,8 @@ const create = async (req, res) => {
     }
 
     // Create new permissions if no existing permissions found for the provided userId
-    const result = await Permission.create(req.body);
+    const newPermissions = new Permission(req.body);
+    const result = await newPermissions.save();
 
     res.status(200).json({
       success: true,

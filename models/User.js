@@ -1,4 +1,5 @@
 // models/User.js
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
@@ -14,12 +15,14 @@ const adminSchema = new Schema({
     type: Number,
     trim: true,
     required: true,
+    unique: true,
   },
   username: {
     type: String,
     lowercase: true,
     trim: true,
     required: true,
+    unique: true,
   },
   password: {
     type: String,

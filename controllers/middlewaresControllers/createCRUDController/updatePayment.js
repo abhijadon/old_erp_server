@@ -1,18 +1,23 @@
 const { Applications } = require('@/models/Application');
 const ApplicationHistory = require('@/models/ApplicationHistory');
-const sendEmail = require('@/emailTemplate/SendEmailTemplate');
+const DesMail = require('@/emailTemplate/paymentEmail/DesMail');
+const HesMail = require('@/emailTemplate/paymentEmail/HesMail');
 
 async function updatePayment(req, res) {
   try {
     const applicationId = req.params.id;
     const customfields = req.body.customfields;
+    const contact = req.body.contact;
+    const { feeDocument } = req.imageUrls;
 
     // Check if customfields is defined and is an object
     if (!customfields || typeof customfields !== 'object') {
       return res.status(400).json({ success: false, message: "Invalid customfields data" });
     }
 
-    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type } = customfields;
+    const { email } = contact;
+
+    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, session } = customfields;
 
     // Check if paymentStatus is defined and convert to lowercase
     const status = paymentStatus ? paymentStatus.toLowerCase() : '';
@@ -20,7 +25,7 @@ async function updatePayment(req, res) {
     // Check if paymentStatus is valid
     if (status !== 'payment approved' && status !== 'payment received' && status !== 'payment rejected') {
       return res.status(400).json({ success: false, message: "Invalid paymentStatus" });
-    }
+    }  
 
     const existingApplication = await Applications.findById(applicationId);
 
@@ -30,10 +35,8 @@ async function updatePayment(req, res) {
 
     const oldValues = JSON.parse(JSON.stringify(existingApplication._doc));
     req.body.removed = false;
-    const updatedBy = req.user._id;
 
     const updatedCustomFields = {};
-
     if (status === 'payment received') {
       if (paid_amount !== undefined) {
         existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
@@ -56,7 +59,7 @@ async function updatePayment(req, res) {
       existingApplication.customfields.payment_mode = payment_mode;
       updatedCustomFields.payment_mode = payment_mode;
     }
-     
+
     if (payment_type !== undefined) {
       existingApplication.customfields.payment_type = payment_type;
       updatedCustomFields.payment_type = payment_type;
@@ -126,24 +129,35 @@ async function updatePayment(req, res) {
       });
     }
 
-    if (status === 'payment approved') {
-      const receiverEmail = existingApplication.contact.email;
-      const formData = {
-        full_name: req.body.full_name,
-        contact: req.body.contact,
-        customfields: req.body.customfields,
-        education: req.body.education || { course: 'Unknown' } // Default value if education is undefined
-      };
-      const dueAmount = existingApplication.customfields.due_amount;
-      
-      let institute = existingApplication.customfields.institute_name === 'HES' ? 'HES' : 'DES';
-      
-      await sendEmail(receiverEmail, institute, formData, dueAmount);
+    let emailSent = false;
+
+    if (university_name && institute_name) {
+      if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+        emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
+      } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+        emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
+      } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+        emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
+      } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+        emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
+      }
     }
 
-    await existingApplication.save();
+    if (!emailSent) {
+      console.warn(`Email not sent for application ${applicationId}`);
+    }
 
-    return res.status(200).json({ success: true, message: "Application updated successfully" });
+    // Check if feeDocument is defined and add new images to existing ones
+    if (feeDocument && Array.isArray(feeDocument)) {
+      // Append newly uploaded images to existing ones
+      feeDocument.forEach((file) => {
+        existingApplication.feeDocument.push(file);
+      });
+    }
+
+    await existingApplication.save(); // Save the updated application
+
+    return res.status(200).json({ success: true, message: `Successfully updated the application` });
   } catch (error) {
     console.error("Error updating application:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
