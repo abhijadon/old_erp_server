@@ -1,47 +1,52 @@
-const mongoose = require('mongoose');
-const Team = mongoose.model('Team');
+const Team = require('@/models/Team');
 
 const create = async (req, res) => {
   try {
-    // Check if a team with the same userId already exists
-    const existingTeam = await Team.findOne({ userId: req.body.userId });
+    // Extract data from the request body
+    const { userId, teamMembers, institute, university, teamName } = req.body;
+
+    // Check if a team with the provided userId already exists
+    const existingTeam = await Team.findOne({ userId });
 
     if (existingTeam) {
-      // Team with the same userId already exists
+      // If a team with the same userId already exists, return a 400 status with an error message
       return res.status(400).json({
         success: false,
         message: 'Team with the provided userId already exists',
-        error: null,
       });
     }
 
-    // Create a new team if userId is not duplicate
-    const result = await Team.create(req.body);
+    // Create a new team instance
+    const team = new Team({
+      userId,
+      teamMembers,
+      institute,
+      university,
+      teamName,
+    });
 
-    res.status(200).json({
+    // Save the new team to the database
+    await team.save();
+
+    // Send a success response
+    res.status(201).json({
       success: true,
-      result: result,
+      result: team,
       message: 'Team created successfully',
     });
   } catch (error) {
-    console.error('Error saving to the database:', error);
+    // Handle errors
+    console.error('Error creating team:', error);
 
-    if (error.name === 'ValidationError') {
-      res.status(400).json({
-        success: false,
-        result,
-        message: 'Required fields are not supplied',
-        error: error,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        result,
-        message: error.message,
-        error: error,
-      });
-    }
+    // Send an error response
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
   }
 };
 
-module.exports = create;
+module.exports = {
+  create,
+};

@@ -7,16 +7,16 @@ const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fat
   
     try {
         // Create an instance of the TransactionalEmailsApi
-        let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+        let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();	
         // Set your Brevo API key
         let apiKey = apiInstance.authentications['apiKey'];
-        apiKey.apiKey = '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';
+        apiKey.apiKey = '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';
 
         // Create a new SendSmtpEmail object
         let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
         // Set the subject of the email
-        sendSmtpEmail.subject = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted (Team ${institute})`;
+        sendSmtpEmail.subject = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted`;
 
         // Set the HTML content of the email
         sendSmtpEmail.htmlContent = `
@@ -68,15 +68,10 @@ const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fat
 		padding: 0px 0px 10px 0px!important;
 	}
 
-	#a17 {
-		max-width: 300px;
-		position: absolute;
-		margin: -8px auto;
-		left: 0;
-		right: 0;
-		text-align: center;	
-		font-size: 14px;
-	}
+	 #a17 {
+                margin-top: 15px !important;
+                text-align: center;
+            }
 
 	#a8 img, #a7 img {
 		width: 90%;

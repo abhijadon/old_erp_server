@@ -15,7 +15,7 @@ const update = async ( req, res) => {
       return res.status(404).json({
         success: false,
         result: null,
-        message: `No document found by this id: ${id}`,
+        message: `No document found`,
       });
     }
 
@@ -24,7 +24,7 @@ const update = async ( req, res) => {
     return res.status(200).json({
       success: true,
       result,
-      message: `Document updated successfully by this id: ${id}`,
+      message: `Document updated successfully`,
     });
   } catch (error) {
     // If error is thrown by Mongoose due to required validations
