@@ -25,7 +25,7 @@ async function updatePayment(req, res) {
     // Check if paymentStatus is valid
     if (status !== 'payment approved' && status !== 'payment received' && status !== 'payment rejected') {
       return res.status(400).json({ success: false, message: "Invalid paymentStatus" });
-    }  
+     }  
 
     const existingApplication = await Applications.findById(applicationId);
 
@@ -131,20 +131,27 @@ async function updatePayment(req, res) {
 
     let emailSent = false;
 
-    if (university_name && institute_name) {
-      if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
-        emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-      } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
-        emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-      } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-        emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-      } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-        emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+    // Only send email if payment status is 'payment approved'
+    if (status === 'payment approved') {
+      if (university_name && institute_name) {
+        if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+        } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+        } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+        } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+        }
       }
-    }
 
-    if (!emailSent) {
-      console.warn(`Email not sent for application ${applicationId}`);
+      if (emailSent) {
+        console.log(`Email sent successfully for application ${applicationId}`);
+      } else {
+        console.warn(`Email not sent for application ${applicationId}`);
+      }
+    } else {
+      console.warn(`Email not sent for application ${applicationId} because payment status is not 'payment approved'`);
     }
 
     // Check if feeDocument is defined and add new images to existing ones
@@ -157,7 +164,8 @@ async function updatePayment(req, res) {
 
     await existingApplication.save(); // Save the updated application
 
-    return res.status(200).json({ success: true, message: `Successfully updated the application` });
+    return res.status(200).json({ success: true, message: `Successfully updated payment. Email sent: ${emailSent}`
+   });
   } catch (error) {
     console.error("Error updating application:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
@@ -167,3 +175,5 @@ async function updatePayment(req, res) {
 module.exports = {
   updatePayment
 };
+
+
