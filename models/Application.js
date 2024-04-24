@@ -42,87 +42,105 @@ const applicationSchema = new mongoose.Schema({
     trim: true,
   },
   alternate_phone: {
-    type: Number,
+    type: String,
     trim: true,
+    default: 'N/A',
   },
 },
   education: {
     course: {
       type: String,
       trim: true,
+      default: 'N/A',
     }
   },
 
   customfields: {
+ sendfeeReciept: {
+      type: String,
+      trim: true,
+      default: 'N/A',
+    },
     institute_name: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     university_name: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     father_name: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     mother_name: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     session: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     admission_type: {
       type: String,
       trim: true,
-      default: 'Fresher',
+      default: 'FRESH',
     },
     enter_specialization: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     dob: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     remark: {
       type: String,
-      default: null,
+      default: 'N/A',
       trim: true,
     },
 
     gender: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
 
     installment_type: {
       type: String,
       trim: true,
-      default: '1st installment',
+      default: '1st Installment',
     },
 
     payment_mode: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     payment_type: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     total_course_fee: {
-      type: Number,
+      type: String,
       trim: true,
+     default: 0,
     },
     // Payment details that need to be saved in the Payment table
     total_paid_amount: {
-      type: Number,
+      type: String,
       default: 0,
     },
     paid_amount: {
-      type: Number,
+      type: String,
       default: 0,
     },
     status: {
@@ -133,22 +151,25 @@ const applicationSchema = new mongoose.Schema({
 due_amount: {
       type: String,
       trim: true,
+      default: 0,
     },
     paymentStatus: {
    type: String,
    trim: true,
-   default: 'N/A',
   },
   },   
    feeDocument: {
     type: Array,
+     default: ['N/A'],
   },
   studentDocument: {
     type: Array,
+     default: ['N/A'],
   },
    previousData: {
     type: [
-      {
+      { 
+        sendfeeReciept: String,
         installment_type: String,
         paymentStatus: String,
         payment_mode: String,
@@ -168,7 +189,7 @@ due_amount: {
     default: Date.now,
   },
 });
-
+  
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {

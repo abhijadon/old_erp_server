@@ -16,51 +16,56 @@ const paginatedList = async (Model, req, res) => {
     }
 
     if (user.role === 'manager') {
-      let team = await Team.findOne({ userId: user._id }).populate('teamMembers');
+      const team = await Team.findOne({ userId: user._id }).populate('teamMembers');
 
       if (team) {
-        query['customfields.institute_name'] = { $in: team.institute }   
-        query['customfields.university_name'] = { $in: team.university }   
-        query['university_name'] = { $in: team.university }   
-        query['institute_name'] = { $in: team.institute }      
-               } 
+       query['customfields.institute_name'] = { $in: team.institute };
+        query['customfields.university_name'] = { $in: team.university };
+        query['institute_name'] = { $in: team.institute };
+        query['university_name'] = { $in: team.university };
+      } else {
+        // No team assigned, return no data
+        query['userId'] = null;
+      }
     } else if (user.role === 'supportiveassociate') {
-      let team = await Team.findOne({ userId: user._id }).populate('teamMembers');
+      const team = await Team.findOne({ userId: user._id }).populate('teamMembers');
 
       if (team) {
         const teamMemberIds = team.teamMembers.map(member => member._id);
-        query.userId = { $in: [user._id, ...teamMemberIds] };
+        query['userId'] = { $in: [user._id, ...teamMemberIds] };
         query['customfields.institute_name'] = { $in: team.institute };
-        query['customfields.university_name'] = { $in: team.university }; 
-        query['institute_name'] = { $in: team.institute }; 
+        query['customfields.university_name'] = { $in: team.university };
+        query['institute_name'] = { $in: team.institute };
         query['university_name'] = { $in: team.university };
+      } else {
+        // No team assigned, return no data
+        query['userId'] = null;
       }
     } else if (user.role === 'teamleader') {
       const team = await Team.findOne({ userId: user._id }).populate('teamMembers');
 
       if (team) {
         const teamMemberIds = team.teamMembers.map(member => member._id);
-        query.userId = { $in: [user._id, ...teamMemberIds] };
-
-        if (instituteName) {
-          query['customfields.institute_name'] = instituteName;
-        }
+        query['userId'] = { $in: [user._id, ...teamMemberIds] };
+      } else {
+        // No team assigned, return no data
+        query['userId'] = null;
       }
     } else if (user.role === 'admin' || user.role === 'subadmin') {
-      // Admin and subadmin get all data, no need to modify the query
+      // Admin and subadmin can see all data, no restrictions
     } else {
-      query.userId = user._id;
+      query['userId'] = user._id; // Default case for other users
     }
 
     const resultsPromise = Model.find(query)
       .sort({ created: 'desc' })
-      .populate('userId')
+      .populate('userId');
     const countPromise = Model.countDocuments(query);
 
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     if (count > 0) {
-      const formattedResults = result.map((item) => ({
+      const formattedResults = result.map(item => ({
         ...item._doc,
         date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
         time: item.time,

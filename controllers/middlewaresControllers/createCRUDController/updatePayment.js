@@ -10,22 +10,23 @@ async function updatePayment(req, res) {
     const contact = req.body.contact;
     const { feeDocument } = req.imageUrls;
 
-    // Check if customfields is defined and is an object
     if (!customfields || typeof customfields !== 'object') {
       return res.status(400).json({ success: false, message: "Invalid customfields data" });
     }
 
     const { email } = contact;
+    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, session, sendfeeReciept } = customfields;
 
-    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, session } = customfields;
+   const status = paymentStatus ? paymentStatus.toLowerCase() : '';
+const sendFeeReciept = sendfeeReciept ? sendfeeReciept.toLowerCase() : '';
+   
+console.log('Payment Status:', status);
+console.log('Send Fee Receipt:', sendFeeReciept);
 
-    // Check if paymentStatus is defined and convert to lowercase
-    const status = paymentStatus ? paymentStatus.toLowerCase() : '';
 
-    // Check if paymentStatus is valid
     if (status !== 'payment approved' && status !== 'payment received' && status !== 'payment rejected') {
       return res.status(400).json({ success: false, message: "Invalid paymentStatus" });
-     }  
+    }
 
     const existingApplication = await Applications.findById(applicationId);
 
@@ -37,13 +38,28 @@ async function updatePayment(req, res) {
     req.body.removed = false;
 
     const updatedCustomFields = {};
-    if (status === 'payment received') {
-      if (paid_amount !== undefined) {
-        existingApplication.customfields.total_paid_amount += parseInt(paid_amount);
-        existingApplication.customfields.paid_amount = paid_amount;
-        updatedCustomFields.paid_amount = paid_amount;
-      }
+    
+if (status === 'payment received') {
+  if (paid_amount !== undefined) {
+    // Convert paid_amount to a floating-point number
+    const amountToAdd = parseFloat(paid_amount);
+    
+    // Ensure total_paid_amount is also a number
+    let totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
+
+    if (isNaN(totalPaidAmount) || isNaN(amountToAdd)) {
+      return res.status(400).json({ success: false, message: "Invalid numerical data" });
     }
+
+    // Correctly increment total paid amount
+    totalPaidAmount += amountToAdd;
+
+    existingApplication.customfields.total_paid_amount = totalPaidAmount;
+    existingApplication.customfields.paid_amount = amountToAdd;
+
+    updatedCustomFields.paid_amount = amountToAdd;
+  }
+}
 
     if (installment_type !== undefined) {
       existingApplication.customfields.installment_type = installment_type;
@@ -63,6 +79,10 @@ async function updatePayment(req, res) {
     if (payment_type !== undefined) {
       existingApplication.customfields.payment_type = payment_type;
       updatedCustomFields.payment_type = payment_type;
+    }    
+    if (sendfeeReciept !== undefined) {
+      existingApplication.customfields.sendfeeReciept = sendFeeReciept;
+      updatedCustomFields.sendfeeReciept = sendFeeReciept;
     }
 
     const totalCourseFee = parseFloat(existingApplication.customfields.total_course_fee);
@@ -74,13 +94,14 @@ async function updatePayment(req, res) {
     existingApplication.previousData.push({
       installment_type: installment_type,
       paymentStatus: status,
+      sendfeeReciept: sendFeeReciept,
       payment_mode: payment_mode,
-      payment_type: payment_type,
-      total_paid_amount: totalPaidAmount,
+      payment_type,
       total_course_fee: totalCourseFee,
-      paid_amount: paid_amount,
+      total_paid_amount: totalPaidAmount,
+      paid_amount,
       due_amount: dueAmount,
-      date: new Date()
+      date: new Date(),
     });
 
     const updatedFields = {};
@@ -95,7 +116,7 @@ async function updatePayment(req, res) {
             }
             updatedFields[field][param] = {
               oldValue: oldValues[field][param],
-              newValue: req.body[field][param]
+              newValue: req.body[field][param],
             };
           }
         }
@@ -108,16 +129,17 @@ async function updatePayment(req, res) {
       }
       updatedFields.customfields.full_name = {
         oldValue: oldValues.full_name,
-        newValue: req.body.full_name
+        newValue: req.body.full_name,
       };
     }
+
     if (req.body.lead_id !== oldValues.lead_id) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
       }
       updatedFields.customfields.lead_id = {
         oldValue: oldValues.lead_id,
-        newValue: req.body.lead_id
+        newValue: req.body.lead_id,
       };
     }
 
@@ -125,36 +147,32 @@ async function updatePayment(req, res) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
         updatedFields,
-        updatedBy: req.user._id
+        updatedBy: req.user._id,
       });
     }
 
     let emailSent = false;
 
-    // Only send email if payment status is 'payment approved'
-    if (status === 'payment approved') {
+    // Only send email if payment status is 'payment approved' AND sendfeeReciept is 'yes'
+    if (status === 'payment approved' && sendFeeReciept === 'yes') {
       if (university_name && institute_name) {
-        if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+        const isValidUniversity = ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase());
+        const isOnlineUniversity = ['MANGALAYATAN ONLINE'].includes(university_name.toUpperCase());
+
+        if (institute_name === 'HES' && isValidUniversity) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-        } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
+        } else if (institute_name === 'DES' && isValidUniversity) {
           emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-        } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+        } else if (institute_name === 'HES' && isOnlineUniversity) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
-        } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+        } else if (institute_name === 'DES' && isOnlineUniversity) {
           emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
         }
       }
-
-      if (emailSent) {
-        console.log(`Email sent successfully for application ${applicationId}`);
-      } else {
-        console.warn(`Email not sent for application ${applicationId}`);
-      }
     } else {
-      console.warn(`Email not sent for application ${applicationId} because payment status is not 'payment approved'`);
+      console.log(`Email not sent for application ${applicationId} because payment status is not 'payment approved' or 'sendfeeReciept' is not 'yes'`);
     }
 
-    // Check if feeDocument is defined and add new images to existing ones
     if (feeDocument && Array.isArray(feeDocument)) {
       // Append newly uploaded images to existing ones
       feeDocument.forEach((file) => {
@@ -164,8 +182,7 @@ async function updatePayment(req, res) {
 
     await existingApplication.save(); // Save the updated application
 
-    return res.status(200).json({ success: true, message: `Successfully updated payment. Email sent: ${emailSent}`
-   });
+    return res.status(200).json({ success: true, message: `Successfully updated payment. Email sent: ${emailSent}` });
   } catch (error) {
     console.error("Error updating application:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
@@ -173,7 +190,5 @@ async function updatePayment(req, res) {
 }
 
 module.exports = {
-  updatePayment
+  updatePayment,
 };
-
-

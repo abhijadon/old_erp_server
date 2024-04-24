@@ -1,9 +1,7 @@
-const HesMail = require('@/emailTemplate/HesMail');
-const DesMail = require('@/emailTemplate/DesMail');
-
 const create = async (Model, req, res) => {
-    try { 
+    try {
         const userId = req.user._id;
+
         const {
             full_name: fullName,
             'education.course': course,
@@ -14,41 +12,64 @@ const create = async (Model, req, res) => {
             'contact.phone': phone,
             'customfields.installment_type': installmentType,
             'customfields.payment_type': payment_type,
+            'customfields.payment_mode': payment_mode,
             'customfields.father_name': fatherName,
             'customfields.institute_name': institute,
             'customfields.total_course_fee': totalCourseFee,
             'customfields.total_paid_amount': totalPaidAmount,
             'customfields.paid_amount': paidAmount,
         } = req.body;
-                  
-        const {feeDocument, studentDocument} = req.imageUrls;
 
-        const dueAmount = parseFloat(totalCourseFee) - parseFloat(totalPaidAmount);
+        const { feeDocument, studentDocument } = req.imageUrls;
 
-        // Create a new document in the Applications collection
+        const parsedTotalPaidAmount = parseFloat(totalPaidAmount) || 0;
+        const parsedPaidAmount = parseFloat(paidAmount) || 0;
+
+        const updatedTotalPaidAmount = parsedTotalPaidAmount + parsedPaidAmount;
+
+        const dueAmount = parseFloat(totalCourseFee) - updatedTotalPaidAmount;
+
         const newDocData = {
+            userId,
             ...req.body,
-            userId: userId,
             'customfields.due_amount': dueAmount.toString(),
+            'customfields.total_paid_amount': updatedTotalPaidAmount.toString(),
+            'customfields.installment_type': '1st Installment',
+            'customfields.status': 'New',
+            'customfields.paymentStatus': 'payment received',
             feeDocument,
-            studentDocument
+            studentDocument,
         };
+
+        // Initialize `previousData` with the first entry
+        const initialPreviousData = {
+            installment_type: '1st Installment', // Initial Installment
+            paymentStatus: 'payment received',
+            payment_type,
+            payment_mode,
+            total_course_fee: totalCourseFee,
+            total_paid_amount: updatedTotalPaidAmount,
+            paid_amount: parsedPaidAmount,
+            due_amount: dueAmount.toString(),
+            date: new Date(), // Log current date/time
+        };
+
+        newDocData.previousData = [initialPreviousData]; // Add initial data to `previousData`
 
         const newDoc = new Model(newDocData);
         
         const result = await newDoc.save();
-
         let emailSent = false;
 
         if (university && institute) {
             if (institute === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university.toUpperCase())) {
-                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount, payment_type);
+                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, updatedTotalPaidAmount, paidAmount, payment_type);
             } else if (institute === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university.toUpperCase())) {
-                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount, payment_type);
+                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, updatedTotalPaidAmount, paidAmount, payment_type);
             } else if (institute === 'HES' && university.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount, payment_type);
+                emailSent = await HesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, updatedTotalPaidAmount, paidAmount, payment_type);
             } else if (institute === 'DES' && university.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount, payment_type);
+                emailSent = await DesMail(studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, updatedTotalPaidAmount, paidAmount, payment_type);
             }
         } else {
             throw new Error(`Missing university or institute name`);
