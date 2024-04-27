@@ -50,6 +50,10 @@ const adminSchema = new Schema({
     type: Boolean,
     default: false,
   },
+sessionId: {
+    type: String,
+    default: null,
+  },
 });
 
 adminSchema.plugin(require('mongoose-autopopulate'));

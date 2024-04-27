@@ -5,62 +5,75 @@ const HesMail = require('@/emailTemplate/paymentEmail/HesMail');
 
 async function updatePayment(req, res) {
   try {
+    // Retrieve application ID and request data
     const applicationId = req.params.id;
     const customfields = req.body.customfields;
     const contact = req.body.contact;
     const { feeDocument } = req.imageUrls;
 
+    // Validate customfields
     if (!customfields || typeof customfields !== 'object') {
       return res.status(400).json({ success: false, message: "Invalid customfields data" });
     }
 
     const { email } = contact;
-    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, session, sendfeeReciept } = customfields;
+    const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, sendfeeReciept } = customfields;
 
-   const status = paymentStatus ? paymentStatus.toLowerCase() : '';
-const sendFeeReciept = sendfeeReciept ? sendfeeReciept.toLowerCase() : '';
-   
-console.log('Payment Status:', status);
-console.log('Send Fee Receipt:', sendFeeReciept);
+    const status = paymentStatus ? paymentStatus.toLowerCase() : '';
 
-
-    if (status !== 'payment approved' && status !== 'payment received' && status !== 'payment rejected') {
-      return res.status(400).json({ success: false, message: "Invalid paymentStatus" });
-    }
-
+    // Fetch the existing application from the database
     const existingApplication = await Applications.findById(applicationId);
 
     if (!existingApplication) {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    const oldValues = JSON.parse(JSON.stringify(existingApplication._doc));
-    req.body.removed = false;
+    // Ensure we don't update if the status is already 'payment approved'
+    const currentPaymentStatus = existingApplication.customfields.paymentStatus;
 
-    const updatedCustomFields = {};
-    
-if (status === 'payment received') {
-  if (paid_amount !== undefined) {
-    // Convert paid_amount to a floating-point number
-    const amountToAdd = parseFloat(paid_amount);
-    
-    // Ensure total_paid_amount is also a number
-    let totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
+    if (currentPaymentStatus === 'payment approved' && status === 'payment approved') {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update application because the payment status is 'payment approved'. Change the status to update other fields.",
+      });
+    } 
 
-    if (isNaN(totalPaidAmount) || isNaN(amountToAdd)) {
-      return res.status(400).json({ success: false, message: "Invalid numerical data" });
+    if (currentPaymentStatus === 'payment rejected' && status === 'payment rejected') {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update application because the payment status is 'payment rejected'. Change the status to update other fields.",
+      });
     }
+    // Continue with other updates if status is valid
+    const updatedCustomFields = {};
 
-    // Correctly increment total paid amount
-    totalPaidAmount += amountToAdd;
+      // Handle updates to paid amount
+    if (status === 'payment received') {
+      if (currentPaymentStatus !== 'payment approved') {
+        return res.status(400).json({ success: false, message: "Cannot mark as 'payment received' unless the previous status was 'payment approved'." });
+      }
+      
+      if (paid_amount !== undefined) {
+        // Convert paid_amount to a number
+        const amountToAdd = parseFloat(paid_amount);
 
-    existingApplication.customfields.total_paid_amount = totalPaidAmount;
-    existingApplication.customfields.paid_amount = amountToAdd;
+        // Check for valid total_paid_amount and paid_amount
+        let totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
 
-    updatedCustomFields.paid_amount = amountToAdd;
-  }
-}
+        if (isNaN(totalPaidAmount) || isNaN(amountToAdd)) {
+          return res.status(400).json({ success: false, message: "Invalid numerical data" });
+        }
 
+        // Increment the total paid amount
+        totalPaidAmount += amountToAdd;
+
+        existingApplication.customfields.total_paid_amount = totalPaidAmount;
+        existingApplication.customfields.paid_amount = amountToAdd;
+
+        updatedCustomFields.paid_amount = amountToAdd;
+      }
+    }
+    // Update other custom fields
     if (installment_type !== undefined) {
       existingApplication.customfields.installment_type = installment_type;
       updatedCustomFields.installment_type = installment_type;
@@ -79,23 +92,21 @@ if (status === 'payment received') {
     if (payment_type !== undefined) {
       existingApplication.customfields.payment_type = payment_type;
       updatedCustomFields.payment_type = payment_type;
-    }    
-    if (sendfeeReciept !== undefined) {
-      existingApplication.customfields.sendfeeReciept = sendFeeReciept;
-      updatedCustomFields.sendfeeReciept = sendFeeReciept;
     }
 
+    // Calculate the due amount
     const totalCourseFee = parseFloat(existingApplication.customfields.total_course_fee);
     const totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
     const dueAmount = totalCourseFee - totalPaidAmount;
 
     existingApplication.customfields.due_amount = dueAmount;
 
+    // Log the changes in application history
     existingApplication.previousData.push({
-      installment_type: installment_type,
+      installment_type,
       paymentStatus: status,
-      sendfeeReciept: sendFeeReciept,
-      payment_mode: payment_mode,
+      sendfeeReciept,
+      payment_mode,
       payment_type,
       total_course_fee: totalCourseFee,
       total_paid_amount: totalPaidAmount,
@@ -104,18 +115,19 @@ if (status === 'payment received') {
       date: new Date(),
     });
 
+    // Create an application history record for updated fields
     const updatedFields = {};
 
     const fieldsToCheck = ['customfields', 'contact', 'education'];
     for (const field of fieldsToCheck) {
       if (req.body[field] && typeof req.body[field] === 'object') {
         for (const param of Object.keys(req.body[field])) {
-          if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
+          if (JSON.stringify(req.body[field][param]) !== JSON.stringify(existingApplication[field][param])) {
             if (!updatedFields[field]) {
               updatedFields[field] = {};
             }
             updatedFields[field][param] = {
-              oldValue: oldValues[field][param],
+              oldValue: existingApplication[field][param],
               newValue: req.body[field][param],
             };
           }
@@ -123,22 +135,22 @@ if (status === 'payment received') {
       }
     }
 
-    if (req.body.full_name !== oldValues.full_name) {
+    if (req.body.full_name !== existingApplication.customfields.full_name) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
       }
       updatedFields.customfields.full_name = {
-        oldValue: oldValues.full_name,
+        oldValue: existingApplication.customfields.full_name,
         newValue: req.body.full_name,
       };
     }
 
-    if (req.body.lead_id !== oldValues.lead_id) {
+    if (req.body.lead_id !== existingApplication.customfields.lead_id) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
       }
       updatedFields.customfields.lead_id = {
-        oldValue: oldValues.lead_id,
+        oldValue: existingApplication.customfields.lead_id,
         newValue: req.body.lead_id,
       };
     }
@@ -151,30 +163,86 @@ if (status === 'payment received') {
       });
     }
 
+    // Send email based on payment status and sendfeeReciept conditions
     let emailSent = false;
 
-    // Only send email if payment status is 'payment approved' AND sendfeeReciept is 'yes'
-    if (status === 'payment approved' && sendFeeReciept === 'yes') {
+    if (status === 'payment approved' && sendfeeReciept === 'yes') {
       if (university_name && institute_name) {
         const isValidUniversity = ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase());
         const isOnlineUniversity = ['MANGALAYATAN ONLINE'].includes(university_name.toUpperCase());
 
         if (institute_name === 'HES' && isValidUniversity) {
-          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+          emailSent = await HesMail(
+            email,
+            institute_name,
+            dueAmount,
+            req.body.full_name,
+            req.body.education.course,
+            req.body.customfields.father_name,
+            req.body.customfields.dob,
+            req.body.contact.phone,
+            installment_type,
+            totalCourseFee,
+            totalPaidAmount,
+            paid_amount,
+            payment_type
+          );
         } else if (institute_name === 'DES' && isValidUniversity) {
-          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+          emailSent = await DesMail(
+            email,
+            institute_name,
+            dueAmount,
+            req.body.full_name,
+            req.body.education.course,
+            req.body.customfields.father_name,
+            req.body.customfields.dob,
+            req.body.contact.phone,
+            installment_type,
+            totalCourseFee,
+            totalPaidAmount,
+            paid_amount,
+            payment_type
+          );
         } else if (institute_name === 'HES' && isOnlineUniversity) {
-          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+          emailSent = await HesMail(
+            email,
+            institute_name,
+            dueAmount,
+            req.body.full_name,
+            req.body.education.course,
+            req.body.customfields.father_name,
+            req.body.customfields.dob,
+            req.body.contact.phone,
+            installment_type,
+            totalCourseFee,
+            totalPaidAmount,
+            paid_amount,
+            payment_type
+          );
         } else if (institute_name === 'DES' && isOnlineUniversity) {
-          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount, payment_type);
+          emailSent = await DesMail(
+            email,
+            institute_name,
+            dueAmount,
+            req.body.full_name,
+            req.body.education.course,
+            req.body.customfields.father_name,
+            req.body.customfields.dob,
+            req.body.contact.phone,
+            installment_type,
+            totalCourseFee,
+            totalPaidAmount,
+            paid_amount,
+            payment_type
+          );
         }
       }
     } else {
       console.log(`Email not sent for application ${applicationId} because payment status is not 'payment approved' or 'sendfeeReciept' is not 'yes'`);
     }
 
+    // Append newly uploaded images to existing ones
     if (feeDocument && Array.isArray(feeDocument)) {
-      // Append newly uploaded images to existing ones
       feeDocument.forEach((file) => {
         existingApplication.feeDocument.push(file);
       });

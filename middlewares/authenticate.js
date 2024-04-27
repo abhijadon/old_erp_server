@@ -1,59 +1,58 @@
 const jwt = require('jsonwebtoken');
-const User = require('@/models/User'); // Adjust the path accordingly
+const User = require('@/models/User');
 
 const authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-// Assuming the token is in the format 'Bearer TOKEN'
 
     if (!token) {
-      return res.status(401).json({ message: 'Authentication failed: No token provided' });
+      return res.status(401).json({
+        success: false,
+        result: null,
+        message: 'No authentication token, authorization denied.',
+      });
     }
 
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decodedToken.id);
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!verified) {
+      return res.status(401).json({
+        success: false,
+        result: null,
+        message: 'Token verification failed, authorization denied.',
+      });
+    }
+
+    const user = await User.findOne({ _id: verified.id, removed: false });
 
     if (!user) {
-      return res.status(401).json({ message: 'Authentication failed: User not found' });
+      return res.status(401).json({
+        success: false,
+        result: null,
+        message: "User doesn't exist, authorization denied.",
+      });
     }
 
-    req.user = user; // Set the user in the request object
+    // Check if session ID matches
+    if (user.sessionId !== verified.sessionId || !user.isLoggedIn) {
+      return res.status(401).json({
+        success: false,
+        result: null,
+        message: 'Session is invalid or user is logged out.',
+        jwtExpired: true,
+      });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
-    console.error(error);
-    return res.status(401).json({ message: 'Authentication failed: Invalid token' });
+    res.status(503).json({
+      success: false,
+      result: null,
+      message: 'Service unavailable, please try again later.',
+      error: error.message,
+    });
   }
 };
 
 module.exports = authenticate;
-
-
-
-// header token 
-// const jwt = require('jsonwebtoken');
-// const User = require('@/models/User'); // Adjust the path accordingly
-
-// const authenticate = async (req, res, next) => {
-//   try {
-//     const token = req.headers.authorization;
-//     if (!token) {
-//       return res.status(401).json({ message: 'Authentication failed: No token provided' });
-//     }
-
-//     // Assuming the token is in the format 'Bearer TOKEN'
-//     const decodedToken = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
-//     const user = await User.findById(decodedToken.id);
-
-//     if (!user) {
-//       return res.status(401).json({ message: 'Authentication failed: User not found' });
-//     }
-
-//     req.user = user; // Set the user in the request object
-//     next();
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(401).json({ message: 'Authentication failed: Invalid token' });
-//   }
-// };
-
-// module.exports = authenticate;

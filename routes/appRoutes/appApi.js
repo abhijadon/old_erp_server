@@ -23,6 +23,7 @@ const kycController = require('@/controllers/appControllers/kycController');
 const inventoryController = require('@/controllers/appControllers/inventoryController');
 const { hasPermission } = require('@/middlewares/permission');
 const updatePaymentcontroller = require('@/controllers/middlewaresControllers/createCRUDController/updatePayment');
+const uploadDocumentController = require('@/controllers/middlewaresControllers/createCRUDController/uploadDocument');
 const { firebaseStorageUpload, saveImageUrls } = require('@/firebase/firebaseStorageUpload');
 // //_________________________________ API for employees_____________________
 router.route('/employee/create').post(hasPermission('create'),catchErrors(employeeController.create));
@@ -66,6 +67,7 @@ router.route('/lead/create').post(hasPermission('create'),firebaseStorageUpload(
 router.route('/lead/read/:id').get(hasPermission('read'),catchErrors(leadController.read));
 router.route('/lead/update/:id').patch(hasPermission('update'),catchErrors(leadController.update));
 router.route('/lead/updatePayment/:id').put(hasPermission('update'),firebaseStorageUpload(),saveImageUrls,catchErrors(updatePaymentcontroller.updatePayment));
+router.route('/lead/uploadDocument/:id').put(hasPermission('update'),firebaseStorageUpload(),saveImageUrls,catchErrors(uploadDocumentController.uploadDocument));
 router.route('/lead/delete/:id').delete(hasPermission('delete'),catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));
