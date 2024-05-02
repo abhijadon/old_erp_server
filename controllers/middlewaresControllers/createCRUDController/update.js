@@ -2,6 +2,7 @@ const ApplicationHistory = require('@/models/ApplicationHistory');
 
 async function update(Model, req, res) {
   try {
+    // Find the existing document
     const existingDocument = await Model.findById(req.params.id).exec();
 
     if (!existingDocument) {
@@ -12,70 +13,108 @@ async function update(Model, req, res) {
       });
     }
 
-    const oldValues = { ...existingDocument._doc };
+    // Start with a copy of the existing document
+    const updatedDocumentData = { ...existingDocument._doc };
 
-    req.body.removed = false;
-    req.body.updatedBy = req.user._id;
+    // Merge customfields with existing data to retain existing values
+    if (req.body.customfields) {
+      const customfields = { ...existingDocument.customfields };
 
-    const totalCourseFee = parseFloat(req.body.customfields.total_course_fee) || 0;
-    const totalPaidAmount = parseFloat(req.body.customfields.total_paid_amount) || 0;
+      // Update customfields only with new data, retain old data otherwise
+      if (req.body.customfields.lmsStatus !== undefined) {
+        customfields.lmsStatus = req.body.customfields.lmsStatus;
+      }
+
+      if (req.body.customfields.enrollment !== undefined) {
+        customfields.enrollment = req.body.customfields.enrollment;
+      }
+
+      updatedDocumentData.customfields = { ...customfields, ...req.body.customfields };
+    }
+
+    // If a new `full_name` is provided, update it
+    if (req.body.full_name !== undefined) {
+      updatedDocumentData.full_name = req.body.full_name;
+    }
+
+    // Merge other sections like contact and education
+    if (req.body.contact) {
+      updatedDocumentData.contact = {
+        ...existingDocument.contact,
+        ...req.body.contact,
+      };
+    }
+
+    if (req.body.education) {
+      updatedDocumentData.education = {
+        ...existingDocument.education,
+        ...req.body.education,
+      };
+    }
+
+    // Ensure total_course_fee and related calculations are updated correctly
+    const totalCourseFee = parseFloat(updatedDocumentData.customfields.total_course_fee) || 0;
+    const totalPaidAmount = parseFloat(updatedDocumentData.customfields.total_paid_amount) || 0;
     const dueAmount = totalCourseFee - totalPaidAmount;
-    req.body.customfields.due_amount = dueAmount.toString();
+    updatedDocumentData.customfields.due_amount = dueAmount.toString();
 
+    // Update the document in the database
     const updatedDocument = await Model.findOneAndUpdate(
       { _id: req.params.id, removed: false },
-      req.body,
+      updatedDocumentData, // Ensure the updated data includes full_name
       { new: true, runValidators: true }
     ).exec();
 
+    // Track updated fields for history
     const updatedFields = {};
 
-    // Compare all parameters within customfields, contact, and education for changes
     const fieldsToCheck = ['customfields', 'contact', 'education'];
-    for (const field of fieldsToCheck) {
-      for (const param of Object.keys(req.body[field])) {
-        if (JSON.stringify(req.body[field][param]) !== JSON.stringify(oldValues[field][param])) {
+    fieldsToCheck.forEach((field) => {
+      Object.keys(updatedDocumentData[field] || {}).forEach((param) => {
+        if (
+          JSON.stringify(updatedDocumentData[field][param]) !==
+          JSON.stringify(existingDocument._doc[field]?.[param])
+        ) {
           if (!updatedFields[field]) {
             updatedFields[field] = {};
           }
           updatedFields[field][param] = {
-            oldValue: oldValues[field][param],
-            newValue: req.body[field][param]
+            oldValue: existingDocument._doc[field]?.[param],
+            newValue: updatedDocumentData[field][param],
           };
         }
-      }
-    }
+      });
+    });
 
-    // Check if full_name or lead_id has been updated
-    if (req.body.full_name !== oldValues.full_name) {
+    // Additional checks for `full_name` and `lead_id`
+    if (req.body.full_name !== existingDocument.full_name) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
       }
       updatedFields.customfields.full_name = {
-        oldValue: oldValues.full_name,
-        newValue: req.body.full_name
+        oldValue: existingDocument.full_name,
+        newValue: req.body.full_name,
       };
     }
-    if (req.body.lead_id !== oldValues.lead_id) {
+
+    if (req.body.lead_id && req.body.lead_id !== existingDocument.lead_id) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
       }
       updatedFields.customfields.lead_id = {
-        oldValue: oldValues.lead_id,
-        newValue: req.body.lead_id
+        oldValue: existingDocument.lead_id,
+        newValue: req.body.lead_id,
       };
     }
 
-    // Create application history if there are any updated fields
+    // Create an application history record if there were updates
     if (Object.keys(updatedFields).length > 0) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
         updatedFields,
-        updatedBy: req.user._id
+        updatedBy: req.user._id,
       });
     }
-
-  
 
     return res.status(200).json({
       success: true,
@@ -85,7 +124,10 @@ async function update(Model, req, res) {
 
   } catch (error) {
     console.error("Error updating document:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 }
 

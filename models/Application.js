@@ -59,8 +59,12 @@ const applicationSchema = new mongoose.Schema({
  sendfeeReciept: {
       type: String,
       trim: true,
-      default: 'N/A',
+      default: 'No',
     },
+   paymentStatus: {
+   type: String,
+   trim: true,
+  },
     institute_name: {
       type: String,
       trim: true,
@@ -162,12 +166,11 @@ due_amount: {
       type: String,
       trim: true,
       default: 0,
-    },
-    paymentStatus: {
-   type: String,
-   trim: true,
-  },
+    }
   },   
+
+
+
    feeDocument: {
     type: Array,
      default: ['N/A'],
