@@ -27,6 +27,7 @@ const uploadDocumentController = require('@/controllers/middlewaresControllers/c
 const { firebaseStorageUpload, saveImageUrls } = require('@/firebase/firebaseStorageUpload');
 const { createComment } = require('@/controllers/comments/comments');
 const { getCommentsByStudent } = require('@/controllers/comments/getcomment');
+const history = require('@/controllers/historyControllers/history');
 // //_________________________________ API for employees_____________________
 router.route('/employee/create').post(hasPermission('create'),catchErrors(employeeController.create));
 router.route('/employee/read/:id').get(hasPermission('read'),catchErrors(employeeController.read));
@@ -77,6 +78,7 @@ router.route('/lead/list').get(catchErrors(leadController.list));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
+router.route('/student/list').get(catchErrors(history));
 router.route('/lead/getAllNotifications').get(catchErrors(leadController.getAllNotifications));
 router
   .route('/lead/deleteNotificationByMessage/:message')

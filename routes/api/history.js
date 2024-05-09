@@ -3,6 +3,7 @@ const router = express.Router();
 const applicationHistoryController = require('@/controllers/historyControllers/applicationHistory');
 const paymentHistoryController = require('@/controllers/historyControllers/paymentHistory'); 
 const userHistoryController = require('@/controllers/historyControllers/userHistory'); 
+
 const { hasPermission } = require('@/middlewares/permission');
 
 // Define a reusable error handler function
@@ -32,6 +33,11 @@ router.get('/payment/history/:id', hasPermission('read'), async (req, res) => {
 });
 
 router.get('/admin/history/:id', hasPermission('read'), async (req, res) => {
+  await getHistoryHandler(req, res, userHistoryController);
+});
+
+
+router.get('/student/history/', async (req, res) => {
   await getHistoryHandler(req, res, userHistoryController);
 });
 

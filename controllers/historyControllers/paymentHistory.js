@@ -1,4 +1,4 @@
-const  PaymentHistory  = require('@/models/PaymentHIstory');
+const  PaymentHistory  = require('@/models/PaymentHistory');
 
 async function getStudentHistory(studentId) {
   try {

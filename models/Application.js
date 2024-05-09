@@ -201,7 +201,9 @@ due_amount: {
     type: Date,
     default: Date.now,
   },
-});
+}, 
+{ timestamps: true });
+
   
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {

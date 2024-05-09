@@ -1,33 +1,63 @@
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
 const UserAction = require('@/models/UserAction')
+const UserLog = mongoose.model('UserLog'); // User log model
+const User = mongoose.model('User');
 const logout = async (req, res) => {
   try {
-    // Find the admin by ID and update the status and user actions
-    const result = await Admin.findOneAndUpdate(
-      { _id: req.admin._id },
-      { status: 'offline' }, // Set status to 'offline' on logout
+    if (!req.admin || !req.admin._id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid logout request: User information is missing',
+      });
+    }
+
+    const userId = req.admin._id;
+
+    // Find and update the log with `logout: null`
+    const userLog = await UserLog.findOneAndUpdate(
+      { userId },
+      { logout: new Date() },
       { new: true }
-    ).exec();
+    );
 
-    // Save the updated admin document
-    await result.save();
+    if (!userLog) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active user log found to update',
+      });
+    }
 
-    // Clear the authentication token cookie
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
+      { status: 'offline', isLoggedIn: false },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
     res.clearCookie('token', {
-      maxAge: null,
       sameSite: 'none',
       httpOnly: true,
       secure: true,
-      domain: req.hostname,
       path: '/',
     });
 
-    // Send response
-    res.json({ isLoggedOut: true });
+    res.json({ success: true, message: 'Successfully logged out' });
   } catch (error) {
-    res.status(500).json({ success: false, result: null, message: error.message, error: error });
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error. Please try again later.',
+      error: error.message,
+    });
   }
 };
 
 module.exports = logout;
+

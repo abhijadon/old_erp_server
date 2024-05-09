@@ -32,7 +32,7 @@ async function resendPaymentEmail(req, res) {
     // Send email based on payment status and sendfeeReciept conditions
     let emailSent = false;
 
-    if (status === 'payment approved' && sendfeeReciept.toLowerCase() === 'yes') {
+    if (status === 'payment approved') {
       if (university_name && institute_name) {
         if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name)) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);

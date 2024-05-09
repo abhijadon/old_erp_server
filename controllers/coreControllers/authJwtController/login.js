@@ -1,30 +1,46 @@
-const bcrypt = require('bcryptjs');
+// Importing necessary modules
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const mongoose = require('mongoose');
-const User = mongoose.model('User');
+const bcrypt = require('bcryptjs');
 const uuid = require('uuid'); // For generating unique session IDs
+const mongoose = require('mongoose');
+const useragent = require('useragent'); // Library to parse user-agent information
+const User = mongoose.model('User'); // User model
+const UserLog = mongoose.model('UserLog'); // User log model
 
+// Function to extract client IP address from request
+const getClientIp = (req) => {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor) {
+    // Handle cases where client is behind a proxy
+    return forwardedFor.split(',')[0].trim();
+  }
+  // Fallback to direct IP address
+  return req.ip || req.connection.remoteAddress;
+};
+
+// Login function
 const login = async (req, res) => {
+  const clientIp = getClientIp(req); // Extract client IP address
+
   try {
     const { username, password } = req.body;
 
-    // Validate the input
     const schema = Joi.object({
       username: Joi.string().min(3).max(255).required(),
       password: Joi.string().min(6).max(255).required(),
     });
+
     const { error } = schema.validate({ username, password });
     if (error) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid/Missing credentials.',
+        message: 'Invalid or missing credentials.',
         errorMessage: error.message,
       });
     }
 
-    // Find the user
-    const user = await User.findOne({ username, removed: false });
+    const user = await User.findOne({ username });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({
         success: false,
@@ -32,46 +48,55 @@ const login = async (req, res) => {
       });
     }
 
-    // Generate a unique session ID
     const sessionId = uuid.v4();
-
-    // Generate a JWT token with a 7-day expiration
     const token = jwt.sign(
       { id: user._id, sessionId },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' } // 7 days
+      { expiresIn: '7d' }
     );
 
-    // Update the user's session ID and status
     user.isLoggedIn = true;
     user.status = 'online';
-    user.sessionId = sessionId; // Store the session ID
+    user.sessionId = sessionId;
     await user.save();
 
-    // Set the token in a cookie with a 7-day expiration
+    const agent = useragent.parse(req.headers['user-agent']);
+    const device = agent.device.toString();
+    const browser = agent.toAgent();
+    const os = agent.os.toString();
+
+    // Create a new user log on login
+    const userLog = new UserLog({
+      userId: user._id,
+      login: new Date(),
+      logout: new Date(),
+      ip: clientIp,
+      device,
+      browser,
+      os,
+    });
+
+    await userLog.save();
+
     res.cookie('token', token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: 'none',
       httpOnly: true,
       secure: true,
-      domain: req.hostname,
       path: '/',
     });
 
-    // Response data
-    const responseData = {
-      _id: user._id,
-      fullname: user.fullname,
-      status: user.status,
-      role: user.role,
-      username: user.username,
-      photo: user.photo,
-      isLoggedIn: true,
-    };
-
     res.status(200).json({
       success: true,
-      result: responseData,
+      result: {
+        _id: user._id,
+        fullname: user.fullname,
+        status: user.status,
+        role: user.role,
+        username,
+        photo: user.photo,
+        isLoggedIn: true,
+      },
       message: `Welcome, you are successfully logged in, ${user.fullname}.`,
     });
   } catch (error) {
