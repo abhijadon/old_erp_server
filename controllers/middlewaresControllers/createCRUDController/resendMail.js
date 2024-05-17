@@ -16,14 +16,14 @@ async function resendPaymentEmail(req, res) {
         message: "Application not found.",
       });
     }
-    
-   const email = req.body.contact.email
 
-    const { paid_amount, installment_type, institute_name,paymentStatus, university_name, sendfeeReciept, session } = customfields;
+    const email = req.body.contact.email
 
-     const status = paymentStatus ? paymentStatus.toLowerCase() : '';
+    const { paid_amount, installment_type, institute_name, paymentStatus, university_name, sendfeeReciept, session } = customfields;
 
-         // Calculate due amount
+    const status = paymentStatus ? paymentStatus.toLowerCase() : '';
+
+    // Calculate due amount
     const totalCourseFee = parseFloat(customfields.total_course_fee);
     const totalPaidAmount = parseFloat(customfields.total_paid_amount);
     const dueAmount = totalCourseFee - totalPaidAmount;
@@ -34,16 +34,16 @@ async function resendPaymentEmail(req, res) {
 
     if (status === 'payment approved') {
       if (university_name && institute_name) {
-        if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name)) {
+        if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN DISTANCE'].includes(university_name)) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
-        } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name)) {
+        } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN DISTANCE'].includes(university_name)) {
           emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
         } else if (institute_name === 'HES' && university_name === 'MANGALAYATAN ONLINE' && (session === 'JULY 23' || session === 'JAN 24')) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
         } else if (institute_name === 'DES' && university_name === 'MANGALAYATAN ONLINE' && (session === 'JULY 23' || session === 'JAN 24')) {
           emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
         }
-      } 
+      }
     } else {
       console.log(`Email not sent for application ${applicationId} because payment status is not 'payment approved' or 'sendfeeReciept' is not 'yes'`);
     }

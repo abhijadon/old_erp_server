@@ -110,7 +110,7 @@ const summary = async (req, res) => {
       'SMU',
       'HU',
       'BOSSE',
-      'MANGALAYATAN',
+      'MANGALAYATAN DISTANCE',
       'MANGALAYATAN ONLINE',
     ];
 
@@ -189,7 +189,7 @@ const summary = async (req, res) => {
       countInstitute += data.length > 0 ? data[0].count : 0;
     }
 
-    const statusData1 = ['Total', 'New', 'Cancel', 'Alumini', 'Enrolled'];
+    const statusData1 = ['Total', 'New', 'Cancel', 'Alumini', 'Enrolled', 'Approved', 'Refunded'];
 
     const statusSpecificData = [];
     let totalStatusCount = 0;

@@ -75,6 +75,7 @@ router.route('/lead/uploadDocument/:id').put(hasPermission('update'),firebaseSto
 router.route('/lead/delete/:id').delete(hasPermission('delete'),catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(catchErrors(leadController.list));
+router.route('/lead/teamfilter').get(catchErrors(leadController.teamfilter));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));

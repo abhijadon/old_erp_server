@@ -7,6 +7,7 @@ const search = require('./search');
 const filter = require('./filter');
 const listAll = require('./listAll');
 const paginatedList = require('./paginatedList');
+const teamfilter = require('./teamFilter');
 
 const createCRUDController = (modelName) => {
   const Model = mongoose.model(modelName);
@@ -30,6 +31,10 @@ const createCRUDController = (modelName) => {
 
   crudMethods.list = async (req, res) => {
     paginatedList(Model, req, res);
+  }; 
+  
+   crudMethods.teamfilter = async (req, res) => {
+    teamfilter(Model, req, res);
   }; 
 
   crudMethods.listAll = async (req, res) => {

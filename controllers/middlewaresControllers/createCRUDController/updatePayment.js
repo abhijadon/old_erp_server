@@ -42,31 +42,38 @@ async function updatePayment(req, res) {
       });
     }
 
+    if (currentPaymentStatus === 'payment rejected' && status === 'payment approved') {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update application because the payment status is 'payment rejected'. Change the status to payment received.",
+      });
+    }
     // Apply updates to the customfields
     const updatedCustomFields = {};
-
     if (status === 'payment received') {
-      if (currentPaymentStatus !== 'payment approved') {
+      if (currentPaymentStatus !== 'payment approved' && currentPaymentStatus !== 'payment rejected') {
         return res.status(400).json({
           success: false,
-          message: "Cannot mark as 'payment received' unless the previous status was 'payment approved'.",
+          message: "Cannot mark as 'payment received' unless the previous status was 'payment approved' or 'payment rejected'.",
         });
       }
 
-      if (installment_type !== undefined) {
-        const previousInstallments = existingApplication.previousData
-          .filter((entry) => entry.paymentStatus === 'payment received')
-          .map((entry) => entry.installment_type);
+      if (currentPaymentStatus === 'payment approved') {
+        if (installment_type !== undefined) {
+          const previousInstallments = existingApplication.previousData
+            .filter((entry) => entry.paymentStatus === 'payment received')
+            .map((entry) => entry.installment_type);
 
-        if (previousInstallments.includes(installment_type)) {
-          return res.status(400).json({
-            success: false,
-            message: `Installment ${installment_type} already exists. Add a different installment or update the existing one.`,
-          });
+          if (previousInstallments.includes(installment_type)) {
+            return res.status(400).json({
+              success: false,
+              message: `Installment ${installment_type} already exists. Add a different installment or update the existing one.`,
+            });
+          }
+
+          existingApplication.customfields.installment_type = installment_type;
+          updatedCustomFields.installment_type = installment_type;
         }
-
-        existingApplication.customfields.installment_type = installment_type;
-        updatedCustomFields.installment_type = installment_type;
       }
 
       if (paid_amount !== undefined) {
@@ -87,6 +94,34 @@ async function updatePayment(req, res) {
         updatedCustomFields.paid_amount = amountToAdd;
       }
     }
+
+    if (status === 'payment rejected') {
+      if (currentPaymentStatus !== 'payment approved' && currentPaymentStatus !== 'payment received') {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot mark as 'payment rejected' unless the previous status was 'payment approved' or 'payment received'.",
+        });
+      }
+
+      if (paid_amount !== undefined) {
+        const amountToSubtract = parseFloat(paid_amount);
+
+        if (isNaN(amountToSubtract)) {
+          return res.status(400).json({ success: false, message: "Invalid numerical data for paid amount" });
+        }
+
+        let totalPaidAmount = parseFloat(existingApplication.customfields.total_paid_amount);
+
+        if (isNaN(totalPaidAmount)) {
+          return res.status(400).json({ success: false, message: "Invalid total paid amount" });
+        }
+        totalPaidAmount -= amountToSubtract;
+        existingApplication.customfields.total_paid_amount = totalPaidAmount;
+        updatedCustomFields.paid_amount = -amountToSubtract;
+      }
+    }
+
+
 
     if (installment_type !== undefined) {
       existingApplication.customfields.installment_type = installment_type;
@@ -114,7 +149,7 @@ async function updatePayment(req, res) {
     }
 
 
-if (paid_amount !== undefined) {
+    if (paid_amount !== undefined) {
       existingApplication.customfields.paid_amount = paid_amount;
       updatedCustomFields.paid_amount = paid_amount;
     }
@@ -125,7 +160,7 @@ if (paid_amount !== undefined) {
     const dueAmount = totalCourseFee - totalPaidAmount;
 
     existingApplication.customfields.due_amount = dueAmount;
-    
+
     // Append to previousData
     existingApplication.previousData.push({
       installment_type,
@@ -170,19 +205,19 @@ if (paid_amount !== undefined) {
     // Send email based on payment status and sendfeeReciept conditions
     let emailSent = false;
 
-   if (status === 'payment approved' && sendfeeReciept.toLowerCase() === 'yes') {
-       if (university_name && institute_name) {
-            if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN'].includes(university_name.toUpperCase())) {
-                emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
-            } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU','MANGALAYATAN'].includes(university_name.toUpperCase())) {
-                emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
-            } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-                emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
-            } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
-                emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
-            }
-        } 
-    }else {
+    if (status === 'payment approved' && sendfeeReciept.toLowerCase() === 'yes') {
+      if (university_name && institute_name) {
+        if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN DISTANCE'].includes(university_name.toUpperCase())) {
+          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, payment_type, totalCourseFee, totalPaidAmount, paid_amount);
+        } else if (institute_name === 'DES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN DISTANCE'].includes(university_name.toUpperCase())) {
+          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, payment_type, totalCourseFee, totalPaidAmount, paid_amount);
+        } else if (institute_name === 'HES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+          emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, payment_type, totalCourseFee, totalPaidAmount, paid_amount);
+        } else if (institute_name === 'DES' && university_name.toUpperCase() === 'MANGALAYATAN ONLINE' && (session.toUpperCase() === 'JULY 23' || session.toUpperCase() === 'JAN 24')) {
+          emailSent = await DesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, payment_type, totalCourseFee, totalPaidAmount, paid_amount);
+        }
+      }
+    } else {
       console.log(`Email not sent for application ${applicationId} because payment status is not 'payment approved' or 'sendfeeReciept' is not 'yes'`);
     }
 

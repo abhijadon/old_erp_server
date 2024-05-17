@@ -1,8 +1,11 @@
 const { sendDataToExternalAPI } = require('@/helpers/sendLms'); // Import the helper function
-const {HistoryModel} = require("@/models/Addonhistory")
+const { HistoryModel } = require("@/models/Addonhistory")
 const create = async (Model, req, res) => {
+  console.log('req.body:', req.body)
   try {
     const userId = req.user._id;
+    const userFullname = req.user.fullname;
+
 
     const {
       'customfields.payment_type': payment_type,
@@ -23,6 +26,7 @@ const create = async (Model, req, res) => {
 
     const newDocData = {
       userId,
+      userFullname,
       ...req.body,
       'customfields.due_amount': dueAmount.toString(),
       'customfields.total_paid_amount': updatedTotalPaidAmount.toString(),
@@ -48,13 +52,13 @@ const create = async (Model, req, res) => {
     newDocData.previousData = [initialPreviousData];
 
     // // Send data to external API
-    // await sendDataToExternalAPI(newDocData);
+    await sendDataToExternalAPI(newDocData);
 
     // Save data to the local database
     const newDoc = new Model(newDocData);
     const result = await newDoc.save();
 
-// Create a history record
+    // Create a history record
     const historyData = {
       dataId: result._id, // Referencing the original data
       userId, // Who made the change
