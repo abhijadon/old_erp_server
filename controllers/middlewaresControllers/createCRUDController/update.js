@@ -1,5 +1,5 @@
 const ApplicationHistory = require('@/models/ApplicationHistory');
-
+const { sendDataToExternalAPI } = require('@/helpers/sendLms');
 async function update(Model, req, res) {
   try {
     // Find the existing document
@@ -15,7 +15,7 @@ async function update(Model, req, res) {
 
     // Start with a copy of the existing document
     const updatedDocumentData = { ...existingDocument._doc };
-
+console.log('updatedDocumentData', updatedDocumentData)
     // Merge customfields with existing data to retain existing values
     if (req.body.customfields) {
       const customfields = { ...existingDocument.customfields };
@@ -115,6 +115,14 @@ async function update(Model, req, res) {
         updatedBy: req.user._id,
       });
     }
+
+   // Check if status is "Approved" and LMS is "yes" before sending data to external API
+    // if (
+    //   updatedDocumentData.customfields.lmsStatus === "yes" &&
+    //   updatedDocumentData.customfields.status === "Approved"
+    // ) {
+    //   await sendDataToExternalAPI(updatedDocumentData);
+    // }
 
     return res.status(200).json({
       success: true,

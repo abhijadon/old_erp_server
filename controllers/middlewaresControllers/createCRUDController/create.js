@@ -1,4 +1,4 @@
-const { sendDataToExternalAPI } = require('@/helpers/sendLms'); // Import the helper function
+ // Import the helper function
 const { HistoryModel } = require("@/models/Addonhistory")
 const create = async (Model, req, res) => {
   console.log('req.body:', req.body)
@@ -50,9 +50,6 @@ const create = async (Model, req, res) => {
     };
 
     newDocData.previousData = [initialPreviousData];
-
-    // // Send data to external API
-    await sendDataToExternalAPI(newDocData);
 
     // Save data to the local database
     const newDoc = new Model(newDocData);

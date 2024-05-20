@@ -337,8 +337,8 @@ td {
         <div id="a16">
             <div class="c2">
                 <div id="a17">
-                    <img width="15" style="margin-right: 10px;" src="https://distanceeducationschool.com/email_marketing/phone_icon.png" alt=""><a href="tel:02241946500">022 - 419 46 500</a><br>
-                    <img width="15" style="margin-right: 10px;" src="https://distanceeducationschool.com/email_marketing/mail_icon.png" alt=""><a href="mailto:support@highereducationschool.com">${instituteEmail}</a>
+                    <img width="15" style="margin-right: 10px;" src="https://distanceeducationschool.com/email_marketing/phone_icon.png" alt=""><a href="tel:01140468080">01140468080</a><br>
+                    <img width="15" style="margin-right: 10px;" src="https://distanceeducationschool.com/email_marketing/mail_icon.png" alt=""><a href="mailto:support@distanceeducationschool.com">${instituteEmail}</a>
                 </div>
             </div>
         </div>
