@@ -47,7 +47,11 @@ const infoSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-});
+}, 
+{
+  timestamps: true
+},
+);
 
 const courseInfo = mongoose.model('courseInfo', infoSchema);
 

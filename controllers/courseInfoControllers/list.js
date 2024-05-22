@@ -2,25 +2,22 @@ const { courseInfo } = require('@/models/courseInfo');
 
 const paginatedList = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.items) || 20;
-    const skip = (page - 1) * limit;
-
-    const { sortBy = 'enabled', sortValue = -1, fields, q } = req.query;
+    const { sortBy = 'enabled', sortValue = 1, q } = req.query;
     let { filter, equal } = req.query;
 
     // Build the initial query object
     let query = { removed: false };
 
-    // Build fields object for regex search if fields and q are provided
-    if (fields && q) {
-      const fieldsArray = fields.split(',');
-      query.$or = fieldsArray.map(field => ({ [field]: { $regex: new RegExp(q, 'i') } }));
+    // If q is provided, search across all string fields dynamically
+    if (q) {
+      const schemaPaths = Object.keys(courseInfo.schema.paths);
+      const stringFields = schemaPaths.filter(field => courseInfo.schema.paths[field].instance === 'String');
+      query.$or = stringFields.map(field => ({ [field]: { $regex: new RegExp(q, 'i') } }));
     }
 
     // Convert filter and equal to arrays if they are not already
-    if (!Array.isArray(filter)) filter = [filter];
-    if (!Array.isArray(equal)) equal = [equal];
+    if (filter && !Array.isArray(filter)) filter = [filter];
+    if (equal && !Array.isArray(equal)) equal = [equal];
 
     // Add filter and equal if provided
     if (filter && equal && filter.length === equal.length) {
@@ -31,10 +28,8 @@ const paginatedList = async (req, res) => {
       });
     }
 
-    // Fetch results with pagination, sorting, and population
+    // Fetch results with sorting and population, without pagination
     const resultsPromise = courseInfo.find(query)
-      .skip(skip)
-      .limit(limit)
       .sort({ [sortBy]: parseInt(sortValue) })
       .lean() // Return plain JavaScript objects instead of Mongoose documents for efficiency
       .exec();
@@ -45,11 +40,8 @@ const paginatedList = async (req, res) => {
     // Resolve both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
-    // Calculate total pages
-    const pages = Math.ceil(count / limit);
-
-    // Pagination information
-    const pagination = { page, pages, count };
+    // Pagination information (count of total documents)
+    const pagination = { count };
 
     if (count > 0) {
       return res.status(200).json({
