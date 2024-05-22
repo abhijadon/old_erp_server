@@ -1,25 +1,25 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const HesMail = async  (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount) => {
-    const currentDate = new Date().toLocaleDateString('en-IN');
-  const instituteEmail = 'support@highereducationschool.com'
-  
-    try {
-        // Create an instance of the TransactionalEmailsApi
-        let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-        // Set your Brevo API key
-        let apiKey = apiInstance.authentications['apiKey'];
-        apiKey.apiKey = '';
+const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount) => {
+	const currentDate = new Date().toLocaleDateString('en-IN');
+	const instituteEmail = 'support@highereducationschool.com'
 
-        // Create a new SendSmtpEmail object
-        let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+	try {
+		// Create an instance of the TransactionalEmailsApi
+		let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+		// Set your Brevo API key
+		let apiKey = apiInstance.authentications['apiKey'];
+		apiKey.apiKey = '';
 
-        // Set the subject of the email
-        sendSmtpEmail.subject = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted`;
+		// Create a new SendSmtpEmail object
+		let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
-        // Set the HTML content of the email
-        sendSmtpEmail.htmlContent = `
+		// Set the subject of the email
+		sendSmtpEmail.subject = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted`;
+
+		// Set the HTML content of the email
+		sendSmtpEmail.htmlContent = `
            <!DOCTYPE html>
 <html>
 <head>
@@ -388,20 +388,20 @@ td {
 </body>
 </html>`;
 
-       // Set the plain text content of the email
-        sendSmtpEmail.textContent = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted (Team ${institute})`;
-sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
-        // Set the recipient information
-        sendSmtpEmail.to = [{"email": studentEmail }];
-        sendSmtpEmail.bcc = [{"email": "abhishek@edgetechnosoft.com"}, {email: 'mail@highereducationschool.com'}];
-        // Call the sendTransacEmail method to send the email
-            // Call the sendTransacEmail method to send the email
-      await apiInstance.sendTransacEmail(sendSmtpEmail);
-        return true;
-    } catch (error) {
-        console.error('Error sending email:', error);
-        return false;
-    }
+		// Set the plain text content of the email
+		sendSmtpEmail.textContent = `Dear ${fullName}, Your ${course} Course Fee Successfully Submitted (Team ${institute})`;
+		sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
+		// Set the recipient information
+		sendSmtpEmail.to = [{ "email": studentEmail }];
+		sendSmtpEmail.bcc = [{ "email": "abhishek@edgetechnosoft.com" }, { "email": "aashi@distanceeducationschool.com" }, { email: 'mail@highereducationschool.com' }];
+		// Call the sendTransacEmail method to send the email
+		// Call the sendTransacEmail method to send the email
+		await apiInstance.sendTransacEmail(sendSmtpEmail);
+		return true;
+	} catch (error) {
+		console.error('Error sending email:', error);
+		return false;
+	}
 };
 
 // Import the sendEmail function wherever you want to use it in your codebase

@@ -1,7 +1,7 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, totalCourseFee, totalPaidAmount, paidAmount, payment_type) => {
+const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, payment_type, totalCourseFee, totalPaidAmount, paidAmount) => {
     const currentDate = new Date().toLocaleDateString('en-IN');
   const instituteEmail = 'support@distanceeducationschool.com'
   
@@ -444,6 +444,7 @@ td {
         sendSmtpEmail.sender = { name: 'Distance Education School', email: instituteEmail };
         sendSmtpEmail.bcc = [
     {"email": "abhishek@edgetechnosoft.com"},
+    {"email": "aashi@distanceeducationschool.com"},
     {"email": "admin@distanceeducationschool.com"},
     {"email": "accounts@distanceeducationschool.com"},
     {"email": "admissionsode@gmail.com"}
