@@ -1,8 +1,8 @@
 const ApplicationHistory = require('@/models/ApplicationHistory');
 const { sendDataToExternalAPI } = require('@/helpers/sendLms');
+const User = require('@/models/User');
 async function update(Model, req, res) {
   try {
-    // Find the existing document
     const existingDocument = await Model.findById(req.params.id).exec();
 
     if (!existingDocument) {
@@ -13,9 +13,19 @@ async function update(Model, req, res) {
       });
     }
 
+    // Fetch the user details using userId
+    const user = await User.findById(existingDocument.userId).exec();
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        result: null,
+        message: "User not found",
+      });
+    }
+
+
     // Start with a copy of the existing document
     const updatedDocumentData = { ...existingDocument._doc };
-console.log('updatedDocumentData', updatedDocumentData)
     // Merge customfields with existing data to retain existing values
     if (req.body.customfields) {
       const customfields = { ...existingDocument.customfields };
@@ -61,7 +71,7 @@ console.log('updatedDocumentData', updatedDocumentData)
     // Update the document in the database
     const updatedDocument = await Model.findOneAndUpdate(
       { _id: req.params.id, removed: false },
-      updatedDocumentData, // Ensure the updated data includes full_name
+      updatedDocumentData,// Ensure the updated data includes full_name
       { new: true, runValidators: true }
     ).exec();
 
@@ -116,13 +126,22 @@ console.log('updatedDocumentData', updatedDocumentData)
       });
     }
 
-   // Check if status is "Approved" and LMS is "yes" before sending data to external API
-    // if (
-    //   updatedDocumentData.customfields.lmsStatus === "yes" &&
-    //   updatedDocumentData.customfields.status === "Approved"
-    // ) {
-    //   await sendDataToExternalAPI(updatedDocumentData);
-    // }
+  //  Check if status is "Approved" and LMS is "yes" before sending data to external API
+   if (
+      updatedDocumentData.customfields.lmsStatus === "yes" &&
+      updatedDocumentData.customfields.status === "Approved"
+    ) {
+      console.log('updatedDocumentData before sending to external API:', updatedDocumentData); // Debug: Log the data before sending
+
+      // Include the user's username in the data to be sent to the external API
+      updatedDocumentData.userId = {
+        ...updatedDocumentData.userId,
+        username: user.username
+      };
+
+      // Send data to external API
+      await sendDataToExternalAPI(updatedDocumentData);
+    }
 
     return res.status(200).json({
       success: true,

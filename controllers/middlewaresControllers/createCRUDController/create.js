@@ -4,7 +4,7 @@ const create = async (Model, req, res) => {
   console.log('req.body:', req.body)
   try {
     const userId = req.user._id;
-    const userFullname = req.user.fullname;
+
 
 
     const {
@@ -26,7 +26,6 @@ const create = async (Model, req, res) => {
 
     const newDocData = {
       userId,
-      userFullname,
       ...req.body,
       'customfields.due_amount': dueAmount.toString(),
       'customfields.total_paid_amount': updatedTotalPaidAmount.toString(),

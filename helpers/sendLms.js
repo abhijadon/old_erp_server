@@ -2,7 +2,7 @@ const axios = require('axios');
 const moment = require('moment');
 
 const sendDataToExternalAPI = async (data) => {
-  console.log('data', data);
+  console.log('data', data)
   try {
     const requestBody = {
       name: data['full_name'],
@@ -10,7 +10,7 @@ const sendDataToExternalAPI = async (data) => {
       phone: data.contact.phone,  // Correct property access
       course: data.education.course,  // Correct property access
       specialization: data.customfields.enter_specialization,  // Correct property access
-      adminID: data.customfields.university_name,  // Correct property access
+      adminID: "SPU",  // Correct property access
       dob: moment(data.customfields.dob).format('DD/MM/YYYY'),  // Correct property access
       password: moment(data.customfields.dob).format('DDMMYYYY'),  // Correct property access
       fathername: data.customfields.father_name,  // Correct property access
@@ -23,8 +23,7 @@ const sendDataToExternalAPI = async (data) => {
       session_type: data.customfields.session,  // Correct property access
       totalFee: data.customfields.total_course_fee,  // Correct property access
       semesterFee: data.customfields.paid_amount,  // Correct property access
-      centreID: "2",
-      sub_coursesID: data.customfields.sub_coursesID || 'default_courseID', // Added sub_coursesID field
+      centreID: data.username
     };
 
     const response = await axios.post('https://spu.lmsonline.co/api/studentupdate_insert/', requestBody, {
@@ -32,9 +31,7 @@ const sendDataToExternalAPI = async (data) => {
         'Content-Type': 'application/json',
       },
     });
-
-    console.log('requestBody', requestBody);
-
+ console.log("requestBody", requestBody)
     return response.data;
   } catch (error) {
     console.error('Error sending data to external API:', error.message);
