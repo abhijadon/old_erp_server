@@ -65,7 +65,11 @@ exports.updateMenuOptions = async (req, res) => {
     // Update only the options field
     menuOptions.options = options;
     await menuOptions.save();
-    res.json({ message: 'Menu options updated successfully' });
+
+    res.status(200).json({
+      success: true,
+      message: 'Menu options created successfully',
+    });
   } catch (error) {
     console.error('Error updating menu options:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -81,8 +85,11 @@ exports.getRead = async (req, res) => {
     if (!menuOptions) {
       return res.status(404).json({ message: 'Menu options not found with this ID' });
     }
-
-    res.json(menuOptions);
+ res.status(200).json({
+      success: true,
+      result: menuOptions,
+      message: 'Get menu options',
+    });
   } catch (error) {
     console.error('Error fetching menu options:', error);
     res.status(500).json({ message: 'Internal server error' });
