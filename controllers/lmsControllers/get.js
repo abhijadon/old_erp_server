@@ -1,11 +1,13 @@
 const { LMS } = require('@/models/Lms'); // Import the LMS model
 
+
 const read = async (req, res) => {
     try {
+        
         const { applicationId } = req.params; // Get the application ID from the route parameter
 
-        // Find LMS document by applicationId
-        const lmsDocument = await LMS.findOne({ applicationId });
+        // Find LMS document by applicationId and populate userId field
+    const lmsDocument = await LMS.findOne({ applicationId }).populate('data.userId');
 
         if (!lmsDocument) {
             return res.status(404).json({

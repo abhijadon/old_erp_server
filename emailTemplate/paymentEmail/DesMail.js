@@ -1,7 +1,8 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const HesMail = async (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, payment_type, totalCourseFee, totalPaidAmount, paidAmount) => {
+const DesMail = async (studentEmail, institute, dueAmount, fullName, course, fatherName, dob, phone, installmentType, payment_type, totalCourseFee, totalPaidAmount, paidAmount) => {
+
     const currentDate = new Date().toLocaleDateString('en-IN');
   const instituteEmail = 'support@distanceeducationschool.com'
   
@@ -459,4 +460,4 @@ td {
 };
 
 // Import the sendEmail function wherever you want to use it in your codebase
-module.exports = HesMail;
+module.exports = DesMail;

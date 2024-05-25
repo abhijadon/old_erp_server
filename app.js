@@ -18,6 +18,7 @@ const menuOptionsRoutes = require('@/routes/api/menuOptionsRoutes');
 const resendApi = require('@/routes/api/resendApi');
 const info = require('@/routes/courseInfoRoutes/api');
 const lmsApi = require('@/routes/lmsApi/index');
+const instituteRoutes = require('@/routes/formBuilder/instituteRoutes');
 const app = express();
 const corsOptions = {
   origin: true,
@@ -59,6 +60,7 @@ app.use('/api',authenticate, menuOptionsRoutes);
 app.use('/api',authenticate, resendApi); 
 app.use('/api',authenticate, info); 
 app.use('/api',authenticate, lmsApi); 
+app.use('/api', authenticate, instituteRoutes);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

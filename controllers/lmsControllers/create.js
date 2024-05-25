@@ -3,6 +3,7 @@ const moment = require('moment');
 const { LMS } = require('@/models/Lms'); // Import the LMS model
 const { Applications } = require('@/models/Application'); // To ensure applicationId exists
 const User = require('@/models/User');
+const HesMail = require('@/emailTemplate/LMSTemplate'); // Import the HesMail function
 
 const create = async (req, res) => {
     try {
@@ -30,11 +31,10 @@ const create = async (req, res) => {
 
         const data = application.toObject(); // Convert application document to plain object
   
-         // Check if the university name is 'SPU'
+        // Check if the university name is 'SPU'
         if (data.customfields.university_name !== 'SPU') {
             return res.status(400).json({ message: 'LMS can only be created for SPU university.' });
         }
-  
 
         const requestBody = {
             applicationId, // Include applicationId in the request body
@@ -44,7 +44,7 @@ const create = async (req, res) => {
             course: data.education.course,
             specialization: data.customfields.enter_specialization,
             adminID: "SPU",
-            dob: moment(data.customfields.dob).format('DD/MM/YYYY'),
+            dob: moment(data.customfields.dob).format('DD-MM-YYYY'),
             password: moment(data.customfields.dob).format('DDMMYYYY'),
             fathername: data.customfields.father_name,
             mothername: data.customfields.mother_name,
@@ -58,7 +58,7 @@ const create = async (req, res) => {
             paidamounttotal: data.customfields.paid_amount,
             centreID: user.username // Use creator user's username
         };
-
+   
         // Check if any field in the requestBody is undefined or empty
         for (const [key, value] of Object.entries(requestBody)) {
             if (!value) {
@@ -79,6 +79,7 @@ const create = async (req, res) => {
         } catch (error) {
             console.error('Error hitting the external API:', error);
         }
+
         // Create or update the LMS entry
         let message;
         if (lms) {
@@ -97,12 +98,32 @@ const create = async (req, res) => {
         }
         const statusSaved = await lms.save(); // Save the LMS status
 
-        // Dynamically set the message based on whether the LMS was created or updated successfully
-        if (apiStatus === 'success') {
-            message = lms.isNew ? 'LMS created successfully.' : 'LMS updated successfully.';
+        let emailStatus = 'failed';
+        let emailErrorMessage = '';
+        if ((apiStatus === 'created' || apiStatus === 'updated') && lms.emailStatuses.every(status => status.status !== 'success')) {
+            try {
+                const emailSent = await HesMail(data.full_name, data.contact.email, data.lead_id, moment(data.customfields.dob).format('DDMMYYYY'));
+                if (emailSent) {
+                    emailStatus = 'success';
+                    message += ' Email sent successfully.';
+                }
+            } catch (emailError) {
+                emailErrorMessage = emailError.message;
+                console.error('Error sending LMS template email:', emailError);
+            }
+
+            // Save email status to LMS
+            lms.emailStatuses.push({
+                status: emailStatus,
+                errorMessage: emailErrorMessage,
+                createdAt: new Date()
+            });
+            await lms.save();
+        } else if (lms.emailStatuses.some(status => status.status === 'success')) {
+            message += ' Email already sent successfully.';
         }
 
-        res.status(200).json({ message, lms: statusSaved, status: apiStatus });
+        res.status(200).json({ message, lms: statusSaved, status: apiStatus, emailStatus });
     } catch (error) {
         console.error('Error creating or updating LMS:', error);
         res.status(500).json({ message: 'Internal Server Error' });
