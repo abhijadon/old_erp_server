@@ -64,6 +64,8 @@ const paginatedList = async (Model, req, res) => {
           const universityNames = team.university;
           query['customfields.institute_name'] = { $in: instituteNames };
           query['customfields.university_name'] = { $in: universityNames };
+          query['institute_name'] = { $in: instituteNames };
+          query['university_name'] = { $in: universityNames };
         } else {
           query['userId'] = null;
         }
@@ -74,6 +76,8 @@ const paginatedList = async (Model, req, res) => {
           query['userId'] = { $in: [user._id.toString(), ...teamMemberIds] };
           query['customfields.institute_name'] = { $in: team.institute };
           query['customfields.university_name'] = { $in: team.university };
+          query['institute_name'] = { $in: team.institute };
+          query['university_name'] = { $in: team.university };
         } else {
           query['userId'] = null;
         }
@@ -94,7 +98,7 @@ const paginatedList = async (Model, req, res) => {
 
 
     // Fetch results with sorting and population, without pagination
-    const resultsPromise = Model.find(query)
+    const resultsPromise = Model.find(query).populate('userId')
       .skip(skip)
       .limit(limit)
       .sort({ [sortBy]: parseInt(sortValue) })
