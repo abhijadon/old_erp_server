@@ -2,6 +2,9 @@ const { courseInfo } = require('@/models/courseInfo');
 
 const paginatedList = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.items) || 10;
+    const skip = (page - 1) * limit;
     const { sortBy = 'enabled', sortValue = 1, q } = req.query;
     let { filter, equal } = req.query;
 
@@ -30,6 +33,8 @@ const paginatedList = async (req, res) => {
 
     // Fetch results with sorting and population, without pagination
     const resultsPromise = courseInfo.find(query)
+      .skip(skip)
+      .limit(limit)
       .sort({ [sortBy]: parseInt(sortValue) })
       .lean() // Return plain JavaScript objects instead of Mongoose documents for efficiency
       .exec();
@@ -40,8 +45,11 @@ const paginatedList = async (req, res) => {
     // Resolve both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
+    // Calculate total pages
+    const pages = Math.ceil(count / limit);
+
     // Pagination information (count of total documents)
-    const pagination = { count };
+    const pagination = { page, pages, count };
 
     if (count > 0) {
       return res.status(200).json({
@@ -68,5 +76,3 @@ const paginatedList = async (req, res) => {
 };
 
 module.exports = paginatedList;
-
-

@@ -6,10 +6,36 @@ const paginatedList = async (Model, req, res) => {
     const instituteName = req.query.instituteName;
     const universityName = req.query.universityName;
     const userId = req.query.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.items) || 10;
+    const skip = (page - 1) * limit;
+    const { sortBy = 'enabled', sortValue = 1, q } = req.query;
+    let { filter, equal } = req.query;
 
+    // Build the initial query object
     let query = { removed: false };
 
-   if (instituteName) {
+    // If q is provided, search across all string fields dynamically
+    if (q) {
+      const schemaPaths = Object.keys(Model.schema.paths);
+      const stringFields = schemaPaths.filter(field => Model.schema.paths[field].instance === 'String');
+      query.$or = stringFields.map(field => ({ [field]: { $regex: new RegExp(q, 'i') } }));
+    }
+
+    // Convert filter and equal to arrays if they are not already
+    if (filter && !Array.isArray(filter)) filter = [filter];
+    if (equal && !Array.isArray(equal)) equal = [equal];
+
+    // Add filter and equal if provided
+    if (filter && equal && filter.length === equal.length) {
+      filter.forEach((filt, index) => {
+        if (equal[index]) {
+          query[filt] = equal[index];
+        }
+      });
+    }
+
+    if (instituteName) {
       query['customfields.institute_name'] = instituteName;
     }
     if (universityName) {
@@ -66,32 +92,39 @@ const paginatedList = async (Model, req, res) => {
       }
     }
 
-    
-    const resultsPromise = Model.find(query)
-      .sort({ created: 'desc' })
-      .populate('userId');
-    const countPromise = Model.countDocuments(query);
 
+    // Fetch results with sorting and population, without pagination
+    const resultsPromise = Model.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ [sortBy]: parseInt(sortValue) })
+      .lean() // Return plain JavaScript objects instead of Mongoose documents for efficiency
+      .exec();
+
+    // Count total documents
+    const countPromise = Model.countDocuments(query).exec();
+
+    // Resolve both promises
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
-    if (count > 0) {
-      const formattedResults = result.map(item => ({
-        ...item._doc,
-        date: item.date ? new Date(item.date).toLocaleDateString('en-US') : null,
-        time: item.time,
-      }));
+    // Calculate total pages
+    const pages = Math.ceil(count / limit);
 
+    // Pagination information (count of total documents)
+    const pagination = { page, pages, count };
+
+    if (count > 0) {
       return res.status(200).json({
         success: true,
-        result: formattedResults,
-        count,
+        result,
+        pagination,
         message: 'Successfully found all documents',
       });
     } else {
       return res.status(200).json({
         success: true,
         result: [],
-        count: 0,
+        pagination,
         message: 'No data found for the specified criteria',
       });
     }
