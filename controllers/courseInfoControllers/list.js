@@ -2,14 +2,11 @@ const { courseInfo } = require('@/models/courseInfo');
 
 const paginatedList = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.items) || 10;
-    const skip = (page - 1) * limit;
-    const { sortBy = 'enabled', sortValue = 1, q } = req.query;
+    const { sortBy = 'enabled', sortValue = -1, q } = req.query;
     let { filter, equal } = req.query;
 
-    // Build the initial query object
-    let query = { removed: false };
+    // Use the queryFilters prepared by the middleware
+    let query = { ...req.queryFilters };
 
     // If q is provided, search across all string fields dynamically
     if (q) {
@@ -31,32 +28,27 @@ const paginatedList = async (req, res) => {
       });
     }
 
-    // Fetch results with sorting and population, without pagination
-    const resultsPromise = courseInfo.find(query)
-      .skip(skip)
-      .limit(limit)
-      .sort({ [sortBy]: parseInt(sortValue) })
-      .lean() // Return plain JavaScript objects instead of Mongoose documents for efficiency
-      .exec();
+    // Fetch results with sorting and population
+    const results = await courseInfo.find(query)
+      .sort({ [sortBy]: parseInt(sortValue) }) // Sorting based on sortBy and sortValue
+      .lean(); // Return plain JavaScript objects instead of Mongoose documents for efficiency
 
     // Count total documents
-    const countPromise = courseInfo.countDocuments(query).exec();
-
-    // Resolve both promises
-    const [result, count] = await Promise.all([resultsPromise, countPromise]);
-
-    // Calculate total pages
-    const pages = Math.ceil(count / limit);
+    const count = await courseInfo.countDocuments(query);
 
     // Pagination information (count of total documents)
-    const pagination = { page, pages, count };
+    const pagination = { count };
 
     if (count > 0) {
+      let message = 'Successfully found all documents';
+      if (sortBy !== 'enabled') {
+        message += ' and sorted the results';
+      }
       return res.status(200).json({
         success: true,
-        result,
+        result: results,
         pagination,
-        message: 'Successfully found all documents',
+        message,
       });
     } else {
       return res.status(200).json({

@@ -5,35 +5,11 @@ const paginatedList = async (Model, req, res) => {
     const user = req.user;
     const instituteName = req.query.instituteName;
     const universityName = req.query.universityName;
+
     const userId = req.query.userId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.items) || 10;
-    const skip = (page - 1) * limit;
-    const { sortBy = 'enabled', sortValue = 1, q } = req.query;
-    let { filter, equal } = req.query;
 
     // Build the initial query object
     let query = { removed: false };
-
-    // If q is provided, search across all string fields dynamically
-    if (q) {
-      const schemaPaths = Object.keys(Model.schema.paths);
-      const stringFields = schemaPaths.filter(field => Model.schema.paths[field].instance === 'String');
-      query.$or = stringFields.map(field => ({ [field]: { $regex: new RegExp(q, 'i') } }));
-    }
-
-    // Convert filter and equal to arrays if they are not already
-    if (filter && !Array.isArray(filter)) filter = [filter];
-    if (equal && !Array.isArray(equal)) equal = [equal];
-
-    // Add filter and equal if provided
-    if (filter && equal && filter.length === equal.length) {
-      filter.forEach((filt, index) => {
-        if (equal[index]) {
-          query[filt] = equal[index];
-        }
-      });
-    }
 
     if (instituteName) {
       query['customfields.institute_name'] = instituteName;
@@ -99,11 +75,6 @@ const paginatedList = async (Model, req, res) => {
 
     // Fetch results with sorting and population, without pagination
     const resultsPromise = Model.find(query).populate('userId')
-      .skip(skip)
-      .limit(limit)
-      .sort({ [sortBy]: parseInt(sortValue) })
-      .lean() // Return plain JavaScript objects instead of Mongoose documents for efficiency
-      .exec();
 
     // Count total documents
     const countPromise = Model.countDocuments(query).exec();
@@ -112,10 +83,10 @@ const paginatedList = async (Model, req, res) => {
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     // Calculate total pages
-    const pages = Math.ceil(count / limit);
+    const pages = Math.ceil(count);
 
     // Pagination information (count of total documents)
-    const pagination = { page, pages, count };
+    const pagination = { pages };
 
     if (count > 0) {
       return res.status(200).json({

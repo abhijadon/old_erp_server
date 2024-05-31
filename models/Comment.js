@@ -16,6 +16,13 @@ const commentSchema = new mongoose.Schema({
     trim: true,
     required: true,
   },
+
+    commentText: {
+    type: String,
+    trim: true,
+    required: true,
+  },
+
   timestamp: {
     type: Date,
     default: Date.now,

@@ -1,9 +1,31 @@
 const mongoose = require('mongoose');
-const Specialization = require('./Specialization');
 
 const courseSchema = new mongoose.Schema({
-  name: String,
-  specializations: [Specialization.schema],
+  
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  courseCode: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  courseDuration: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  courseType: {
+    type: String,
+    required: true,
+    trim: true
+  },
 });
 
-module.exports = mongoose.model('Course', courseSchema);
+const Course = mongoose.model('Course', courseSchema);
+
+module.exports = Course;

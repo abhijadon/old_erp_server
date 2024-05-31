@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
-const UserAction = require('@/models/UserAction')
 const UserLog = mongoose.model('UserLog'); // User log model
 const User = mongoose.model('User');
 const logout = async (req, res) => {

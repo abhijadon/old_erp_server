@@ -1,5 +1,3 @@
-// models/User.js
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
@@ -50,14 +48,25 @@ const adminSchema = new Schema({
     type: Boolean,
     default: false,
   },
-sessionId: {
+  sessionId: {
     type: String,
     default: null,
+  },
+  teamName: {
+    type: String,
+    required: true,
+  },
+  university: {
+    type: String,
+    required: true,
+  },
+  institute: {
+    type: String,
+    required: true,
   },
 });
 
 adminSchema.plugin(require('mongoose-autopopulate'));
-
 
 adminSchema.methods.generateHash = function (password) {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(), null);

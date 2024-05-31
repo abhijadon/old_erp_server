@@ -51,8 +51,8 @@ async function setupApp() {
 
     console.log('👍 Admin created: Done!');
 
-    const Setting = require('../models/appModels/coreModels/Setting');
-    const Email = require('../models/appModels/coreModels/Email');
+    const Setting = require('../models/Setting');
+    const Email = require('../models/Email');
 
     const readJsonFile = (filename) => {
       const filePath = path.join(__dirname, 'config', `${filename}.json`);

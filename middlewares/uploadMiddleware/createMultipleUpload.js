@@ -1,5 +1,3 @@
-const Upload = require('@/models/appModels/coreModels/Upload');
-
 // middleware to upload the public document
 const createMultipleUpload = async (req, res, next) => {
   const modelName = req.params.model;
@@ -29,17 +27,7 @@ const createMultipleUpload = async (req, res, next) => {
       _uploadsArray.push(uploadObject);
     });
 
-    try {
-      const upload = await Upload.insertMany(_uploadsArray);
-      if (upload?.length !== 0) {
-        next();
-      } else {
-        return res.status(500).json({ success: false, message: error.message });
-      }
-    } catch (error) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
-  } else {
+    } else {
     return res.status(500).json({ success: false, message: error.message });
   }
 };

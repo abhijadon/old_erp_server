@@ -1,11 +1,11 @@
+// models/University.js
 const mongoose = require('mongoose');
-const Course = require('./Course');
-const Field = require('./Field');
 
 const universitySchema = new mongoose.Schema({
-  name: String,
-  courses: [Course.schema],
-  fields: [Field.schema]
+  name: { type: String, required: true, unique: true, trim: true },
+  location: { type: String, required: true, trim: true  },
 });
 
-module.exports = mongoose.model('University', universitySchema);
+const University = mongoose.model('University', universitySchema);
+
+module.exports = University;

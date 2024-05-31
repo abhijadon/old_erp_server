@@ -1,12 +1,6 @@
- // Import the helper function
-const { HistoryModel } = require("@/models/Addonhistory")
 const create = async (Model, req, res) => {
-  console.log('req.body:', req.body)
   try {
     const userId = req.user._id;
-
-
-
     const {
       'customfields.payment_type': payment_type,
       'customfields.payment_mode': payment_mode,
@@ -53,17 +47,6 @@ const create = async (Model, req, res) => {
     // Save data to the local database
     const newDoc = new Model(newDocData);
     const result = await newDoc.save();
-
-    // Create a history record
-    const historyData = {
-      dataId: result._id, // Referencing the original data
-      userId, // Who made the change
-      changes: newDocData, // What changes were made
-      timestamp: new Date(), // When the change happened
-    };
-
-    const historyRecord = new HistoryModel(historyData);
-    await historyRecord.save(); // Save the history record
 
 
     return res.status(200).json({

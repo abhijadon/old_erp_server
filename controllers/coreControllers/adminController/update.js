@@ -1,4 +1,3 @@
-const UserHistory = require('@/models/UserHistory');
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
 
@@ -27,6 +26,9 @@ const update = async (req, res) => {
       fullname: req.body.fullname,
       phone: req.body.phone,
       photo: req.body.photo,
+      teamName: req.body.teamName,
+      university: req.body.university,
+      institute: req.body.institute,
     };
 
     // Find document by id and updates with the required fields
@@ -38,28 +40,6 @@ const update = async (req, res) => {
       }
     ).exec();
 
-    // Define updatedFields variable
-    const updatedFields = {}; // Initialize empty object
-
-    // Populate updatedFields with updated fields and old values
-    for (const key of Object.keys(req.body)) {
-      if (JSON.stringify(req.body[key]) !== JSON.stringify(oldValues[key])) {
-        // Only include fields that have been updated
-        updatedFields[key] = {
-          oldValue: oldValues[key],
-          newValue: req.body[key]
-        };
-      }
-    }
-
-    // Create application history if there are any updated fields
-    if (Object.keys(updatedFields).length > 0) {
-      await UserHistory.create({
-        userId: req.params.id,
-        updatedFields,
-        updatedBy: req.user._id // Include the updatedBy field
-      });
-    }
 
     return res.status(200).json({
       success: true,

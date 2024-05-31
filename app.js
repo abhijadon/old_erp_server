@@ -11,14 +11,15 @@ const corePublicRouter = require('./routes/coreRoutes/corePublicRouter');
 const errorHandlers = require('./handlers/errorHandlers');
 const erpApiRouter = require('./routes/appRoutes/appApi');
 const bulkData = require('./routes/bulkRoutes/bulkRoutes');
-const remarkHistory = require('./routes/notificationRouter');
 const authenticate = require('./middlewares/authenticate');
 const checkUserRoleMiddleware = require('@/middlewares/checkUserRole');
 const menuOptionsRoutes = require('@/routes/api/menuOptionsRoutes');
 const resendApi = require('@/routes/api/resendApi');
 const info = require('@/routes/courseInfoRoutes/api');
+const allowRoutes = require('@/routes/api/allowRoutes');
 const lmsApi = require('@/routes/lmsApi/index');
 const instituteRoutes = require('@/routes/formBuilder/instituteRoutes');
+const checkUserAccess = require('./middlewares/checkUserAccess');
 const app = express();
 const corsOptions = {
   origin: true,
@@ -52,15 +53,15 @@ app.use('/api',authenticate,checkUserRoleMiddleware, erpApiRouter);
 app.use('/download',authenticate,checkUserRoleMiddleware, coreDownloadRouter);
 app.use('/public',authenticate,checkUserRoleMiddleware,corePublicRouter);
 app.use('/api',authenticate,checkUserRoleMiddleware, bulkData);
-app.use('/api',authenticate,checkUserRoleMiddleware,remarkHistory); 
 app.use('/api', authenticate ,checkUserRoleMiddleware, require("@/routes/api/teamRoutes")) 
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/history")) 
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/permissionapi"))  
 app.use('/api',authenticate, menuOptionsRoutes); 
 app.use('/api',authenticate, resendApi); 
-app.use('/api',authenticate, info); 
+app.use('/api',authenticate,checkUserAccess, info); 
 app.use('/api',authenticate, lmsApi); 
 app.use('/api', authenticate, instituteRoutes);
+app.use('/api', allowRoutes);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 
