@@ -5,6 +5,7 @@ const { Applications } = require('@/models/Application');
 const { Payment } = require('@/models/Payment');
 
 const createComment = async (req, res) => {
+  console.log('req.body', req.body);
   try {
     const userId = req.user._id;
     const { applicationId } = req.params;
