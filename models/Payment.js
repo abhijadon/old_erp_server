@@ -1,8 +1,7 @@
 // models/payment.js
 
 const mongoose = require('mongoose');
-const PaymentHistory = require('./PaymentHistory')
-
+const PaymentHistory = require('./PaymentHistory');
 
 const paymentSchema = new mongoose.Schema(
   {
@@ -10,9 +9,9 @@ const paymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Application' 
     },
-     userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     },
     removed: {
       type: Boolean,
@@ -37,7 +36,6 @@ const paymentSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-   
     institute_name: {
       type: String,
       trim: true,
@@ -46,7 +44,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-      session: {
+    session: {
       type: String,
       trim: true,
     },
@@ -75,6 +73,14 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    followStatus: {
+      type: String,
+      trim: true,
+    },
+    followUpDate: {
+      type: Date,
+      default: null,
+    },
     status: {
       type: String,
       trim: true,
@@ -87,11 +93,11 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-     updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     },
+  }
 );
 
 paymentSchema.post('findOneAndUpdate', async function (doc) {
@@ -120,6 +126,7 @@ paymentSchema.post('findOneAndUpdate', async function (doc) {
     console.error('Error creating payment history:', error);
   }
 });
+
 const Payment = mongoose.model('Payment', paymentSchema);
 
 module.exports = { Payment };

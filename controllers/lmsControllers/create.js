@@ -55,10 +55,10 @@ const create = async (req, res) => {
             sex: data.customfields.gender,
             session_type: data.customfields.session,
             totalCOursefee: data.customfields.total_course_fee,
-            paidamounttotal: data.customfields.paid_amount,
+            paidamounttotal: data.customfields.total_paid_amount,
             centreID: user.username // Use creator user's username
         };
-   
+    
         // Check if any field in the requestBody is undefined or empty
         for (const [key, value] of Object.entries(requestBody)) {
             if (!value) {
