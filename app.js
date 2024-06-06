@@ -61,7 +61,7 @@ app.use('/api',authenticate, resendApi);
 app.use('/api',authenticate,checkUserAccess, info); 
 app.use('/api',authenticate, lmsApi); 
 app.use('/api', authenticate, instituteRoutes);
-app.use('/api', allowRoutes);
+app.use('/api', authenticate, allowRoutes);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

@@ -1,7 +1,7 @@
 // models/payment.js
 
 const mongoose = require('mongoose');
-const PaymentHistory = require('./PaymentHistory');
+const PaymentHistory = require('./PaymentHIstory');
 
 const paymentSchema = new mongoose.Schema(
   {
