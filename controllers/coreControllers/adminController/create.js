@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Admin = mongoose.model('User');
 
-
 const create = async (req, res) => {
   try {
     let { username, password, phone } = req.body;
@@ -62,10 +61,7 @@ const create = async (req, res) => {
         phone: result.phone,
         fullname: result.fullname,
         photo: result.photo,
-        role: result.role,
-        teamName: result.teamName,
-        university: result.university,
-        institute: result.institute,
+        role: result.role
       },
       message: 'Admin document saved correctly',
     });

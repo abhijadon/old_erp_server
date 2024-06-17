@@ -10,7 +10,7 @@ const adminSchema = new Schema({
     lowercase: true,
   },
   phone: {
-    type: Number,
+    type: String,
     trim: true,
     required: true,
     unique: true,

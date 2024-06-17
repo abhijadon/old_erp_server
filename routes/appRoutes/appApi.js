@@ -10,6 +10,8 @@ const { firebaseStorageUpload, saveImageUrls } = require('@/firebase/firebaseSto
 const { createComment } = require('@/controllers/comments/comments');
 const { getCommentsByStudent } = require('@/controllers/comments/getcomment');
 const history = require('@/controllers/historyControllers/history');
+const { deleteImage } = require('@/controllers/middlewaresControllers/createCRUDController/imageController');
+const { checkRole } = require('@/middlewares/checkRole');
 
 // //_________________________________ API for employees_____________________
 
@@ -28,6 +30,7 @@ router.route('/lead/teamfilter').get(catchErrors(leadController.teamfilter));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
+router.route('/lead/image').delete(checkRole('admin', 'manager', 'subadmin'), catchErrors(deleteImage));
 router.route('/student/list').get(catchErrors(history));
 router.route('/lead/getAllNotifications').get(catchErrors(leadController.getAllNotifications));
 router

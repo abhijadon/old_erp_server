@@ -1,6 +1,8 @@
 const ApplicationHistory = require('@/models/ApplicationHistory');
-const { sendDataToExternalAPI } = require('@/helpers/sendLms');
+const { LMS } = require('@/models/Lms');
 const User = require('@/models/User');
+const axios = require('axios');
+
 async function update(Model, req, res) {
   try {
     const existingDocument = await Model.findById(req.params.id).exec();
@@ -12,22 +14,41 @@ async function update(Model, req, res) {
         message: "No document found",
       });
     }
+
     // Start with a copy of the existing document
     const updatedDocumentData = { ...existingDocument._doc };
-    // Merge customfields with existing data to retain existing values
     if (req.body.customfields) {
       const customfields = { ...existingDocument.customfields };
-
-      // Update customfields only with new data, retain old data otherwise
-      if (req.body.customfields.lmsStatus !== undefined) {
-        customfields.lmsStatus = req.body.customfields.lmsStatus;
-      }
 
       if (req.body.customfields.enrollment !== undefined) {
         customfields.enrollment = req.body.customfields.enrollment;
       }
 
       updatedDocumentData.customfields = { ...customfields, ...req.body.customfields };
+    }
+
+    // Fetch user phone numbers based on institute name condition
+    let phoneNumbers = [];
+    let targetEmails = [];
+
+    if (updatedDocumentData.customfields.institute_name === 'HES') {
+      targetEmails = ['aashita@erp.sode.co.in'];
+    } else if (updatedDocumentData.customfields.institute_name === 'DES') {
+      targetEmails = ['jadonabhishek332@gmail.com'];
+    }
+
+    // Fetch users based on targetEmails
+    for (const targetEmail of targetEmails) {
+      try {
+        const user = await User.findOne({ username: targetEmail }).exec();
+        if (user && user.phone) {
+          phoneNumbers.push(user.phone);
+        } else {
+          console.log(`User with email ${targetEmail} not found or phone number not available.`);
+        }
+      } catch (error) {
+        console.error(`Error fetching user for email ${targetEmail}:`, error);
+      }
     }
 
     // If a new `full_name` is provided, update it
@@ -59,7 +80,7 @@ async function update(Model, req, res) {
     // Update the document in the database
     const updatedDocument = await Model.findOneAndUpdate(
       { _id: req.params.id, removed: false },
-      updatedDocumentData,// Ensure the updated data includes full_name
+      updatedDocumentData,
       { new: true, runValidators: true }
     ).exec();
 
@@ -113,6 +134,66 @@ async function update(Model, req, res) {
         updatedBy: req.user._id,
       });
     }
+
+    let whatsappMessageSent = false;
+
+    if (updatedDocumentData.customfields.status === 'Enrolled' && updatedDocumentData.whatsappEnrolled !== 'success') {
+      let gallaboxWebhookUrl = '';
+      if (updatedDocumentData.customfields.institute_name === 'HES') {
+        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/62e5204adcf80e00048761df/integrations/genericWebhook/666c11401508f3c7717e2bf5/webhook';
+      } else if (updatedDocumentData.customfields.institute_name === 'DES') {
+        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/61fce6fd9b042a00049ddbc1/integrations/genericWebhook/666c031621be75f64c34bb26/webhook';
+      }
+
+      try {
+        const whatsappPayload = {
+          lead_id: req.body.lead_id,
+          full_name: req.body.full_name,
+          contact: {
+            email: req.body.contact.email,
+            phone: req.body.contact.phone,
+          },
+          education: {
+            course: req.body.education.course,
+          },
+          customfields: {
+            institute_name: updatedDocumentData.customfields.institute_name,
+            university_name: updatedDocumentData.customfields.university_name,
+            tags: "Support Template",
+            source: "Support Template",
+            enrollment: updatedDocumentData.customfields.enrollment,
+            status: updatedDocumentData.customfields.status
+          },
+          userId: {
+            phone: phoneNumbers
+          }
+        };
+
+        await axios.post(gallaboxWebhookUrl, whatsappPayload);
+        whatsappMessageSent = true;
+        updatedDocumentData.whatsappEnrolled = 'success';
+
+        await LMS.updateOne(
+          { applicationId: req.params.id },
+          { $push: { whatsappEnrolledment: { status: 'success', createdAt: new Date() } } }
+        );
+      } catch (whatsappError) {
+        updatedDocumentData.whatsappEnrolled = 'failed';
+
+        await LMS.updateOne(
+          { applicationId: req.params.id },
+          { $push: { whatsappEnrolledment: { status: 'failed', errorMessage: whatsappError.message, createdAt: new Date() } } }
+        );
+
+        console.error(`Error sending WhatsApp message for application ${req.params.id}:`, whatsappError);
+      }
+
+      // Update the document again to reflect whatsappEnrolled status
+      await Model.findByIdAndUpdate(req.params.id, { whatsappEnrolled: updatedDocumentData.whatsappEnrolled }).exec();
+    } else {
+      console.log(`WhatsApp message already sent successfully for application ${req.params.id}`);
+    }
+
     return res.status(200).json({
       success: true,
       result: updatedDocument,

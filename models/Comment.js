@@ -22,6 +22,14 @@ const commentSchema = new mongoose.Schema({
     trim: true,
     required: true,
   },
+    followStatus: {
+      type: String,
+      trim: true,
+    },
+    followUpDate: {
+      type: Date,
+      default: null,
+    },
 
   timestamp: {
     type: Date,

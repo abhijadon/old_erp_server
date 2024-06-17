@@ -8,7 +8,7 @@ const applicationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-   updatedBy: {
+  updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -30,23 +30,23 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
- 
+
   contact: {
-  email: {
-    type: String,
-    trim: true,
-    lowercase: true,
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    alternate_phone: {
+      type: String,
+      trim: true,
+      default: 'N/A',
+    },
   },
-  phone: {
-    type: Number,
-    trim: true,
-  },
-  alternate_phone: {
-    type: String,
-    trim: true,
-    default: 'N/A',
-  },
-},
   education: {
     course: {
       type: String,
@@ -56,15 +56,15 @@ const applicationSchema = new mongoose.Schema({
   },
 
   customfields: {
- sendfeeReciept: {
+    sendfeeReciept: {
       type: String,
       trim: true,
       default: 'No',
     },
-   paymentStatus: {
-   type: String,
-   trim: true,
-  },
+    paymentStatus: {
+      type: String,
+      trim: true,
+    },
     institute_name: {
       type: String,
       trim: true,
@@ -80,12 +80,12 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       default: 'N/A',
     },
-      lmsStatus: {
+    lmsStatus: {
       type: String,
       trim: true,
       default: 'N/A',
     },
-     father_name: {
+    father_name: {
       type: String,
       trim: true,
       default: 'N/A',
@@ -146,7 +146,7 @@ const applicationSchema = new mongoose.Schema({
     total_course_fee: {
       type: String,
       trim: true,
-     default: 0,
+      default: 0,
     },
     // Payment details that need to be saved in the Payment table
     total_paid_amount: {
@@ -162,26 +162,48 @@ const applicationSchema = new mongoose.Schema({
       trim: true,
       default: 'New',
     },
-due_amount: {
+    due_amount: {
       type: String,
       trim: true,
       default: 0,
     }
-  },   
+  },
 
-
-
-   feeDocument: {
+  feeDocument: {
     type: Array,
-     default: ['N/A'],
+    default: ['N/A'],
   },
   studentDocument: {
     type: Array,
-     default: ['N/A'],
+    default: ['N/A'],
   },
-   previousData: {
+  welcomeMail: {
+    type: String,
+    trim: true,
+  },
+  whatsappMessageStatus: {
+    type: String,
+    trim: true,
+  },
+  whatsappEnrolled: {
+    type: String,
+    trim: true,
+  },
+  welcomeEnrolled: {
+    type: String,
+    trim: true,
+  },
+   welcome: {
+    type: String,
+    trim: true,
+  },
+  whatsappWelcome:{
+type: String,
+trim: true,
+  },
+  previousData: {
     type: [
-      { 
+      {
         sendfeeReciept: String,
         installment_type: String,
         paymentStatus: String,
@@ -197,13 +219,13 @@ due_amount: {
     default: []
   },
   created: {
-  type: Date,
-  default: Date.now,
+    type: Date,
+    default: Date.now,
+  },
 },
-}, 
-{ timestamps: true });
+  { timestamps: true });
 
-  
+
 
 applicationSchema.post('findOneAndUpdate', async function (doc) {
   try {
@@ -229,8 +251,8 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
           phone: doc.contact['phone'],
           student_name: doc.full_name,
           updatedBy: doc.updatedBy,
-       created: doc.created,
-         },
+          created: doc.created,
+        },
       },
       { upsert: true }
     );
@@ -242,7 +264,7 @@ applicationSchema.post('findOneAndUpdate', async function (doc) {
 // Pre-save hook for adding new data
 applicationSchema.pre('save', async function (next) {
   try {
-    const applicationId = this._id; 
+    const applicationId = this._id;
     if (!this.isNew) {
       return next();
     }
@@ -253,7 +275,7 @@ applicationSchema.pre('save', async function (next) {
       student_name: this.full_name,
       email: this.contact['email'],
       phone: this.contact['phone'],
-        session: this.customfields['session'],
+      session: this.customfields['session'],
       status: this.customfields['status'],
       payment_type: this.customfields['payment_type'],
       total_course_fee: this.customfields['total_course_fee'],
@@ -264,7 +286,7 @@ applicationSchema.pre('save', async function (next) {
       university_name: this.customfields['university_name'],
       institute_name: this.customfields['institute_name'],
       created: this.created,
-       updatedBy: this.updatedBy,
+      updatedBy: this.updatedBy,
     });
 
     return next();

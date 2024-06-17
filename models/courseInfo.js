@@ -1,11 +1,10 @@
-// Schema adjustment: Remove unique constraint from 'Mode' field
 const mongoose = require('mongoose');
 
 const infoSchema = new mongoose.Schema({
   mode_info: {
     type: String,
     trim: true,
-    required: true, // Ensure mode_info is provided
+    required: true,
   },
   university: {
     type: String,
@@ -43,11 +42,33 @@ const infoSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+   utm_link: {
+    type: String,
+    trim: true,
+  },
    ebd: {
     type: String,
     trim: true,
   },
-}, 
+ brochure: [{ 
+    name: { type: String },
+    downloadURL: { type: String },
+    previewURL: { type: String },
+    university: { type: String },
+    course: { type: String },
+    electives: { type: String },
+  }],
+   sampleMarksheets: [{
+    name: { type: String },
+    downloadURL: { type: String },
+    university: { type: String },
+  }],
+   sampleDegrees: [{
+    name: { type: String },
+    downloadURL: { type: String },
+    university: { type: String },
+  }],
+},
 {
   timestamps: true
 },

@@ -3,17 +3,9 @@ const Admin = mongoose.model('User');
 
 const remove = async (req, res) => {
   try {
-    let updates = {
-      removed: true,
-    };
     // Find the document by id and delete it
-    const result = await Admin.findOneAndUpdate(
-      { _id: req.params.id, removed: false },
-      { $set: updates },
-      {
-        new: true, // return the new result instead of the old one
-      }
-    ).exec();
+    const result = await Admin.findByIdAndDelete(req.params.id).exec();
+
     // If no results found, return document not found
     if (!result) {
       return res.status(404).json({

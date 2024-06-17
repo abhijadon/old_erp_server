@@ -2,22 +2,48 @@ const { Applications } = require('@/models/Application');
 const ApplicationHistory = require('@/models/ApplicationHistory');
 const DesMail = require('@/emailTemplate/paymentEmail/DesMail');
 const HesMail = require('@/emailTemplate/paymentEmail/HesMail');
+const { WelcomeMail } = require('@/emailTemplate/welcomeEmail');
+const { LMS } = require('@/models/Lms');
+const axios = require('axios'); // Import axios for HTTP requests
+const User = require('@/models/User');
 
 async function updatePayment(req, res) {
   try {
     const applicationId = req.params.id;
     const customfields = req.body.customfields;
     const contact = req.body.contact;
+    const whatsappWelcome = req.body.whatsappWelcome;
+    const welcome = req.body.welcome;
     const { feeDocument } = req.imageUrls;
 
-    if (!customfields || typeof customfields !== 'object') {
-      return res.status(400).json({ success: false, message: "Invalid customfields data" });
-    }
 
     const { email } = contact;
     const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, sendfeeReciept, session } = customfields;
-
     const status = paymentStatus ? paymentStatus.toLowerCase() : '';
+
+    // Fetch user phone numbers based on institute name condition
+    let phoneNumbers = [];
+    let targetEmails = [];
+
+    if (institute_name === 'HES') {
+      targetEmails = ['aashita@erp.sode.co.in'];
+    } else if (institute_name === 'DES') {
+      targetEmails = ['jadonabhishek332@gmail.com'];
+    }
+
+    // Fetch users based on targetEmails
+    for (const targetEmail of targetEmails) {
+      try {
+        const user = await User.findOne({ username: targetEmail }).exec();
+        if (user && user.phone) {
+          phoneNumbers.push(user.phone);
+        } else {
+          console.log(`User with email ${targetEmail} not found or phone number not available.`);
+        }
+      } catch (error) {
+        console.error(`Error fetching user for email ${targetEmail}:`, error);
+      }
+    }
 
     const existingApplication = await Applications.findById(applicationId);
     if (!existingApplication) {
@@ -25,9 +51,9 @@ async function updatePayment(req, res) {
     }
 
     const oldValues = { ...existingApplication.toObject() }; // Store current values
-
     const currentPaymentStatus = existingApplication.customfields.paymentStatus;
 
+    // Validate payment status updates
     if (currentPaymentStatus === 'payment approved' && status === 'payment approved') {
       return res.status(400).json({
         success: false,
@@ -48,6 +74,7 @@ async function updatePayment(req, res) {
         message: "Cannot update application because the payment status is 'payment rejected'. Change the status to payment received.",
       });
     }
+
     // Apply updates to the customfields
     const updatedCustomFields = {};
     if (status === 'payment received') {
@@ -121,8 +148,6 @@ async function updatePayment(req, res) {
       }
     }
 
-
-
     if (installment_type !== undefined) {
       existingApplication.customfields.installment_type = installment_type;
       updatedCustomFields.installment_type = installment_type;
@@ -147,7 +172,6 @@ async function updatePayment(req, res) {
       existingApplication.customfields.sendfeeReciept = sendfeeReciept;
       updatedCustomFields.sendfeeReciept = sendfeeReciept;
     }
-
 
     if (paid_amount !== undefined) {
       existingApplication.customfields.paid_amount = paid_amount;
@@ -192,7 +216,6 @@ async function updatePayment(req, res) {
       }
     }
 
-
     // If there are any updates, create a history record
     if (Object.keys(updatedFields).length > 0) {
       await ApplicationHistory.create({
@@ -205,7 +228,7 @@ async function updatePayment(req, res) {
     // Send email based on payment status and sendfeeReciept conditions
     let emailSent = false;
 
-    if (status === 'payment approved' && sendfeeReciept.toLowerCase() === 'yes') {
+   if (status === 'payment approved' && sendfeeReciept.toLowerCase() === 'yes') {
       if (university_name && institute_name) {
         if (institute_name === 'HES' && ['BOSSE', 'SPU', 'SVSU', 'MANGALAYATAN DISTANCE', 'SGVU', 'HU'].includes(university_name.toUpperCase())) {
           emailSent = await HesMail(email, institute_name, dueAmount, req.body.full_name, req.body.education.course, req.body.customfields.father_name, req.body.customfields.dob, req.body.contact.phone, installment_type, totalCourseFee, totalPaidAmount, paid_amount);
@@ -221,7 +244,6 @@ async function updatePayment(req, res) {
       console.log(`Email not sent for application ${applicationId} because payment status is not 'payment approved' or 'sendfeeReciept' is not 'yes'`);
     }
 
-
     // Append newly uploaded images to existing ones
     if (feeDocument && Array.isArray(feeDocument)) {
       feeDocument.forEach((file) => {
@@ -229,9 +251,129 @@ async function updatePayment(req, res) {
       });
     }
 
+    // Check and send WelcomeMail
+    let welcomeMailSent = false;
+    if (status === 'payment approved'  && welcome === 'yes' ) {
+      const lmsEntry = await LMS.findOne({ applicationId });
+      if (lmsEntry) {
+        const alreadySent = lmsEntry.welcomeMailStatus.some(
+          (entry) => entry.status === 'success'
+        );
+
+        if (alreadySent) {
+          console.log(`Welcome mail already sent successfully for application ${applicationId}`);
+        } else {
+          try {
+            await WelcomeMail(req.body.full_name, email);
+            welcomeMailSent = true;
+            await LMS.updateOne(
+              { applicationId },
+              { $push: { welcomeMailStatus: { status: 'success', createdAt: new Date() } } }
+            );
+          } catch (welcomeMailError) {
+            await LMS.updateOne(
+              { applicationId },
+              { $push: { welcomeMailStatus: { status: 'failed', errorMessage: welcomeMailError.message, createdAt: new Date() } } }
+            );
+            console.error(`Error sending welcome mail for application ${applicationId}:`, welcomeMailError);
+          }
+        }
+      } else {
+        // Create a new LMS entry if it does not exist
+        try {
+          await LMS.create({
+            applicationId,
+            status: 'initialized',
+            data: [],
+            emailStatuses: [],
+            welcomeMailStatus: [{ status: 'success', createdAt: new Date() }]
+          });
+          welcomeMailSent = true;
+          await WelcomeMail(req.body.full_name, email);
+        } catch (welcomeMailError) {
+          await LMS.create({
+            applicationId,
+            status: 'initialized',
+            data: [],
+            emailStatuses: [],
+            welcomeMailStatus: [{ status: 'failed', errorMessage: welcomeMailError.message, createdAt: new Date() }]
+          });
+          console.error(`Error sending welcome mail for application ${applicationId}:`, welcomeMailError);
+        }
+      }
+    }
+
+// Set welcomeMail field based on welcomeMailSent
+existingApplication.welcomeMail = welcomeMailSent ? 'Yes' : 'No';
+
+    if (status === 'payment approved' && whatsappWelcome === 'yes' ) {
+      // Send WhatsApp message based on institute name
+      let gallaboxWebhookUrl = '';
+      if (institute_name === 'HES') {
+        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/62e5204adcf80e00048761df/integrations/genericWebhook/6651aecee5e9efbf11651770/webhook';
+      } else if (institute_name === 'DES') {
+        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/61fce6fd9b042a00049ddbc1/integrations/genericWebhook/6651896de5e9efbf1160ab63/webhook';
+      }
+
+      let whatsappMessageSent = false;
+
+      // Initialize whatsappMessageStatus if undefined
+      if (!existingApplication.whatsappMessageStatus) {
+        existingApplication.whatsappMessageStatus = 'pending';
+      }
+
+      if (existingApplication.whatsappMessageStatus !== 'success') {
+        try {
+          const whatsappPayload = {
+            lead_id: applicationId,
+            full_name: req.body.full_name,
+            contact: {
+              email: contact.email,
+              phone: contact.phone,
+            },
+            education: {
+              course: req.body.education.course,
+            },
+            customfields: {
+              institute_name: customfields.institute_name,
+              university_name: customfields.university_name,
+              tags: "Support Template",
+              source: "Support Template",
+            },
+            userId: {
+              phone: [phoneNumbers]
+            }
+          };
+
+          await axios.post(gallaboxWebhookUrl, whatsappPayload);
+
+          whatsappMessageSent = true;
+          existingApplication.whatsappMessageStatus = 'success';
+
+          // Update WhatsApp status in LMS model
+          await LMS.updateOne(
+            { applicationId },
+            { $push: { whatsappStatuses: { status: 'success', createdAt: new Date() } } }
+          );
+        } catch (whatsappError) {
+          existingApplication.whatsappMessageStatus = 'failed';
+
+          // Update WhatsApp status with error in LMS model
+          await LMS.updateOne(
+            { applicationId },
+            { $push: { whatsappStatuses: { status: 'failed', errorMessage: whatsappError.message, createdAt: new Date() } } }
+          );
+
+          console.error(`Error sending WhatsApp message for application ${applicationId}:`, whatsappError);
+        }
+      } else {
+        console.log(`WhatsApp message already sent successfully for application ${applicationId}`);
+      }
+    }
+
     await existingApplication.save(); // Save the updated application
 
-    return res.status(200).json({ success: true, message: `Successfully updated payment. Email sent: ${emailSent}` });
+    return res.status(200).json({ success: true, message: `Successfully updated payment.` });
   } catch (error) {
     console.error("Error updating application:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
@@ -241,7 +383,3 @@ async function updatePayment(req, res) {
 module.exports = {
   updatePayment,
 };
-
-
-
-

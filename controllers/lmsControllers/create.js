@@ -30,8 +30,7 @@ const create = async (req, res) => {
         }
 
         const data = application.toObject(); // Convert application document to plain object
-  
-        // Check if the university name is 'SPU'
+
         if (data.customfields.university_name !== 'SPU') {
             return res.status(400).json({ message: 'LMS can only be created for SPU university.' });
         }
@@ -56,9 +55,12 @@ const create = async (req, res) => {
             session_type: data.customfields.session,
             totalCOursefee: data.customfields.total_course_fee,
             paidamounttotal: data.customfields.total_paid_amount,
-            centreID: user.username // Use creator user's username
+            centreID: user.fullname,
+            previousData: data.previousData,
         };
-    
+
+        console.log('requrestbody', requestBody)
+        
         // Check if any field in the requestBody is undefined or empty
         for (const [key, value] of Object.entries(requestBody)) {
             if (!value) {
@@ -97,6 +99,10 @@ const create = async (req, res) => {
             message = apiStatus === 'created' ? 'LMS created successfully.' : 'Failed to create LMS.';
         }
         const statusSaved = await lms.save(); // Save the LMS status
+
+        // Update lmsStatus in Applications model
+        const lmsStatus = apiStatus === 'created' || apiStatus === 'updated' ? 'yes' : 'no';
+        await Applications.findByIdAndUpdate(applicationId, { 'customfields.lmsStatus': lmsStatus });
 
         let emailStatus = 'failed';
         let emailErrorMessage = '';

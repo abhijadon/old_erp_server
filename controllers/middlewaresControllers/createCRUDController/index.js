@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {create} = require('./create');
+const { create } = require('./create');
 const read = require('./read');
 const update = require('./update');
 const remove = require('./remove');
@@ -31,11 +31,11 @@ const createCRUDController = (modelName) => {
 
   crudMethods.list = async (req, res) => {
     paginatedList(Model, req, res);
-  }; 
-  
-   crudMethods.teamfilter = async (req, res) => {
+  };
+
+  crudMethods.teamfilter = async (req, res) => {
     teamfilter(Model, req, res);
-  }; 
+  };
 
   crudMethods.listAll = async (req, res) => {
     listAll(Model, req, res);

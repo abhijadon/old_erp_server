@@ -40,7 +40,34 @@ const lmsSchema = new Schema({
                 required: true
             }
         }
-    ]
+    ],
+    welcomeMailStatus: [
+        {
+            status: {
+                type: String,
+                required: true
+            },
+            errorMessage: String,
+            createdAt: {
+                type: Date,
+                required: true
+            }
+        }
+    ],
+    whatsappStatuses: [
+        {
+            status: { type: String, required: true },
+            errorMessage: { type: String, default: '' },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ],
+    whatsappEnrolledment: [
+{
+            status: { type: String, required: true },
+            errorMessage: { type: String, default: '' },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ],
 }, { timestamps: true });
 
 const LMS = mongoose.model('LMS', lmsSchema);
