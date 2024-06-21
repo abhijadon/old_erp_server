@@ -71,7 +71,7 @@ const paginatedList = async (Model, req, res) => {
       .skip(skip)
       .limit(limit)
       .sort({ [sortBy]: sortValue })
-      .populate('updatedBy', 'username')
+      .populate('userId')
       .exec();
 
     const countPromise = Model.countDocuments(filters);
