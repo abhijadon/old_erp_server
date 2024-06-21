@@ -193,13 +193,13 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-   welcome: {
+  welcome: {
     type: String,
     trim: true,
   },
-  whatsappWelcome:{
-type: String,
-trim: true,
+  whatsappWelcome: {
+    type: String,
+    trim: true,
   },
   previousData: {
     type: [

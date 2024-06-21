@@ -12,6 +12,8 @@ const { getCommentsByStudent } = require('@/controllers/comments/getcomment');
 const history = require('@/controllers/historyControllers/history');
 const { deleteImage } = require('@/controllers/middlewaresControllers/createCRUDController/imageController');
 const { checkRole } = require('@/middlewares/checkRole');
+const authorizeUser = require('@/middlewares/paymentQuery');
+const authMiddleware = require('@/middlewares/paymentQuery');
 
 // //_________________________________ API for employees_____________________
 
@@ -25,7 +27,7 @@ router.route('/lead/updatePayment/:id').put(hasPermission('update'), firebaseSto
 router.route('/lead/uploadDocument/:id').put(hasPermission('update'), firebaseStorageUpload(), saveImageUrls, catchErrors(uploadDocumentController.uploadDocument));
 router.route('/lead/delete/:id').delete(hasPermission('delete'), catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
-router.route('/lead/list').get(catchErrors(leadController.list));
+router.route('/lead/list').get(authMiddleware, catchErrors(leadController.list));
 router.route('/lead/teamfilter').get(catchErrors(leadController.teamfilter));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));
 router.route('/lead/filter').get(catchErrors(leadController.filter));
@@ -43,12 +45,11 @@ router.route('/payment/create').post(hasPermission('create'), catchErrors(paymen
 router.route('/payment/read/:id').get(hasPermission('read'), catchErrors(paymentController.read));
 router.route('/payment/update/:id').patch(hasPermission('update'), catchErrors(paymentController.update));
 router.route('/payment/delete/:id').delete(hasPermission('delete'), catchErrors(paymentController.delete));
-router.route('/payment/search').get(catchErrors(paymentController.search));
-router.route('/payment/list').get(catchErrors(paymentController.list));
-router.route('/payment/filter').get(catchErrors(paymentController.filter));
-router.route('/payment/pdf/:id').get(hasPermission('read'), catchErrors(paymentController.generatePDF));
+router.route('/payment/list').get(hasPermission('read'),authMiddleware, catchErrors(paymentController.paginatedList));
+router.route('/payment/filter').get(hasPermission('read'), catchErrors(paymentController.filter));
 router.route('/payment/summary').get(catchErrors(paymentController.summary));
-router.route('/payment/mail').post(catchErrors(paymentController.mail));
+router.route('/payment/mail').post(catchErrors(paymentController.sendMail));
+router.route('/payment/search').get(catchErrors(paymentController.search));
 
 
 module.exports = router;

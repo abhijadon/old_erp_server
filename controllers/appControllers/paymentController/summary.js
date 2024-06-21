@@ -110,6 +110,9 @@ const summary = async (req, res) => {
       'SMU',
       'HU',
       'BOSSE',
+      'VGU',
+      'SHOOLINI',
+      'SHARDA',
       'MANGALAYATAN DISTANCE',
       'MANGALAYATAN ONLINE',
     ];

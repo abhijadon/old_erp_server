@@ -34,7 +34,7 @@ async function update(Model, req, res) {
     if (updatedDocumentData.customfields.institute_name === 'HES') {
       targetEmails = ['aashita@erp.sode.co.in'];
     } else if (updatedDocumentData.customfields.institute_name === 'DES') {
-      targetEmails = ['jadonabhishek332@gmail.com'];
+      targetEmails = ['aashi@erp.sode.co.in'];
     }
 
     // Fetch users based on targetEmails

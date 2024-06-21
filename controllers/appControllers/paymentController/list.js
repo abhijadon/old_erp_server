@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
+const Payment = mongoose.model('Payment');
 const Team = require('@/models/Team'); // Adjust the path according to your project structure
 
-const paginatedList = async (Model, req, res) => {
+const paginatedList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10); // Set limit to 0 for export
   const skip = (page - 1) * limit;
@@ -36,13 +38,13 @@ const paginatedList = async (Model, req, res) => {
     } else {
       if (req.user.isManager) {
         filters.$and = [
-          { 'customfields.institute_name': { $in: req.user.assignedInstitutes } },
-          { 'customfields.university_name': { $in: req.user.assignedUniversities } }
+          { institute_name: { $in: req.user.assignedInstitutes } },
+          { university_name: { $in: req.user.assignedUniversities } }
         ];
       } else if (req.user.isSupportiveAssociate) {
         filters.$and = [
-          { 'customfields.institute_name': { $in: req.user.assignedInstitutes } },
-          { 'customfields.university_name': { $in: req.user.assignedUniversities } }
+          { institute_name: { $in: req.user.assignedInstitutes } },
+          { university_name: { $in: req.user.assignedUniversities } }
         ];
 
         if (!req.user.isTeamLeader) {
@@ -67,32 +69,20 @@ const paginatedList = async (Model, req, res) => {
 
     applyAdditionalFilters(req.query, filters);
 
-    const resultsPromise = Model.find(filters)
+    const resultsPromise = Payment.find(filters)
       .skip(skip)
       .limit(limit)
       .sort({ [sortBy]: sortValue })
-      .populate('updatedBy', 'username')
+      .populate('updatedBy', 'username') 
       .exec();
 
-    const countPromise = Model.countDocuments(filters);
+    const countPromise = Payment.countDocuments(filters);
 
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
-    // Count different payment statuses
-    const paymentApprovedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment approved' });
-    const paymentReceivedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment received' });
-    const paymentRejectedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment rejected' });
-
     const pages = Math.ceil(count / limit);
 
-    const pagination = {
-      page,
-      pages,
-      count,
-      paymentApprovedCount,
-      paymentReceivedCount,
-      paymentRejectedCount,
-    };
+    const pagination = { page, pages, count, followUpCount: countFollowUp(result) }; // Include follow-up count
 
     if (count > 0) {
       return res.status(200).json({
@@ -117,46 +107,31 @@ const paginatedList = async (Model, req, res) => {
 
 function applyAdditionalFilters(query, filters) {
   if (query.status) {
-    filters['customfields.status'] = query.status;
+    filters.status = query.status;
   }
   if (query.payment_mode) {
-    filters['customfields.payment_mode'] = query.payment_mode;
+    filters.payment_mode = query.payment_mode;
   }
   if (query.payment_type) {
-    filters['customfields.payment_type'] = query.payment_type;
-  }
-   if (query.installment_type) {
-    filters['customfields.installment_type'] = query.installment_type;
-  }
-
-   if (query.paymentStatus) {
-      filters['customfields.paymentStatus'] = query.paymentStatus;
+    filters.payment_type = query.payment_type;
   }
   if (query.userId) {
     filters.userId = query.userId;
   }
+  
+  if (query.followup) {
+    filters.followStatus = query.followup;
+  }
+
+  if (query.followupdate_start && query.followupdate_end) {
+    filters.followUpDate = {
+      $gte: new Date(query.followupdate_start.split('/').reverse().join('-')),
+      $lte: new Date(query.followupdate_end.split('/').reverse().join('-')).setHours(23, 59, 59, 999),
+    };
+  }
   if (query.session) {
-    filters['customfields.session'] = query.session;
+    filters.session = query.session;
   }
-
-  if (query.welcomeMail) {
-    filters.welcomeMail= query.welcomeMail;
-  }
-
- if (query.lmsStatus) {
-    filters['customfields.lmsStatus']= query.lmsStatus;
-  }
-
-    if (query.whatsappMessageStatus) {
-    filters.whatsappMessageStatus= query.whatsappMessageStatus;
-  }
-  if (query.whatsappEnrolled) {
-    filters.whatsappEnrolled= query.whatsappEnrolled;
-  }
-   if (query.welcomeEnrolled) {
-    filters.welcomeEnrolled= query.welcomeEnrolled;
-  }
-
   if (query.start_date && query.end_date) {
     filters.created = {
       $gte: new Date(query.start_date.split('/').reverse().join('-')),
@@ -164,11 +139,15 @@ function applyAdditionalFilters(query, filters) {
     };
   }
   if (query.institute_name) {
-    filters['customfields.institute_name'] = query.institute_name;
+    filters.institute_name = query.institute_name;
   }
   if (query.university_name) {
-    filters['customfields.university_name'] = query.university_name;
+    filters.university_name = query.university_name;
   }
+}
+
+function countFollowUp(result) {
+  return result.filter(item => item.followStatus === 'follow-up').length;
 }
 
 module.exports = paginatedList;

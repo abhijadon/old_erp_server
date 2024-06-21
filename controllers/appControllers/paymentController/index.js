@@ -1,17 +1,22 @@
-const createCRUDController = require('@/controllers/middlewaresControllers/createCRUDController');
-const methods = createCRUDController('Payment');
-
 const create = require('./create');
-const summary = require('./summary');
+const read = require('./read');
 const update = require('./update');
 const remove = require('./remove');
-const read = require('./read');
-const sendMail = require('./sendMail');
+const paginatedList = require('./list');
+const summary = require('./summary');
+const sendMail = require('./sendMail')
+const filter = require('./filter');
+const search = require('./search');
+const paymentController = {
+  create,
+  read,
+  filter,
+  search,
+  update,
+  paginatedList,
+  summary,
+  sendMail,
+  delete: remove,
+};
 
-methods.mail = sendMail;
-methods.create = create;
-methods.update = update;
-methods.delete = remove;
-methods.summary = summary;
-methods.read = read;
-module.exports = methods;
+module.exports = paymentController;
