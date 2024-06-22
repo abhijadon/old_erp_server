@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const Payment = mongoose.model('Payment');
-const Team = require('@/models/Team'); // Adjust the path according to your project structure
+const Model = mongoose.model('Payment'); // Adjust the path according to your project structure
+const Team = require('@/models/Team');
 
 const paginatedList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10); // Set limit to 0 for export
+  const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10);
   const skip = (page - 1) * limit;
   const { sortBy = 'updated', sortValue = -1 } = req.query;
 
@@ -17,7 +17,7 @@ const paginatedList = async (req, res) => {
 
   let filters = { removed: false, ...fields };
 
-  try {
+   try {
     if (req.user.isAdmin || req.user.role === 'subadmin') {
       if (req.query.team === 'true' && req.query.teamLeader) {
         const teamLeaderId = req.query.teamLeader;
@@ -36,19 +36,13 @@ const paginatedList = async (req, res) => {
         filters.userId = req.query.teamLeader;
       }
     } else {
-      if (req.user.isManager) {
+      if (req.user.isManager || req.user.isSupportiveAssociate) {
         filters.$and = [
           { institute_name: { $in: req.user.assignedInstitutes } },
           { university_name: { $in: req.user.assignedUniversities } }
         ];
-      } else if (req.user.isSupportiveAssociate) {
-        filters.$and = [
-          { institute_name: { $in: req.user.assignedInstitutes } },
-          { university_name: { $in: req.user.assignedUniversities } }
-        ];
-
-        if (!req.user.isTeamLeader) {
-          filters.$and.push({ userId: { $in: [req.user._id, req.user.teamLeader] } });
+        if (req.user.isSupportiveAssociate && !req.user.isTeamLeader) {
+          filters.$and.push({ userId: { $in: [req.user._id, ...req.user.teamMembers] } });
         }
       } else if (req.user.isTeamLeader) {
         const team = await Team.findOne({ userId: req.user._id }).populate('teamMembers');
@@ -69,20 +63,21 @@ const paginatedList = async (req, res) => {
 
     applyAdditionalFilters(req.query, filters);
 
-    const resultsPromise = Payment.find(filters)
+
+    const resultsPromise = Model.find(filters)
       .skip(skip)
       .limit(limit)
       .sort({ [sortBy]: sortValue })
-      .populate('userId') 
+      .populate('userId')
       .exec();
 
-    const countPromise = Payment.countDocuments(filters);
+    const countPromise = Model.countDocuments(filters);
 
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     const pages = Math.ceil(count / limit);
 
-    const pagination = { page, pages, count, followUpCount: countFollowUp(result) }; // Include follow-up count
+    const pagination = { page, pages, count, followUpCount: countFollowUp(result) };
 
     if (count > 0) {
       return res.status(200).json({
@@ -118,11 +113,9 @@ function applyAdditionalFilters(query, filters) {
   if (query.userId) {
     filters.userId = query.userId;
   }
-  
   if (query.followup) {
     filters.followStatus = query.followup;
   }
-
   if (query.followupdate_start && query.followupdate_end) {
     filters.followUpDate = {
       $gte: new Date(query.followupdate_start.split('/').reverse().join('-')),
@@ -135,7 +128,7 @@ function applyAdditionalFilters(query, filters) {
   if (query.start_date && query.end_date) {
     filters.created = {
       $gte: new Date(query.start_date.split('/').reverse().join('-')),
-      $lte: new Date(new Date(query.end_date.split('/').reverse().join('-')).setHours(23, 59, 59, 999)), // Include the entire end date
+      $lte: new Date(new Date(query.end_date.split('/').reverse().join('-')).setHours(23, 59, 59, 999)),
     };
   }
   if (query.institute_name) {

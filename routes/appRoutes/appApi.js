@@ -12,7 +12,6 @@ const { getCommentsByStudent } = require('@/controllers/comments/getcomment');
 const history = require('@/controllers/historyControllers/history');
 const { deleteImage } = require('@/controllers/middlewaresControllers/createCRUDController/imageController');
 const { checkRole } = require('@/middlewares/checkRole');
-const authorizeUser = require('@/middlewares/paymentQuery');
 const authMiddleware = require('@/middlewares/paymentQuery');
 
 // //_________________________________ API for employees_____________________
@@ -45,7 +44,7 @@ router.route('/payment/create').post(hasPermission('create'), catchErrors(paymen
 router.route('/payment/read/:id').get(hasPermission('read'), catchErrors(paymentController.read));
 router.route('/payment/update/:id').patch(hasPermission('update'), catchErrors(paymentController.update));
 router.route('/payment/delete/:id').delete(hasPermission('delete'), catchErrors(paymentController.delete));
-router.route('/payment/list').get(hasPermission('read'),authMiddleware, catchErrors(paymentController.paginatedList));
+router.route('/payment/list').get(authMiddleware, catchErrors(paymentController.paginatedList));
 router.route('/payment/filter').get(hasPermission('read'), catchErrors(paymentController.filter));
 router.route('/payment/summary').get(catchErrors(paymentController.summary));
 router.route('/payment/mail').post(catchErrors(paymentController.sendMail));

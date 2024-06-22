@@ -2,6 +2,9 @@ const ApplicationHistory = require('@/models/ApplicationHistory');
 const { LMS } = require('@/models/Lms');
 const User = require('@/models/User');
 const axios = require('axios');
+const moment = require('moment');
+const HESEnrolled = require('@/emailTemplate/EnrolledTemplate/HESEnrolled');
+const DESEnrolled = require('@/emailTemplate/EnrolledTemplate/DESEnrolled');
 
 async function update(Model, req, res) {
   try {
@@ -15,7 +18,6 @@ async function update(Model, req, res) {
       });
     }
 
-    // Start with a copy of the existing document
     const updatedDocumentData = { ...existingDocument._doc };
     if (req.body.customfields) {
       const customfields = { ...existingDocument.customfields };
@@ -27,7 +29,6 @@ async function update(Model, req, res) {
       updatedDocumentData.customfields = { ...customfields, ...req.body.customfields };
     }
 
-    // Fetch user phone numbers based on institute name condition
     let phoneNumbers = [];
     let targetEmails = [];
 
@@ -37,7 +38,6 @@ async function update(Model, req, res) {
       targetEmails = ['aashi@erp.sode.co.in'];
     }
 
-    // Fetch users based on targetEmails
     for (const targetEmail of targetEmails) {
       try {
         const user = await User.findOne({ username: targetEmail }).exec();
@@ -51,12 +51,10 @@ async function update(Model, req, res) {
       }
     }
 
-    // If a new `full_name` is provided, update it
     if (req.body.full_name !== undefined) {
       updatedDocumentData.full_name = req.body.full_name;
     }
 
-    // Merge other sections like contact and education
     if (req.body.contact) {
       updatedDocumentData.contact = {
         ...existingDocument.contact,
@@ -71,20 +69,17 @@ async function update(Model, req, res) {
       };
     }
 
-    // Ensure total_course_fee and related calculations are updated correctly
     const totalCourseFee = parseFloat(updatedDocumentData.customfields.total_course_fee) || 0;
     const totalPaidAmount = parseFloat(updatedDocumentData.customfields.total_paid_amount) || 0;
     const dueAmount = totalCourseFee - totalPaidAmount;
     updatedDocumentData.customfields.due_amount = dueAmount.toString();
 
-    // Update the document in the database
     const updatedDocument = await Model.findOneAndUpdate(
       { _id: req.params.id, removed: false },
       updatedDocumentData,
       { new: true, runValidators: true }
     ).exec();
 
-    // Track updated fields for history
     const updatedFields = {};
 
     const fieldsToCheck = ['customfields', 'contact', 'education'];
@@ -105,7 +100,6 @@ async function update(Model, req, res) {
       });
     });
 
-    // Additional checks for `full_name` and `lead_id`
     if (req.body.full_name !== existingDocument.full_name) {
       if (!updatedFields.customfields) {
         updatedFields.customfields = {};
@@ -126,7 +120,6 @@ async function update(Model, req, res) {
       };
     }
 
-    // Create an application history record if there were updates
     if (Object.keys(updatedFields).length > 0) {
       await ApplicationHistory.create({
         applicationId: req.params.id,
@@ -136,68 +129,159 @@ async function update(Model, req, res) {
     }
 
     let whatsappMessageSent = false;
+    let emailMessageSent = false;
+    let whatsappMessage = '';
+    let emailMessage = '';
 
-    if (updatedDocumentData.customfields.status === 'Enrolled' && updatedDocumentData.whatsappEnrolled !== 'success') {
-      let gallaboxWebhookUrl = '';
-      if (updatedDocumentData.customfields.institute_name === 'HES') {
-        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/62e5204adcf80e00048761df/integrations/genericWebhook/666c11401508f3c7717e2bf5/webhook';
-      } else if (updatedDocumentData.customfields.institute_name === 'DES') {
-        gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/61fce6fd9b042a00049ddbc1/integrations/genericWebhook/666c031621be75f64c34bb26/webhook';
-      }
+    const hesUniversities = ['SPU', 'HU', 'BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE'];
+    const desUniversities = ['BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE'];
 
-      try {
+    let sendPassword = '';
+    if (hesUniversities.includes(updatedDocumentData.customfields.university_name) || desUniversities.includes(updatedDocumentData.customfields.university_name)) {
+      sendPassword = moment(updatedDocumentData.customfields.dob).format('DDMMYYYY');
+    } else if (['SVSU'].includes(updatedDocumentData.customfields.university_name)) {
+      sendPassword = updatedDocumentData.contact.phone;
+    }
+
+    const universityUrlMap = {
+      'SPU': 'https://www.spu.ac/f-tel/student_login.php',
+      'HU': 'https://www.himalayanuniversity.com/student/student_login.php',
+      'BOSSE': 'https://www.bosse.ac.in/student/student_login.php',
+      'MANGALAYATAN ONLINE': 'https://www.muonline.ac.in/studentzone/',
+      'MANGALAYATAN DISTANCE': 'https://www.mude.ac.in/studentzone/login.php',
+      'SVSU': 'https://student.subhartide.com/auth/login',
+    };
+
+    if (
+      ((updatedDocumentData.customfields.institute_name === 'HES' && hesUniversities.includes(updatedDocumentData.customfields.university_name)) ||
+        (updatedDocumentData.customfields.institute_name === 'DES' && desUniversities.includes(updatedDocumentData.customfields.university_name))) &&
+      updatedDocumentData.customfields.status === 'Enrolled'
+    ) {
+      if (updatedDocumentData.whatsappEnrolled === 'success') {
+        whatsappMessage = 'WhatsApp message already sent successfully for this number.';
+      } else {
+        let gallaboxWebhookUrl = '';
+        if (updatedDocumentData.customfields.institute_name === 'HES') {
+          gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/62e5204adcf80e00048761df/integrations/genericWebhook/666c11401508f3c7717e2bf5/webhook';
+        } else if (updatedDocumentData.customfields.institute_name === 'DES') {
+          gallaboxWebhookUrl = 'https://server.gallabox.com/accounts/61fce6fd9b042a00049ddbc1/integrations/genericWebhook/666c031621be75f64c34bb26/webhook';
+        }
+
         const whatsappPayload = {
           lead_id: req.body.lead_id,
           full_name: req.body.full_name,
-          contact: {
-            email: req.body.contact.email,
-            phone: req.body.contact.phone,
-          },
-          education: {
-            course: req.body.education.course,
-          },
-          customfields: {
-            institute_name: updatedDocumentData.customfields.institute_name,
-            university_name: updatedDocumentData.customfields.university_name,
-            tags: "Support Template",
-            source: "Support Template",
-            enrollment: updatedDocumentData.customfields.enrollment,
-            status: updatedDocumentData.customfields.status
-          },
-          userId: {
-            phone: phoneNumbers
-          }
+          email: req.body.contact.email,
+          phone: req.body.contact.phone,
+          course: req.body.education.course,
+          enrollment: req.body.customfields.enrollment,
+          institute_name: updatedDocumentData.customfields.institute_name,
+          status: updatedDocumentData.customfields.status,
+          password: sendPassword,
+          URL: universityUrlMap[updatedDocumentData.customfields.university_name],
+          tags: "Support Template",
+          source: "Support Template",
         };
 
-        await axios.post(gallaboxWebhookUrl, whatsappPayload);
-        whatsappMessageSent = true;
-        updatedDocumentData.whatsappEnrolled = 'success';
+        if (updatedDocumentData.customfields.university_name) {
+          whatsappPayload.university_name = updatedDocumentData.customfields.university_name;
+        }
 
-        await LMS.updateOne(
-          { applicationId: req.params.id },
-          { $push: { whatsappEnrolledment: { status: 'success', createdAt: new Date() } } }
-        );
-      } catch (whatsappError) {
-        updatedDocumentData.whatsappEnrolled = 'failed';
+        console.log(`Sending WhatsApp message for application ${req.params.id}:`, whatsappPayload);
 
-        await LMS.updateOne(
-          { applicationId: req.params.id },
-          { $push: { whatsappEnrolledment: { status: 'failed', errorMessage: whatsappError.message, createdAt: new Date() } } }
-        );
+        try {
+          await axios.post(gallaboxWebhookUrl, whatsappPayload);
+          whatsappMessageSent = true;
+          updatedDocumentData.whatsappEnrolled = 'success';
 
-        console.error(`Error sending WhatsApp message for application ${req.params.id}:`, whatsappError);
+          await LMS.findByIdAndUpdate(
+            { applicationId: req.params.id },
+            { $push: { whatsappEnrolledment: { status: 'success', createdAt: new Date() } } }
+          );
+        } catch (whatsappError) {
+          updatedDocumentData.whatsappEnrolled = 'failed';
+
+          await LMS.findByIdAndUpdate(
+            { applicationId: req.params.id },
+            { $push: { whatsappEnrolledment: { status: 'failed', errorMessage: whatsappError.message, createdAt: new Date() } } }
+          );
+
+          console.error(`Error sending WhatsApp message for application ${req.params.id}:`, whatsappError);
+        }
+
+        await Model.findByIdAndUpdate(req.params.id, { whatsappEnrolled: updatedDocumentData.whatsappEnrolled }).exec();
       }
 
-      // Update the document again to reflect whatsappEnrolled status
-      await Model.findByIdAndUpdate(req.params.id, { whatsappEnrolled: updatedDocumentData.whatsappEnrolled }).exec();
+      if (updatedDocumentData.welcomeEnrolled === 'success') {
+        emailMessage = 'Email already sent successfully for this number.';
+      } else {
+        let emailPayload;
+        if (updatedDocumentData.customfields.institute_name === 'HES') {
+          emailPayload = HESEnrolled({
+            full_name: req.body.full_name,
+            email: req.body.contact.email,
+            phone: req.body.contact.phone,
+            course: req.body.education.course,
+            enrollment: req.body.customfields.enrollment,
+            institute_name: updatedDocumentData.customfields.institute_name,
+            status: updatedDocumentData.customfields.status,
+            password: sendPassword,
+            URL: universityUrlMap[updatedDocumentData.customfields.university_name],
+          });
+        } else if (updatedDocumentData.customfields.institute_name === 'DES') {
+          emailPayload = DESEnrolled({
+            full_name: req.body.full_name,
+            email: req.body.contact.email,
+            phone: req.body.contact.phone,
+            course: req.body.education.course,
+            enrollment: req.body.customfields.enrollment,
+            institute_name: updatedDocumentData.customfields.institute_name,
+            status: updatedDocumentData.customfields.status,
+            password: sendPassword,
+            URL: universityUrlMap[updatedDocumentData.customfields.university_name],
+          });
+        }
+
+        console.log(`Sending Email for application ${req.params.id}:`, emailPayload);
+
+        try {
+          await emailPayload;
+          emailMessageSent = true;
+          updatedDocumentData.welcomeEnrolled = 'success';
+
+          await LMS.updateOne(
+            { applicationId: req.params.id },
+            { $push: { emailEnrolledment: { status: 'success', createdAt: new Date() } } }
+          );
+        } catch (emailError) {
+          updatedDocumentData.welcomeEnrolled = 'failed';
+
+          await LMS.updateOne(
+            { applicationId: req.params.id },
+            { $push: { emailEnrolledment: { status: 'failed', errorMessage: emailError.message, createdAt: new Date() } } }
+          );
+          console.error(`Error sending Email for application ${req.params.id}:`, emailError);
+        }
+
+        await Model.findByIdAndUpdate(req.params.id, { welcomeEnrolled: updatedDocumentData.welcomeEnrolled }).exec();
+      }
+
     } else {
-      console.log(`WhatsApp message already sent successfully for application ${req.params.id}`);
+      whatsappMessage = `University ${updatedDocumentData.customfields.university_name} is not eligible for WhatsApp enrollment.`;
+      emailMessage = `University ${updatedDocumentData.customfields.university_name} is not eligible for Email enrollment.`;
+      console.log(whatsappMessage);
+      console.log(emailMessage);
     }
 
     return res.status(200).json({
       success: true,
       result: updatedDocument,
-      message: "Document updated successfully",
+      message: whatsappMessageSent && emailMessageSent
+        ? "Document updated, WhatsApp message, and email sent successfully"
+        : whatsappMessageSent
+          ? "Document updated and WhatsApp message sent successfully"
+          : emailMessageSent
+            ? "Document updated and email sent successfully"
+            : `Document updated successfully. ${whatsappMessage} ${emailMessage}`,
     });
 
   } catch (error) {
