@@ -289,7 +289,7 @@ async function updatePayment(req, res) {
             welcomeMailStatus: [{ status: 'success', createdAt: new Date() }]
           });
           welcomeMailSent = true;
-          await WelcomeMail(req.body.full_name, email);
+          await WelcomeMail(email, req.body.full_name);
         } catch (welcomeMailError) {
           await LMS.create({
             applicationId,

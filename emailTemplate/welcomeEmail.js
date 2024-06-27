@@ -1,7 +1,8 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const WelcomeMail = async  (fullName, email, username, password) => {
+const WelcomeMail = async  (email) => {
+    console.log('Welcome', email);
   const instituteEmail = 'mail@lmsonline.co'
   
     try {
@@ -15,104 +16,76 @@ const WelcomeMail = async  (fullName, email, username, password) => {
         let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
         // Set the subject of the email
-        sendSmtpEmail.subject = `Welcome to Sikkim Professional University LMS`;
-
-        // Set the HTML content of the email
-        sendSmtpEmail.htmlContent = `<!DOCTYPE html>
+        sendSmtpEmail.subject = `<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students Fee Receipt</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Inter Tight', sans-serif;
-            background-color: white;
-            padding: 10px !important;
-        }
-
-        #center {
-            text-align: center !important;
-        }
-
-        #spu {
-            background-color: #0599c4 !important;
-            border: 1px solid #ebf4f6 !important;
-            border-color: #ebf4f6 !important;
-            border-radius: 6px !important;
-            border-width: 1px !important;
-            color: #ffffff !important;
-            display: inline-block !important;
-            font-size: 14px !important;
-            font-weight: normal !important;
-            letter-spacing: 0px !important;
-            line-height: normal !important;
-            padding: 10px 20px 10px 20px !important;
-            text-align: center !important;
-            text-decoration: none !important;
-            border-style: solid !important;
-        }
-
-        #abhi {
-            border-bottom: 3.5px solid rgb(5, 153, 196);
-            width: 90%;
-            text-align: center;
-            margin: 10px auto;
-        }
-
-      table {
-        margin-left: 35px !important;
-      }
-
-        td {
-            padding: 5px 0px;
-            font-style: normal;
-            font-size: 14px;
-            line-height: 24px;
-        }
-
-        #a9 {
-            text-align: center;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-        }
-    </style>
+    <title>Enrollment Success</title>
 </head>
 
-<body>
-    <div style="max-width: 700px; margin: auto; background-color: white;">
-        <div style="width: 100%; height: 100px; text-align: center;">
-            <div style="width: 70%; margin: auto;">
-                <img id="a2" src="https://distanceeducationschool.com/email_marketing/spu_logo.png" alt="SPU Logo" style="max-width: 200px; margin-top: 60px; height: 65px">
-            </div>
-        </div>
-        <br>
-        <div id="abhi"></div>
-        <div style="padding: 0px !important; line-height: 40px !important; margin-top: 15px; font-size: 11px !important; font-weight: normal;">
-            <table>
-                <tbody>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
+    <table role="presentation"
+        style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; width: 100%;">
+        <tr>
+            <td style="text-align: center; padding: 0;">
+                <table role="presentation" width="100%" style="border-collapse: collapse;">
                     <tr>
-                        <td>Welcome mail this </strong></td>
+                        <td>
+                            <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_2.png"
+                                alt="Higher Education School" style="width: 100%; height: auto;">
+                        </td>
                     </tr>
-                    <tr>
-                        <td>Log in to your dashboard to access your information & details.</td>
-                    </tr>
-                    <tr>
-                        <td>We wish you a very Happy Learning!</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div id="center">
-                <a id="spu" href="https://spu.lmsonline.co" style="background-color: #0599c4 !important; border: 1px solid #ebf4f6 !important; border-color: #ebf4f6 !important; border-radius: 6px !important; border-width: 1px !important; color: #ffffff !important; display: inline-block !important; font-size: 14px !important; font-weight: normal !important; letter-spacing: 0px !important; line-height: normal !important; padding: 10px 20px 10px 20px !important; text-align: center !important; text-decoration: none !important; border-style: solid !important;">Sign In</a>
-            </div>
-            <div id="abhi"></div>
-        </div>
-        <div id="bhi">
-            <p id="a9">You received this email because your email-id signed up for a new account.</p>
-        </div>
-    </div>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; padding: 50px;">
+                <p style="font-size: 15px; color: #333333; line-height: 1.5;">
+                    <strong style="color: #ed3b8e;">Hopefully</strong>, the enrollment process has been smooth for you
+                    so far. We will be available to assist you through your educational journey, whether it be during
+                    live classes, assignments, exams, or any other activity.
+                </p>
+                <div style="margin: 20px 0;">
+                    <a href="https://api.whatsapp.com/send?phone=9289116921">
+                        <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_4.png"
+                            alt="Support Manager" style="width: 100%; max-width: 400px; height: auto; cursor: pointer;">
+                    </a>
+                </div>
+                <p style="font-size: 15px; color: #333333; line-height: 1.5;">
+                    We are happy to help, kindly contact us if you have a question or need assistance.
+                </p>
+                <p style="font-size: 15px; color: #333333; line-height: 1.5;">
+                    <a href="https://www.highereducationschool.com"
+                        style="color: #ed3b8e; text-decoration: none;">HigerEducationSchool.com</a> stands as India's
+                    top free counseling portal for distance and online education universities.
+                </p>
+                <a href="https://www.highereducationschool.com"
+                    style="display: inline-block; padding: 7px 15px; margin: 20px 0; background-color: #e74c3c; color: #ffffff; text-decoration: none; border-radius: 5px;">
+                    Visit Website
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td
+                style="text-align: center; padding: 20px; background-color: #333333; color: #ffffff; line-height: 20px; font-stretch: expanded; font-size: 14px;">
+                <div>
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_8.png"
+                            alt="Facebook" style="width: 30px; margin: 0 5px;"></a>
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_5.png"
+                            alt="Instagram" style="width: 30px; margin: 0 5px;"></a>
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_6.png"
+                            alt="LinkedIn" style="width: 30px; margin: 0 5px;"></a>
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_7.png"
+                            alt="WhatsApp" style="width: 30px; margin: 0 5px;"></a>
+                </div>
+                <p>Registered Office:</p>
+                <p>Office Number 25, Gayatri Satsang, Behind Vishnu Shivam Mall, Near Bank of Baroda Thakur Village,
+                    Kandivali East Mumbai - 400101</p>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>`;
@@ -123,7 +96,6 @@ const WelcomeMail = async  (fullName, email, username, password) => {
         sendSmtpEmail.to = [{"email": email }];
         sendSmtpEmail.sender = { name: 'Sikkim Professional University', email: instituteEmail };
         sendSmtpEmail.bcc = [
-    {"email": "abhishek@edgetechnosoft.com"},
     {"email": "admin@distanceeducationschool.com"},
     {"email": "accounts@distanceeducationschool.com"},
     {"email": "admissionsode@gmail.com"}
@@ -139,3 +111,4 @@ const WelcomeMail = async  (fullName, email, username, password) => {
 
 // Import the sendEmail function wherever you want to use it in your codebase
 module.exports = {WelcomeMail};
+ 

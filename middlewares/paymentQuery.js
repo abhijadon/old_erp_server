@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Team = require('@/models/Team');
 
 const authMiddleware = async (req, res, next) => {

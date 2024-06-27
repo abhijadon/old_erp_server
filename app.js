@@ -20,6 +20,7 @@ const allowRoutes = require('@/routes/api/allowRoutes');
 const lmsApi = require('@/routes/lmsApi/index');
 const instituteRoutes = require('@/routes/formBuilder/instituteRoutes');
 const checkUserAccess = require('./middlewares/checkUserAccess');
+const chart = require('@/routes/api/chart');
 const app = express();
 const corsOptions = {
   origin: true,
@@ -62,6 +63,7 @@ app.use('/api',authenticate,checkUserAccess, info);
 app.use('/api',authenticate, lmsApi); 
 app.use('/api', authenticate, instituteRoutes);
 app.use('/api', authenticate, allowRoutes);
+app.use('/api', authenticate, chart);
 // If that above routes didnt work, we 404 them and forward to error handler
 app.use(errorHandlers.notFound);
 

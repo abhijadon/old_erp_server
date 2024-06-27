@@ -59,6 +59,8 @@ const create = async (req, res) => {
             previousData: data.previousData,
         };
         
+
+        console.log('result: ', requestBody)
         // Check if any field in the requestBody is undefined or empty
         for (const [key, value] of Object.entries(requestBody)) {
             if (!value) {

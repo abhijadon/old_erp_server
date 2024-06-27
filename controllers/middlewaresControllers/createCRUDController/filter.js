@@ -1,54 +1,15 @@
+const mongoose = require('mongoose');
+const User = require('@/models/User'); // Ensure the User model is imported
+
 const filter = async (Model, req, res) => {
   try {
-    const filterConditions = {};
+    const uniqueValues = await getUniqueValues(Model);
 
-    if (req.query.university_name !== undefined) {
-      filterConditions['university_name'] = req.query.university_name;
-    }
-
-    if (req.query.institute_name !== undefined) {
-      filterConditions['institute_name'] = req.query.institute_name;
-    }
-
-
-    if (req.query.session !== undefined) {
-      filterConditions['session'] = req.query.session;
-    }
-
-    if (req.query.status !== undefined) {
-      filterConditions['status'] = req.query.status;
-    }
-
-    // Additional filter based on userId
-    if (req.query.userId !== undefined) {
-      filterConditions['userId'] = req.query.userId;
-    }
-
-    const results = await Model.find({ removed: false, ...filterConditions })
-      .sort({ date: -1, time: -1 }) // Sort by date and time in descending order
-      .populate('userId');
-
-    const count = await Model.countDocuments({ removed: false, ...filterConditions });
-
-    const filterMessage = Object.keys(filterConditions)
-      .map((key) => `${key}: ${filterConditions[key]}`)
-      .join(', ');
-
-    if (count > 0) {
-      return res.status(200).json({
-        success: true,
-        result: results,
-        count: count,
-        message: `Successfully found documents where ${filterMessage}`,
-      });
-    } else {
-      return res.status(203).json({
-        success: true,
-        result: [],
-        count: 0,
-        message: `No matching documents found with the given filter conditions: ${filterMessage}`,
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      uniqueValues: uniqueValues,
+      message: "Successfully retrieved unique values for the specified fields",
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -57,6 +18,26 @@ const filter = async (Model, req, res) => {
       error: error,
     });
   }
+};
+
+const getUniqueValues = async (Model) => {
+  const uniqueValues = {};
+
+  uniqueValues.university_names = await Model.distinct('customfields.university_name', { removed: false });
+  uniqueValues.institute_names = await Model.distinct('customfields.institute_name', { removed: false });
+  uniqueValues.sessions = await Model.distinct('customfields.session', { removed: false });
+  uniqueValues.statuses = await Model.distinct('customfields.status', { removed: false });
+  uniqueValues.installment_types = await Model.distinct('customfields.installment_type', { removed: false });
+  uniqueValues.payment_types = await Model.distinct('customfields.payment_type', { removed: false });
+  uniqueValues.payment_modes = await Model.distinct('customfields.payment_mode', { removed: false });
+
+  // Fetch distinct userIds and populate them
+  const userIds = await Model.distinct('userId', { removed: false });
+  const users = await User.find({ _id: { $in: userIds } }).select('_id fullname');
+
+  uniqueValues.userIds = users.map(user => ({ value: user._id, label: user.fullname }));
+
+  return uniqueValues;
 };
 
 module.exports = filter;

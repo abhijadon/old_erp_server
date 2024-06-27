@@ -120,7 +120,7 @@ const DESEnrolled = async ({ full_name, email, enrollment, password, URL }) => {
 <body>
     <div class="container">
         <div>
-            <img src="https://distanceeducationschool.com/email_marketing/des_enroll_1.webp" alt="Distance Education School"
+            <img src="https://distanceeducationschool.com/email_marketing/des_enroll_1.png" alt="Distance Education School"
                 class="responsive-img">
         </div>
         <div class="content">

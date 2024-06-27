@@ -29,7 +29,7 @@ router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(authMiddleware, catchErrors(leadController.list));
 router.route('/lead/teamfilter').get(catchErrors(leadController.teamfilter));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));
-router.route('/lead/filter').get(catchErrors(leadController.filter));
+router.route('/lead/filter').get(authMiddleware, catchErrors(leadController.filter));
 router.route('/lead/summary').get(catchErrors(leadController.summary));
 router.route('/lead/image').delete(checkRole('admin', 'manager', 'subadmin'), catchErrors(deleteImage));
 router.route('/student/list').get(catchErrors(history));

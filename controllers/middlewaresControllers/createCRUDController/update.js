@@ -193,14 +193,14 @@ async function update(Model, req, res) {
           whatsappMessageSent = true;
           updatedDocumentData.whatsappEnrolled = 'success';
 
-          await LMS.findByIdAndUpdate(
+          await LMS.updateOne(
             { applicationId: req.params.id },
             { $push: { whatsappEnrolledment: { status: 'success', createdAt: new Date() } } }
           );
         } catch (whatsappError) {
           updatedDocumentData.whatsappEnrolled = 'failed';
 
-          await LMS.findByIdAndUpdate(
+          await LMS.updateOne(
             { applicationId: req.params.id },
             { $push: { whatsappEnrolledment: { status: 'failed', errorMessage: whatsappError.message, createdAt: new Date() } } }
           );

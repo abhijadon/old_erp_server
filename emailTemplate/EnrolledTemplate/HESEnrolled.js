@@ -121,7 +121,7 @@ const HESEnrolled = async ({ full_name, email, enrollment, password, URL }) => {
 <body>
     <div class="container">
         <div>
-            <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_1.webp" alt="Higher Education School"
+            <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_1.png" alt="Higher Education School"
                 class="responsive-img">
         </div>
         <div class="content">
