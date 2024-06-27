@@ -16,7 +16,6 @@ async function updatePayment(req, res) {
     const welcome = req.body.welcome;
     const { feeDocument } = req.imageUrls;
 
-
     const { email } = contact;
     const { paid_amount, installment_type, paymentStatus, payment_mode, payment_type, institute_name, university_name, sendfeeReciept, session } = customfields;
     const status = paymentStatus ? paymentStatus.toLowerCase() : '';
@@ -264,7 +263,7 @@ async function updatePayment(req, res) {
           console.log(`Welcome mail already sent successfully for application ${applicationId}`);
         } else {
           try {
-            await WelcomeMail(req.body.full_name, email);
+            await WelcomeMail(req.body.full_name, email, university_name);
             welcomeMailSent = true;
             await LMS.updateOne(
               { applicationId },
@@ -289,7 +288,7 @@ async function updatePayment(req, res) {
             welcomeMailStatus: [{ status: 'success', createdAt: new Date() }]
           });
           welcomeMailSent = true;
-          await WelcomeMail(email, req.body.full_name);
+           await WelcomeMail(req.body.full_name, email, university_name);
         } catch (welcomeMailError) {
           await LMS.create({
             applicationId,

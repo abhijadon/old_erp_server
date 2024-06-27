@@ -1,22 +1,44 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const WelcomeMail = async  (email) => {
-    console.log('Welcome', email);
-  const instituteEmail = 'mail@lmsonline.co'
+const WelcomeMail = async (full_name, email, university_name) => {
+  const instituteEmail = 'support@highereducationschool.com';
   
-    try {
-        // Create an instance of the TransactionalEmailsApi
-        let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-        // Set your Brevo API key
-        let apiKey = apiInstance.authentications['apiKey'];
-        apiKey.apiKey = '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';
-                        
-        // Create a new SendSmtpEmail object
-        let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+  const universityUrlImage = {
+    'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-HES-welcome-mail.png',
+    'SHARDA': 'https://distanceeducationschool.com/email_marketing/Sharda-HES-welcome-mail.png',
+    'MANGALAYATAN ONLINE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-HES-welcome-mail.png',
+    'JAIN': 'https://distanceeducationschool.com/email_marketing/JAIN-HES-welcome-mail.png',
+    'LPU': 'https://distanceeducationschool.com/email_marketing/LPU-HES-welcome-mail.png',
+    'CU': 'https://distanceeducationschool.com/email_marketing/Chandigarh-HES-welcome-mail.png',
+    'AMITY': 'https://distanceeducationschool.com/email_marketing/Amity-HES-welcome-mail.png',
+    'MANIPAL': 'https://distanceeducationschool.com/email_marketing/Manipal-HES-welcome-mail.png',
+    'SHOBHIT': 'https://distanceeducationschool.com/email_marketing/Shobhit-HES-welcome-mail.png',
+    'SMU': 'https://distanceeducationschool.com/email_marketing/Sikkim%20Manipal-HES-welcome-mail.png',
+    'VGU': 'https://distanceeducationschool.com/email_marketing/VGU-HES-welcome-mail.png',
+    'UPES': 'https://distanceeducationschool.com/email_marketing/UPES-HES-welcome-mail.png',
+    'UU' : 'https://distanceeducationschool.com/email_marketing/Uttaranachal-HES-welcome-mail.png',
+    'VIGNAN': 'https://distanceeducationschool.com/email_marketing/Vignan-HES-welcome-mail.png', 
 
-        // Set the subject of the email
-        sendSmtpEmail.subject = `<!DOCTYPE html>
+  };
+
+  const selectedImage = universityUrlImage[university_name.toUpperCase()] || '';
+
+  try {
+    // Create an instance of the TransactionalEmailsApi
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    // Set your Brevo API key
+    let apiKey = apiInstance.authentications['apiKey'];
+    apiKey.apiKey = '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';
+
+    // Create a new SendSmtpEmail object
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    // Set the subject of the email
+    sendSmtpEmail.subject = `We Welcome you to ${university_name} University for your educational journey!`;
+
+    // Set the HTML content of the email
+    sendSmtpEmail.htmlContent = `<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -33,8 +55,7 @@ const WelcomeMail = async  (email) => {
                 <table role="presentation" width="100%" style="border-collapse: collapse;">
                     <tr>
                         <td>
-                            <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_2.png"
-                                alt="Higher Education School" style="width: 100%; height: auto;">
+                            <img src="${selectedImage}" alt="Higher Education School" style="width: 100%; height: auto;">
                         </td>
                     </tr>
                 </table>
@@ -89,26 +110,24 @@ const WelcomeMail = async  (email) => {
 </body>
 
 </html>`;
-    
-       // Set the plain text content of the email
-        sendSmtpEmail.textContent = `Welcome to Sikkim Professional University LMS`;
-                // Set the recipient information
-        sendSmtpEmail.to = [{"email": email }];
-        sendSmtpEmail.sender = { name: 'Sikkim Professional University', email: instituteEmail };
-        sendSmtpEmail.bcc = [
-    {"email": "admin@distanceeducationschool.com"},
-    {"email": "accounts@distanceeducationschool.com"},
-    {"email": "admissionsode@gmail.com"}
-];
-        // Call the sendTransacEmail method to send the email
-      await apiInstance.sendTransacEmail(sendSmtpEmail);
-        return true;
-    } catch (error) {
-        console.error('Error sending email:', error);
-        return false;
-    }
+
+    // Set the plain text content of the email
+    sendSmtpEmail.textContent = `We Welcome you to ${university_name} University for your educational journey!`;
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
+    sendSmtpEmail.bcc = [
+      { email: "admin@distanceeducationschool.com" },
+      { email: "accounts@distanceeducationschool.com" },
+      { email: "admissionsode@gmail.com" }
+    ];
+    // Call the sendTransacEmail method to send the email
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    return true;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return false;
+  }
 };
 
 // Import the sendEmail function wherever you want to use it in your codebase
-module.exports = {WelcomeMail};
- 
+module.exports = { WelcomeMail };
