@@ -8,6 +8,7 @@ const HESWelcome = async (full_name, email, university_name) => {
     'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-HES-welcome-mail.png',
     'SHARDA': 'https://distanceeducationschool.com/email_marketing/Sharda-HES-welcome-mail.png',
     'MANGALAYATAN ONLINE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-HES-welcome-mail.png',
+    'MANGALAYATAN DISTANCE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-HES-welcome-mail.png',
     'JAIN': 'https://distanceeducationschool.com/email_marketing/JAIN-HES-welcome-mail.png',
     'LPU': 'https://distanceeducationschool.com/email_marketing/LPU-HES-welcome-mail.png',
     'CU': 'https://distanceeducationschool.com/email_marketing/Chandigarh-HES-welcome-mail.png',
@@ -18,8 +19,12 @@ const HESWelcome = async (full_name, email, university_name) => {
     'VGU': 'https://distanceeducationschool.com/email_marketing/VGU-HES-welcome-mail.png',
     'UPES': 'https://distanceeducationschool.com/email_marketing/UPES-HES-welcome-mail.png',
     'UU' : 'https://distanceeducationschool.com/email_marketing/Uttaranachal-HES-welcome-mail.png',
-    'VIGNAN': 'https://distanceeducationschool.com/email_marketing/Vignan-HES-welcome-mail.png', 
-
+    'DPU': 'https://distanceeducationschool.com/email_marketing/DPU-HES-welcome-mail.png',
+    'AMRITA': 'https://distanceeducationschool.com/email_marketing/Amrita-HES-welcome-mail.png',
+    'SGVU': 'https://distanceeducationschool.com/email_marketing/SGVU-HES-welcome-mail.png',
+    'SPU': 'https://distanceeducationschool.com/email_marketing/SPU-HES-welcome-mail.png',
+    'SVSU': 'https://distanceeducationschool.com/email_marketing/SVSU-HES-welcome-mail.png',
+    'BOSSE': 'https://distanceeducationschool.com/email_marketing/Bosse-HES-welcome-mail.png',
   };
 
   const selectedImage = universityUrlImage[university_name.toUpperCase()] || '';
@@ -92,13 +97,13 @@ const HESWelcome = async (full_name, email, university_name) => {
             <td
                 style="text-align: center; padding: 20px; background-color: #333333; color: #ffffff; line-height: 20px; font-stretch: expanded; font-size: 14px;">
                 <div>
-                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_8.png"
+                    <a href="https://www.facebook.com/highereducationschool/"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_8.png"
                             alt="Facebook" style="width: 30px; margin: 0 5px;"></a>
-                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_5.png"
+                    <a href="https://www.instagram.com/highereducationschool/"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_5.png"
                             alt="Instagram" style="width: 30px; margin: 0 5px;"></a>
-                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_6.png"
+                    <a href="https://www.linkedin.com/company/highereducationschool/"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_6.png"
                             alt="LinkedIn" style="width: 30px; margin: 0 5px;"></a>
-                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_7.png"
+                    <a href="https://api.whatsapp.com/send?phone=9355588876"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_7.png"
                             alt="WhatsApp" style="width: 30px; margin: 0 5px;"></a>
                 </div>
                 <p>Registered Office:</p>

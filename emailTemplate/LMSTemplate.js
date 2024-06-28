@@ -129,7 +129,6 @@ const HesMail = async  (fullName, studentEmail, username, password) => {
         sendSmtpEmail.to = [{"email": studentEmail }];
         sendSmtpEmail.sender = { name: 'Sikkim Professional University', email: instituteEmail };
         sendSmtpEmail.bcc = [
-    {"email": "abhishek@edgetechnosoft.com"},
     {"email": "admin@distanceeducationschool.com"},
     {"email": "accounts@distanceeducationschool.com"},
     {"email": "admissionsode@gmail.com"}

@@ -442,7 +442,6 @@ td {
         sendSmtpEmail.to = [{"email": studentEmail }];
         sendSmtpEmail.sender = { name: 'Distance Education School', email: instituteEmail };
         sendSmtpEmail.bcc = [
-    {"email": "abhishek@edgetechnosoft.com"},
     {"email": "admin@distanceeducationschool.com"},
     {"email": "accounts@distanceeducationschool.com"},
     {"email": "admissionsode@gmail.com"}

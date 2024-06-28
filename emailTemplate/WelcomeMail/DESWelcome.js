@@ -5,21 +5,27 @@ const DESWelcome = async (full_name, email, university_name) => {
   const instituteEmail = 'support@distanceeducationschool.com';
   
   const universityUrlImage = {
-    'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-HES-welcome-mail.png',
-    'SHARDA': 'https://distanceeducationschool.com/email_marketing/Sharda-HES-welcome-mail.png',
-    'MANGALAYATAN ONLINE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-HES-welcome-mail.png',
-    'JAIN': 'https://distanceeducationschool.com/email_marketing/JAIN-HES-welcome-mail.png',
-    'LPU': 'https://distanceeducationschool.com/email_marketing/LPU-HES-welcome-mail.png',
-    'CU': 'https://distanceeducationschool.com/email_marketing/Chandigarh-HES-welcome-mail.png',
-    'AMITY': 'https://distanceeducationschool.com/email_marketing/Amity-HES-welcome-mail.png',
-    'MANIPAL': 'https://distanceeducationschool.com/email_marketing/Manipal-HES-welcome-mail.png',
-    'SHOBHIT': 'https://distanceeducationschool.com/email_marketing/Shobhit-HES-welcome-mail.png',
-    'SMU': 'https://distanceeducationschool.com/email_marketing/Sikkim%20Manipal-HES-welcome-mail.png',
-    'VGU': 'https://distanceeducationschool.com/email_marketing/VGU-HES-welcome-mail.png',
-    'UPES': 'https://distanceeducationschool.com/email_marketing/UPES-HES-welcome-mail.png',
-    'UU' : 'https://distanceeducationschool.com/email_marketing/Uttaranachal-HES-welcome-mail.png',
-    'VIGNAN': 'https://distanceeducationschool.com/email_marketing/Vignan-HES-welcome-mail.png', 
-
+    'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-DES-welcome-mail.png',
+    'SHARDA': 'https://distanceeducationschool.com/email_marketing/Sharda-DES-welcome-mail.png',
+    'MANGALAYATAN ONLINE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-DES-welcome-mail.png',
+    'MANGALAYATAN DISTANCE': 'https://distanceeducationschool.com/email_marketing/Mangalayatan-DES-welcome-mail.png',
+    'JAIN': 'https://distanceeducationschool.com/email_marketing/JAIN-DES-welcome-mail.png',
+    'LPU': 'https://distanceeducationschool.com/email_marketing/LPU-DES-welcome-mail.png',
+    'CU': 'https://distanceeducationschool.com/email_marketing/Chandigarh-DES-welcome-mail.png',
+    'AMITY': 'https://distanceeducationschool.com/email_marketing/Amity-DES-welcome-mail.png',
+    'MANIPAL': 'https://distanceeducationschool.com/email_marketing/Manipal-DES-welcome-mail.png',
+    'SHOBHIT': 'https://distanceeducationschool.com/email_marketing/Shobhit-DES-welcome-mail.png',
+    'SMU': 'https://distanceeducationschool.com/email_marketing/SMU-DES-welcome-mail.png',
+    'VGU': 'https://distanceeducationschool.com/email_marketing/VGU-DES-welcome-mail.png',
+    'UPES': 'https://distanceeducationschool.com/email_marketing/UPES-DES-welcome-mail.png',
+    'UU' : 'https://distanceeducationschool.com/email_marketing/UU-DES-welcome-mail.png',
+    'VIGNAN': 'https://distanceeducationschool.com/email_marketing/Vignan-DES-welcome-mail.png', 
+    'SGVU': 'https://distanceeducationschool.com/email_marketing/SGVU-DES-welcome-mail.png',
+    'AMRITA': 'https://distanceeducationschool.com/email_marketing/Amrita-DES-welcome-mail.png',
+    'DPU': 'https://distanceeducationschool.com/email_marketing/DPU-DES-welcome-mail.png',
+    'SVSU': 'https://distanceeducationschool.com/email_marketing/SVSU-DES-welcome-mail.png',
+'BOSSE': 'https://distanceeducationschool.com/email_marketing/Bosse-DES-welcome-mail.png',
+'SHOBHIT': 'https://distanceeducationschool.com/email_marketing/Shobhit-DES-welcome-mail.png'
   };
 
   const selectedImage = universityUrlImage[university_name.toUpperCase()] || '';
@@ -44,7 +50,7 @@ const DESWelcome = async (full_name, email, university_name) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrollment Success</title>
+    <title>Welcome Mail</title>
 </head>
 
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
@@ -55,7 +61,8 @@ const DESWelcome = async (full_name, email, university_name) => {
                 <table role="presentation" width="100%" style="border-collapse: collapse;">
                     <tr>
                         <td>
-                            <img src="${selectedImage}" alt="Higher Education School" style="width: 100%; height: auto;">
+                            <img src="${selectedImage}"
+                                alt="Distance Education School" style="width: 100%; height: auto;">
                         </td>
                     </tr>
                 </table>
@@ -69,30 +76,37 @@ const DESWelcome = async (full_name, email, university_name) => {
                     live classes, assignments, exams, or any other activity.
                 </p>
                 <div style="margin: 20px 0;">
-                    <a href="https://api.whatsapp.com/send?phone=9289116921">
-                        <img src="https://distanceeducationschool.com/email_marketing/hes_enroll_4.png"
+                    <a href="https://api.whatsapp.com/send?phone=9625998568">
+                        <img src="https://distanceeducationschool.com/email_marketing/aashi_gupta.png"
                             alt="Support Manager" style="width: 100%; max-width: 400px; height: auto; cursor: pointer;">
                     </a>
                 </div>
                 <p style="font-size: 15px; color: #333333; line-height: 1.5;">
-                    We are happy to help, kindly contact us if you have a question or need assistance.
+                    She's here to ensure your experience with us is seamless and fulfilling.
                 </p>
                 <p style="font-size: 15px; color: #333333; line-height: 1.5;">
-                    <a href="https://www.highereducationschool.com"
-                        style="color: #ed3b8e; text-decoration: none;">HigerEducationSchool.com</a> stands as India's
-                    top free counseling portal for distance and online education universities.
+                    Got a question or need assistance? Feel free to reach out to her via <span
+                        style="color: green;">WhatsApp</span> at 9625998568.
                 </p>
-                <a href="https://www.highereducationschool.com"
-                    style="display: inline-block; padding: 7px 15px; margin: 20px 0; background-color: #e74c3c; color: #ffffff; text-decoration: none; border-radius: 5px;">
-                    Visit Website
-                </a>
+                <a href="https://api.whatsapp.com/send?phone=9625998568" style="display: inline-block; text-decoration: none; border-radius: 25px;"><img
+                    style="width: 150px;"    src="https://distanceeducationschool.com/email_marketing/connect.png" alt="connect now"></a>
             </td>
         </tr>
+        <tr>
+            <td style="text-align: center; padding: 20px; background-color: #efefef; line-height: 20px; font-stretch: expanded; font-size: 14px; ">
+            <p style="padding-left: 30px; padding-right: 30px;"> <a href="https://distanceeducationschool.com/" style="color: #114D8A;">DistanceEducationSchool.com</a>
+           stands as India's top free counseling
+            portal for distance and online
+            education universities</p>
+            <a href="https://www.distanceeducationschool.com"
+                style="display: inline-block; padding: 7px 15px; background-color: #114D8A; color: #ffffff; text-decoration: none; border-radius: 25px;">
+                Visit Website
+            </a>    
         <tr>
             <td
                 style="text-align: center; padding: 20px; background-color: #333333; color: #ffffff; line-height: 20px; font-stretch: expanded; font-size: 14px;">
                 <div>
-                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_8.png"
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/facebook_icon.png"
                             alt="Facebook" style="width: 30px; margin: 0 5px;"></a>
                     <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_5.png"
                             alt="Instagram" style="width: 30px; margin: 0 5px;"></a>
@@ -100,10 +114,12 @@ const DESWelcome = async (full_name, email, university_name) => {
                             alt="LinkedIn" style="width: 30px; margin: 0 5px;"></a>
                     <a href="#"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_7.png"
                             alt="WhatsApp" style="width: 30px; margin: 0 5px;"></a>
+                    <a href="#"><img src="https://distanceeducationschool.com/email_marketing/youtube_icon.png"
+                            alt="Youtube" style="width: 30px; margin: 0 5px;"></a>
                 </div>
                 <p>Registered Office:</p>
-                <p>Office Number 25, Gayatri Satsang, Behind Vishnu Shivam Mall, Near Bank of Baroda Thakur Village,
-                    Kandivali East Mumbai - 400101</p>
+                <p>Unit No. 1 3rd Floor Vardhman Trade Center, Nehru Place,New Delhi - 110019</p>
+        <p><a href="tel:+917065777755" style="color: #ffffff;">+91- 7065 777 755</a></p>
             </td>
         </tr>
     </table>
