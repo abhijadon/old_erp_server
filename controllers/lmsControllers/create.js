@@ -35,6 +35,12 @@ const create = async (req, res) => {
             return res.status(400).json({ message: 'LMS can only be created for SPU university.' });
         }
 
+        // Format previousData dates
+        const formattedPreviousData = data.previousData.map(entry => ({
+            ...entry,
+            date: moment(entry.date).format('YYYY-MM-DD'),
+        }));
+
         const requestBody = {
             applicationId, // Include applicationId in the request body
             name: data.full_name,
@@ -56,9 +62,8 @@ const create = async (req, res) => {
             totalCOursefee: data.customfields.total_course_fee,
             paidamounttotal: data.customfields.total_paid_amount,
             centreID: user.username,
-            previousData: data.previousData,
+            previousData: formattedPreviousData,
         };
-        
 
         console.log('result: ', requestBody)
         // Check if any field in the requestBody is undefined or empty

@@ -1,8 +1,8 @@
 const SibApiV3Sdk = require('@getbrevo/brevo');
 
 // Function to send email
-const WelcomeMail = async (full_name, email, university_name) => {
-  const instituteEmail = 'support@highereducationschool.com';
+const DESWelcome = async (full_name, email, university_name) => {
+  const instituteEmail = 'support@distanceeducationschool.com';
   
   const universityUrlImage = {
     'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-HES-welcome-mail.png',
@@ -114,7 +114,7 @@ const WelcomeMail = async (full_name, email, university_name) => {
     // Set the plain text content of the email
     sendSmtpEmail.textContent = `We Welcome you to ${university_name} University for your educational journey!`;
     sendSmtpEmail.to = [{ email }];
-    sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
+    sendSmtpEmail.sender = { name: 'Distance Education School', email: instituteEmail };
     sendSmtpEmail.bcc = [
       { email: "admin@distanceeducationschool.com" },
       { email: "accounts@distanceeducationschool.com" },
@@ -130,4 +130,4 @@ const WelcomeMail = async (full_name, email, university_name) => {
 };
 
 // Import the sendEmail function wherever you want to use it in your codebase
-module.exports = { WelcomeMail };
+module.exports = { DESWelcome };

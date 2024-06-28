@@ -2,7 +2,8 @@ const { Applications } = require('@/models/Application');
 const ApplicationHistory = require('@/models/ApplicationHistory');
 const DesMail = require('@/emailTemplate/paymentEmail/DesMail');
 const HesMail = require('@/emailTemplate/paymentEmail/HesMail');
-const { WelcomeMail } = require('@/emailTemplate/welcomeEmail');
+const { HESWelcome } = require('@/emailTemplate/WelcomeMail/HESWelcome');
+const { DESWelcome } = require('@/emailTemplate/WelcomeMail/DESWelcome');
 const { LMS } = require('@/models/Lms');
 const axios = require('axios'); // Import axios for HTTP requests
 const User = require('@/models/User');
@@ -252,7 +253,7 @@ async function updatePayment(req, res) {
 
     // Check and send WelcomeMail
     let welcomeMailSent = false;
-    if (status === 'payment approved'  && welcome === 'yes' ) {
+    if (status === 'payment approved' && welcome === 'yes') {
       const lmsEntry = await LMS.findOne({ applicationId });
       if (lmsEntry) {
         const alreadySent = lmsEntry.welcomeMailStatus.some(
@@ -263,7 +264,11 @@ async function updatePayment(req, res) {
           console.log(`Welcome mail already sent successfully for application ${applicationId}`);
         } else {
           try {
-            await WelcomeMail(req.body.full_name, email, university_name);
+            if (institute_name === 'HES') {
+              await HESWelcome(req.body.full_name, email, university_name);
+            } else if (institute_name === 'DES') {
+              await DESWelcome(req.body.full_name, email, university_name);
+            }
             welcomeMailSent = true;
             await LMS.updateOne(
               { applicationId },
@@ -288,7 +293,11 @@ async function updatePayment(req, res) {
             welcomeMailStatus: [{ status: 'success', createdAt: new Date() }]
           });
           welcomeMailSent = true;
-           await WelcomeMail(req.body.full_name, email, university_name);
+          if (institute_name === 'HES') {
+            await HESWelcome(req.body.full_name, email, university_name);
+          } else if (institute_name === 'DES') {
+            await DESWelcome(req.body.full_name, email, university_name);
+          }
         } catch (welcomeMailError) {
           await LMS.create({
             applicationId,
@@ -302,10 +311,10 @@ async function updatePayment(req, res) {
       }
     }
 
-// Set welcomeMail field based on welcomeMailSent
-existingApplication.welcomeMail = welcomeMailSent ? 'Yes' : 'No';
+    // Set welcomeMail field based on welcomeMailSent
+    existingApplication.welcomeMail = welcomeMailSent ? 'Yes' : 'No';
 
-    if (status === 'payment approved' && whatsappWelcome === 'yes' ) {
+    if (status === 'payment approved' && whatsappWelcome === 'yes') {
       // Send WhatsApp message based on institute name
       let gallaboxWebhookUrl = '';
       if (institute_name === 'HES') {
