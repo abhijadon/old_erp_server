@@ -105,6 +105,9 @@ const HESWelcome = async (full_name, email, university_name) => {
                             alt="LinkedIn" style="width: 30px; margin: 0 5px;"></a>
                     <a href="https://api.whatsapp.com/send?phone=9355588876"><img src="https://distanceeducationschool.com/email_marketing/hes_enroll_7.png"
                             alt="WhatsApp" style="width: 30px; margin: 0 5px;"></a>
+                              <a href="https://x.com/highereduschool"><img
+                                    src="https://distanceeducationschool.com/email_marketing/twitter.png" alt="X-Twitter"
+                                    style="width: 30px; margin: 0 5px;"></a>
                 </div>
                 <p>Registered Office:</p>
                 <p>Office Number 25, Gayatri Satsang, Behind Vishnu Shivam Mall, Near Bank of Baroda Thakur Village,
