@@ -83,7 +83,7 @@ const applicationSchema = new mongoose.Schema({
     lmsStatus: {
       type: String,
       trim: true,
-      default: 'N/A',
+      default: 'no',
     },
     father_name: {
       type: String,

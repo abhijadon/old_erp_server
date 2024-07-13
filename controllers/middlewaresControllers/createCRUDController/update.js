@@ -133,14 +133,16 @@ async function update(Model, req, res) {
     let whatsappMessage = '';
     let emailMessage = '';
 
-    const hesUniversities = ['SPU', 'HU', 'BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE'];
-    const desUniversities = ['BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE'];
+    const hesUniversities = ['SPU', 'HU', 'BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE', 'SVSU'];
+    const desUniversities = ['BOSSE', 'MANGALAYATAN ONLINE', 'MANGALAYATAN DISTANCE', 'SVSU'];
 
     let sendPassword = '';
     if (hesUniversities.includes(updatedDocumentData.customfields.university_name) || desUniversities.includes(updatedDocumentData.customfields.university_name)) {
-      sendPassword = moment(updatedDocumentData.customfields.dob).format('DDMMYYYY');
-    } else if (['SVSU'].includes(updatedDocumentData.customfields.university_name)) {
-      sendPassword = updatedDocumentData.contact.phone;
+      if (updatedDocumentData.customfields.university_name === 'SVSU') {
+        sendPassword = updatedDocumentData.contact.phone;
+      } else {
+        sendPassword = moment(updatedDocumentData.customfields.dob).format('DDMMYYYY');
+      }
     }
 
     const universityUrlMap = {
