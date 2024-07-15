@@ -72,19 +72,15 @@ const paginatedList = async (Model, req, res) => {
 
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
-    const paymentApprovedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment approved' });
-    const paymentReceivedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment received' });
-    const paymentRejectedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment rejected' });
-
     const pages = Math.ceil(count / limit);
 
     const pagination = {
       page,
       pages,
       count,
-      paymentApprovedCount,
-      paymentReceivedCount,
-      paymentRejectedCount,
+      paymentApprovedCount: countApproved(result),
+      paymentReceivedCount: countReceived(result),
+      paymentRejectedCount: countRejected(result)
     };
 
     if (count > 0) {
@@ -157,6 +153,18 @@ function applyAdditionalFilters(query, filters) {
   if (query.university_name) {
     filters['customfields.university_name'] = query.university_name;
   }
+}
+
+function countApproved(result) {
+  return result.filter(item => item.customfields.paymentStatus === 'payment approved').length;
+}
+
+function countReceived(result) {
+  return result.filter(item => item.customfields.paymentStatus === 'payment received').length;
+}
+
+function countRejected(result) {
+  return result.filter(item => item.customfields.paymentStatus === 'payment rejected').length;
 }
 
 module.exports = paginatedList;
