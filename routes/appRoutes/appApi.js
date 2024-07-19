@@ -23,7 +23,7 @@ router.route('/lead/comment/:applicationId').post(catchErrors(createComment));
 router.route('/lead/read/:id').get(hasPermission('read'), catchErrors(leadController.read));
 router.route('/lead/update/:id').patch(hasPermission('update'), catchErrors(leadController.update));
 router.route('/lead/updatePayment/:id').put(hasPermission('update'), firebaseStorageUpload(), saveImageUrls, catchErrors(updatePaymentcontroller.updatePayment));
-router.route('/lead/uploadDocument/:id').put(hasPermission('update'), firebaseStorageUpload(), saveImageUrls, catchErrors(uploadDocumentController.uploadDocument));
+router.route('/lead/uploadDocument/:id').put(firebaseStorageUpload(), saveImageUrls, catchErrors(uploadDocumentController.uploadDocument));
 router.route('/lead/delete/:id').delete(hasPermission('delete'), catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
 router.route('/lead/list').get(authMiddleware, catchErrors(leadController.list));

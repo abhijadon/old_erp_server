@@ -4,18 +4,12 @@ const paginatedList = async (Model, req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10);
   const skip = (page - 1) * limit;
-  const { sortBy = 'updated', sortValue = -1 } = req.query;
+  const { sortBy = 'created', sortValue = -1 } = req.query;
 
-  const fieldsArray = req.query.fields ? req.query.fields.split(',') : [];
-  let fields = fieldsArray.length === 0 ? {} : { $or: [] };
-
-  for (const field of fieldsArray) {
-    fields.$or.push({ [field]: { $regex: new RegExp(req.query.q, 'i') } });
-  }
-
-  let filters = { removed: false, ...fields };
+  let filters = { removed: false };
 
   try {
+    // Apply role-based filters first
     if (req.user.isAdmin || req.user.role === 'subadmin') {
       if (req.query.team === 'true' && req.query.teamLeader) {
         const teamLeaderId = req.query.teamLeader;
@@ -59,6 +53,37 @@ const paginatedList = async (Model, req, res) => {
       }
     }
 
+    // Create regex for search across specified fields or all fields
+    const regex = new RegExp(req.query.q, 'i');
+    if (req.query.q) {
+      if (req.query.fields) {
+        const fieldsArray = req.query.fields.split(',');
+        filters.$and = filters.$and || [];
+        filters.$and.push({
+          $or: fieldsArray.map(field => ({ [field]: { $regex: regex } }))
+        });
+      } else {
+        filters.$and = filters.$and || [];
+        filters.$and.push({
+          $or: [
+            { 'customfields.status': { $regex: regex } },
+            { 'customfields.payment_mode': { $regex: regex } },
+            { 'customfields.payment_type': { $regex: regex } },
+            { 'customfields.installment_type': { $regex: regex } },
+            { 'customfields.paymentStatus': { $regex: regex } },
+            { 'customfields.session': { $regex: regex } },
+            { 'customfields.enrollment': { $regex: regex } },
+            { 'customfields.institute_name': { $regex: regex } },
+            { 'customfields.university_name': { $regex: regex } },
+            { 'contact.email': { $regex: regex } },
+            { 'contact.phone': { $regex: regex } },
+            { 'full_name': { $regex: regex } },
+            { 'lead_id': { $regex: regex } }
+          ]
+        });
+      }
+    }
+
     applyAdditionalFilters(req.query, filters);
 
     const resultsPromise = Model.find(filters)
@@ -73,14 +98,17 @@ const paginatedList = async (Model, req, res) => {
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     const pages = Math.ceil(count / limit);
+    const paymentApprovedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment approved' });
+    const paymentReceivedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment received' });
+    const paymentRejectedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment rejected' });
 
     const pagination = {
       page,
       pages,
       count,
-      paymentApprovedCount: countApproved(result),
-      paymentReceivedCount: countReceived(result),
-      paymentRejectedCount: countRejected(result)
+      paymentApprovedCount,
+      paymentReceivedCount,
+      paymentRejectedCount
     };
 
     if (count > 0) {
@@ -153,18 +181,6 @@ function applyAdditionalFilters(query, filters) {
   if (query.university_name) {
     filters['customfields.university_name'] = query.university_name;
   }
-}
-
-function countApproved(result) {
-  return result.filter(item => item.customfields.paymentStatus === 'payment approved').length;
-}
-
-function countReceived(result) {
-  return result.filter(item => item.customfields.paymentStatus === 'payment received').length;
-}
-
-function countRejected(result) {
-  return result.filter(item => item.customfields.paymentStatus === 'payment rejected').length;
 }
 
 module.exports = paginatedList;

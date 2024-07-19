@@ -139,7 +139,7 @@ const DESEnrolled = async ({ full_name, email, enrollment, password, URL }) => {
             <p><a href="${URL}">${URL}</a></p>
             <p>Also kindly revert if any correction is required in your profile.</p>
             <p><strong>Note:</strong> Kindly review your personal information and revert if any corrections are
-                required. (Student name, Father name, DOB, GENDER, COURSE etc.)</p>
+                required. (Student name, Father name, DOB, GENDER, COURSE, SESSION etc.)</p>
         </div>
         <div class="footer">
             <hr style="border: none; border-top: 1.5px solid #c3c3c3;">

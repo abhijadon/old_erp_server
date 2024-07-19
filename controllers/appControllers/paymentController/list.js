@@ -6,7 +6,7 @@ const paginatedList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10);
   const skip = (page - 1) * limit;
-  const { sortBy = 'updated', sortValue = -1 } = req.query;
+  const { sortBy = 'updatedAt', sortValue = -1 } = req.query;
 
   const fieldsArray = req.query.fields ? req.query.fields.split(',') : [];
   let fields = fieldsArray.length === 0 ? {} : { $or: [] };
@@ -63,7 +63,6 @@ const paginatedList = async (req, res) => {
 
     applyAdditionalFilters(req.query, filters);
 
-
     const resultsPromise = Model.find(filters)
       .skip(skip)
       .limit(limit)
@@ -77,7 +76,9 @@ const paginatedList = async (req, res) => {
 
     const pages = Math.ceil(count / limit);
 
-    const pagination = { page, pages, count, followUpCount: countFollowUp(result) };
+   const followUpCount = await Model.countDocuments({ ...filters, 'followStatus': 'follow-up' });
+
+    const pagination = { page, pages, count, followUpCount};
 
     if (count > 0) {
       return res.status(200).json({
@@ -139,8 +140,5 @@ function applyAdditionalFilters(query, filters) {
   }
 }
 
-function countFollowUp(result) {
-  return result.filter(item => item.followStatus === 'follow-up').length;
-}
 
 module.exports = paginatedList;

@@ -36,6 +36,7 @@ const firebaseStorageUpload = () => {
 ]);
 };
 
+
 // Middleware function to save image URLs with original names
 const saveImageUrls = async (req, res, next) => {
   try {
