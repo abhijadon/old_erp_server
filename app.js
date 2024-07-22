@@ -59,7 +59,7 @@ app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/his
 app.use('/api',  authenticate ,checkUserRoleMiddleware,require("@/routes/api/permissionapi"))  
 app.use('/api',authenticate, menuOptionsRoutes); 
 app.use('/api',authenticate, resendApi); 
-app.use('/api',authenticate, info); 
+app.use('/api',authenticate,checkUserAccess, info); 
 app.use('/api',authenticate, lmsApi); 
 app.use('/api', authenticate, instituteRoutes);
 app.use('/api', authenticate, allowRoutes);

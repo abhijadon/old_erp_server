@@ -7,7 +7,7 @@ const HesMail = require('@/emailTemplate/LMSTemplate'); // Import the HesMail fu
 
 const create = async (req, res) => {
     try {
-        const creatorUserId = req.user._id; // Get the user ID from the authenticated user who initiates the create action
+        const creatorUserId = req.user._id;
         const { applicationId } = req.params; // Get the application ID from the route parameter
         let lms = await LMS.findOne({ applicationId }); // Use let instead of const
         // Retrieve application and user details
@@ -53,6 +53,7 @@ const create = async (req, res) => {
             password: moment(data.customfields.dob).format('DDMMYYYY'),
             fathername: data.customfields.father_name,
             mothername: data.customfields.mother_name,
+            enrollment: data.customfields.enrollment,
             nationality: "Indian",
             status: "9",
             yearsOrSemester: "1st_Semester",
@@ -65,7 +66,6 @@ const create = async (req, res) => {
             previousData: formattedPreviousData,
         };
 
-        console.log('result: ', requestBody)
         // Check if any field in the requestBody is undefined or empty
         for (const [key, value] of Object.entries(requestBody)) {
             if (!value) {
