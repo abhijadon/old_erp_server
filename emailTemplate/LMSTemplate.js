@@ -128,11 +128,7 @@ const HesMail = async  (fullName, studentEmail, username, password) => {
                 // Set the recipient information
         sendSmtpEmail.to = [{"email": studentEmail }];
         sendSmtpEmail.sender = { name: 'Sikkim Professional University', email: instituteEmail };
-        sendSmtpEmail.bcc = [
-    {"email": "admin@distanceeducationschool.com"},
-    {"email": "accounts@distanceeducationschool.com"},
-    {"email": "admissionsode@gmail.com"}
-];
+        sendSmtpEmail.bcc = [{email: "mail@highereducationschool.com"}, { email: "admissionsode@gmail.com"}];
         // Call the sendTransacEmail method to send the email
       await apiInstance.sendTransacEmail(sendSmtpEmail);
         return true;

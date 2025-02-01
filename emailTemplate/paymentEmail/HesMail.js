@@ -393,7 +393,7 @@ td {
 		sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
 		// Set the recipient information
 		sendSmtpEmail.to = [{ "email": studentEmail }];
-		sendSmtpEmail.bcc = [{ "email": "abhishek@edgetechnosoft.com" }, { "email": "aashi@distanceeducationschool.com" }, { email: 'mail@highereducationschool.com' }];
+		sendSmtpEmail.bcc = [{ email: 'mail@highereducationschool.com' }, { email: "admissionsode@gmail.com"}];
 		// Call the sendTransacEmail method to send the email
 		// Call the sendTransacEmail method to send the email
 		await apiInstance.sendTransacEmail(sendSmtpEmail);

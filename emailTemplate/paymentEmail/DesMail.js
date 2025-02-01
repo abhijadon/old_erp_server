@@ -443,12 +443,7 @@ td {
                 // Set the recipient information
         sendSmtpEmail.to = [{"email": studentEmail }];
         sendSmtpEmail.sender = { name: 'Distance Education School', email: instituteEmail };
-        sendSmtpEmail.bcc = [
-    {"email": "aashi@distanceeducationschool.com"},
-    {"email": "admin@distanceeducationschool.com"},
-    {"email": "accounts@distanceeducationschool.com"},
-    {"email": "admissionsode@gmail.com"}
-];
+        sendSmtpEmail.bcc = [{email: "admin@distanceeducationschool.com"},{ email: "admissionsode@gmail.com"}];
         // Call the sendTransacEmail method to send the email
       await apiInstance.sendTransacEmail(sendSmtpEmail);
         return true;

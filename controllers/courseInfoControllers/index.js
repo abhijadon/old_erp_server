@@ -2,7 +2,7 @@ const create = require('./create');
 const update = require('./update');
 const remove = require('./remove');
 const list = require('./list');
-const {fetchBrochures, uploadBrochure} = require('./brochureCreate');
+const {fetchBrochures, uploadBrochure, deleteBrochureFromDatabase} = require('./brochureCreate');
 
 const courseInfoController = {
   create,
@@ -11,6 +11,7 @@ const courseInfoController = {
   list,
   fetchBrochures,
   uploadBrochure,
+  deleteBrochureFromDatabase
 };
 
 module.exports = courseInfoController;

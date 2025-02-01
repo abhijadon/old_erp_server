@@ -1,4 +1,6 @@
+const { ref, deleteObject } = require('firebase/storage');
 const { courseInfo } = require('@/models/courseInfo');
+const { storage } = require('@/firebase/brochureFirebase'); // Ensure correct path to storage
 
 // Upload brochure
 exports.uploadBrochure = async (req, res) => {
@@ -42,6 +44,7 @@ exports.uploadBrochure = async (req, res) => {
       return await courseDoc.save();
     }));
 
+    console.log('Updated courses:', updatedCourses); // Debugging statement
     res.status(200).json({
       success: true,
       result: updatedCourses,
@@ -52,8 +55,6 @@ exports.uploadBrochure = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
 
 // Fetch brochures by university, course, and electives with filtering and sorting
 exports.fetchBrochures = async (req, res) => {
@@ -101,6 +102,45 @@ exports.fetchBrochures = async (req, res) => {
     res.json({ count, brochures, sampleMarksheets, sampleDegrees }); // Include the count in the response
   } catch (error) {
     console.error('Error fetching brochures:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.deleteBrochureFromDatabase = async (req, res) => {
+  try {
+    const { fileUrl, university, course, electives } = req.body;
+
+    if (!fileUrl || !university || !course) {
+      return res.status(400).json({ success: false, message: 'File URL, university, and course are required' });
+    }
+
+    // Construct the query to find the document
+    const query = {
+      university,
+      course,
+      'brochure.downloadURL': fileUrl
+    };
+
+    // Update the document to remove the specific brochure entry
+    const update = {
+      $pull: {
+        brochure: { downloadURL: fileUrl }
+      }
+    };
+
+    const updatedCourse = await courseInfo.findOneAndUpdate(query, update, { new: true });
+
+    if (!updatedCourse) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      result: updatedCourse,
+      message: 'File entry has been deleted from the database successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting file entry:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

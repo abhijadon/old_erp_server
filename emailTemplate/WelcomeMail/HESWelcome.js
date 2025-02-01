@@ -3,7 +3,7 @@ const SibApiV3Sdk = require('@getbrevo/brevo');
 // Function to send email
 const HESWelcome = async (full_name, email, university_name) => {
   const instituteEmail = 'support@highereducationschool.com';
-  
+  console.log('Sending', email, university_name);
   const universityUrlImage = {
     'SHOOLINI': 'https://distanceeducationschool.com/email_marketing/Shoolini-HES-welcome-mail.png',
     'SHARDA': 'https://distanceeducationschool.com/email_marketing/Sharda-HES-welcome-mail.png',
@@ -28,7 +28,12 @@ const HESWelcome = async (full_name, email, university_name) => {
   };
 
   const selectedImage = universityUrlImage[university_name.toUpperCase()] || '';
-
+  
+  // Determine if it's a university or board
+  const isBoard = university_name.toUpperCase() === 'BOSSE';
+  const institutionType = isBoard ? 'Board' : 'University';
+  const subjectText = `We Welcome you to ${university_name} ${institutionType} for your educational journey!`;
+  
   try {
     // Create an instance of the TransactionalEmailsApi
     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
@@ -40,7 +45,7 @@ const HESWelcome = async (full_name, email, university_name) => {
     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
     // Set the subject of the email
-    sendSmtpEmail.subject = `We Welcome you to ${university_name} University for your educational journey!`;
+    sendSmtpEmail.subject = subjectText;
 
     // Set the HTML content of the email
     sendSmtpEmail.htmlContent = `<!DOCTYPE html>
@@ -120,14 +125,11 @@ const HESWelcome = async (full_name, email, university_name) => {
 </html>`;
 
     // Set the plain text content of the email
-    sendSmtpEmail.textContent = `We Welcome you to ${university_name} University for your educational journey!`;
+    sendSmtpEmail.textContent = subjectText;
     sendSmtpEmail.to = [{ email }];
     sendSmtpEmail.sender = { name: 'Higher Education School', email: instituteEmail };
     sendSmtpEmail.bcc = [
-      { email: "admin@distanceeducationschool.com" },
-      { email: "accounts@distanceeducationschool.com" },
-      { email: "admissionsode@gmail.com" }
-    ];
+      { email: "mail@highereducationschool.com" }, { email: "admissionsode@gmail.com"}];
     // Call the sendTransacEmail method to send the email
     await apiInstance.sendTransacEmail(sendSmtpEmail);
     return true;

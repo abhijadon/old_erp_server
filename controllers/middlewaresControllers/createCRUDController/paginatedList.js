@@ -2,7 +2,7 @@ const Team = require('@/models/Team');
 
 const paginatedList = async (Model, req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = req.query.export === 'true' ? 0 : (parseInt(req.query.items) || 10);
+  const limit = req.query.export === 'true' ? 0 : parseInt(req.query.items) || 10;
   const skip = (page - 1) * limit;
   const { sortBy = 'created', sortValue = -1 } = req.query;
 
@@ -16,11 +16,8 @@ const paginatedList = async (Model, req, res) => {
         const team = await Team.findOne({ userId: teamLeaderId }).populate('teamMembers');
 
         if (team) {
-          const teamMemberIds = team.teamMembers.map(member => member._id);
-          filters.$or = [
-            { userId: teamLeaderId },
-            { userId: { $in: teamMemberIds } }
-          ];
+          const teamMemberIds = team.teamMembers.map((member) => member._id);
+          filters.$or = [{ userId: teamLeaderId }, { userId: { $in: teamMemberIds } }];
         } else {
           filters.userId = teamLeaderId;
         }
@@ -31,7 +28,7 @@ const paginatedList = async (Model, req, res) => {
       if (req.user.isManager || req.user.isSupportiveAssociate) {
         filters.$and = [
           { 'customfields.institute_name': { $in: req.user.assignedInstitutes } },
-          { 'customfields.university_name': { $in: req.user.assignedUniversities } }
+          { 'customfields.university_name': { $in: req.user.assignedUniversities } },
         ];
         if (req.user.isSupportiveAssociate && !req.user.isTeamLeader) {
           filters.$and.push({ userId: { $in: [req.user._id, ...req.user.teamMembers] } });
@@ -40,11 +37,8 @@ const paginatedList = async (Model, req, res) => {
         const team = await Team.findOne({ userId: req.user._id }).populate('teamMembers');
 
         if (team) {
-          const teamMemberIds = team.teamMembers.map(member => member._id);
-          filters.$or = [
-            { userId: req.user._id },
-            { userId: { $in: teamMemberIds } }
-          ];
+          const teamMemberIds = team.teamMembers.map((member) => member._id);
+          filters.$or = [{ userId: req.user._id }, { userId: { $in: teamMemberIds } }];
         } else {
           filters.userId = req.user._id;
         }
@@ -60,7 +54,7 @@ const paginatedList = async (Model, req, res) => {
         const fieldsArray = req.query.fields.split(',');
         filters.$and = filters.$and || [];
         filters.$and.push({
-          $or: fieldsArray.map(field => ({ [field]: { $regex: regex } }))
+          $or: fieldsArray.map((field) => ({ [field]: { $regex: regex } })),
         });
       } else {
         filters.$and = filters.$and || [];
@@ -77,9 +71,9 @@ const paginatedList = async (Model, req, res) => {
             { 'customfields.university_name': { $regex: regex } },
             { 'contact.email': { $regex: regex } },
             { 'contact.phone': { $regex: regex } },
-            { 'full_name': { $regex: regex } },
-            { 'lead_id': { $regex: regex } }
-          ]
+            { full_name: { $regex: regex } },
+            { lead_id: { $regex: regex } },
+          ],
         });
       }
     }
@@ -98,9 +92,18 @@ const paginatedList = async (Model, req, res) => {
     const [result, count] = await Promise.all([resultsPromise, countPromise]);
 
     const pages = Math.ceil(count / limit);
-    const paymentApprovedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment approved' });
-    const paymentReceivedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment received' });
-    const paymentRejectedCount = await Model.countDocuments({ ...filters, 'customfields.paymentStatus': 'payment rejected' });
+    const paymentApprovedCount = await Model.countDocuments({
+      ...filters,
+      'customfields.paymentStatus': 'payment approved',
+    });
+    const paymentReceivedCount = await Model.countDocuments({
+      ...filters,
+      'customfields.paymentStatus': 'payment received',
+    });
+    const paymentRejectedCount = await Model.countDocuments({
+      ...filters,
+      'customfields.paymentStatus': 'payment rejected',
+    });
 
     const pagination = {
       page,
@@ -108,7 +111,7 @@ const paginatedList = async (Model, req, res) => {
       count,
       paymentApprovedCount,
       paymentReceivedCount,
-      paymentRejectedCount
+      paymentRejectedCount,
     };
 
     if (count > 0) {
@@ -134,52 +137,70 @@ const paginatedList = async (Model, req, res) => {
 
 function applyAdditionalFilters(query, filters) {
   if (query.status) {
-    filters['customfields.status'] = query.status;
+    const statusArray = query.status.split(',');
+    filters['customfields.status'] = { $in: statusArray };
   }
   if (query.payment_mode) {
-    filters['customfields.payment_mode'] = query.payment_mode;
+    const paymentModeArray = query.payment_mode.split(',');
+    filters['customfields.payment_mode'] = { $in: paymentModeArray };
   }
   if (query.payment_type) {
-    filters['customfields.payment_type'] = query.payment_type;
+    const paymentTypeArray = query.payment_type.split(',');
+    filters['customfields.payment_type'] = { $in: paymentTypeArray };
   }
   if (query.installment_type) {
-    filters['customfields.installment_type'] = query.installment_type;
+    const installmentTypeArray = query.installment_type.split(',');
+    filters['customfields.installment_type'] = { $in: installmentTypeArray };
   }
   if (query.paymentStatus) {
-    filters['customfields.paymentStatus'] = query.paymentStatus;
+    const paymentStatusArray = query.paymentStatus.split(',');
+    filters['customfields.paymentStatus'] = { $in: paymentStatusArray };
   }
   if (query.userId) {
-    filters.userId = query.userId;
+    const userIdArray = query.userId.split(',');
+    filters.userId = { $in: userIdArray };
   }
   if (query.session) {
-    filters['customfields.session'] = query.session;
+    const sessionArray = query.session.split(',');
+    filters['customfields.session'] = { $in: sessionArray };
   }
   if (query.welcomeMail) {
-    filters.welcomeMail = query.welcomeMail;
+    const welcomeMailArray = query.welcomeMail.split(',');
+    filters.welcomeMail = { $in: welcomeMailArray };
   }
   if (query.lmsStatus) {
-    filters['customfields.lmsStatus'] = query.lmsStatus;
+    const lmsStatusArray = query.lmsStatus.split(',');
+    filters['customfields.lmsStatus'] = { $in: lmsStatusArray };
   }
   if (query.whatsappMessageStatus) {
-    filters.whatsappMessageStatus = query.whatsappMessageStatus;
+    const whatsappMessageStatusArray = query.whatsappMessageStatus.split(',');
+    filters.whatsappMessageStatus = { $in: whatsappMessageStatusArray };
   }
   if (query.whatsappEnrolled) {
-    filters.whatsappEnrolled = query.whatsappEnrolled;
+    const whatsappEnrolledArray = query.whatsappEnrolled.split(',');
+    filters.whatsappEnrolled = { $in: whatsappEnrolledArray };
   }
   if (query.welcomeEnrolled) {
-    filters.welcomeEnrolled = query.welcomeEnrolled;
+    const welcomeEnrolledArray = query.welcomeEnrolled.split(',');
+    filters.welcomeEnrolled = { $in: welcomeEnrolledArray };
   }
   if (query.start_date && query.end_date) {
     filters.created = {
       $gte: new Date(query.start_date.split('/').reverse().join('-')),
-      $lte: new Date(new Date(query.end_date.split('/').reverse().join('-')).setHours(23, 59, 59, 999)),
+      $lte: new Date(
+        new Date(query.end_date.split('/').reverse().join('-')).setHours(23, 59, 59, 999)
+      ),
     };
   }
+
+  // Apply .split() for institute_name and university_name as well
   if (query.institute_name) {
-    filters['customfields.institute_name'] = query.institute_name;
+    const instituteArray = query.institute_name.split(',');
+    filters['customfields.institute_name'] = { $in: instituteArray };
   }
   if (query.university_name) {
-    filters['customfields.university_name'] = query.university_name;
+    const universityArray = query.university_name.split(',');
+    filters['customfields.university_name'] = { $in: universityArray };
   }
 }
 

@@ -1,5 +1,3 @@
-// controllers/commentController.js
-
 const { Comment } = require('@/models/Comment');
 const { Applications } = require('@/models/Application');
 const { Payment } = require('@/models/Payment');
@@ -30,19 +28,15 @@ const createComment = async (req, res) => {
       commentText,
     };
 
-    if (removeFollowUp) {
-      payment.followStatus = null;
-      payment.followUpDate = null;
-    } else {
-      // Otherwise, include follow-up date and status in both comment and payment
-      newCommentData.followStatus = 'follow-up';
-      newCommentData.followUpDate = followUpDate;
-      payment.followStatus = 'follow-up';
-      payment.followUpDate = followUpDate;
+    if (followUpDate) {
+      addFollowUpDetails(newCommentData, payment, followUpDate);
+    } else if (removeFollowUp) {
+      removeFollowUpDetails(payment);
     }
 
     const newComment = new Comment(newCommentData);
     const savedComment = await newComment.save();
+
     await payment.save();
 
     res.status(200).json({ message: 'Comment created successfully.', comment: savedComment });
@@ -53,6 +47,17 @@ const createComment = async (req, res) => {
   }
 };
 
+const removeFollowUpDetails = (payment) => {
+  payment.followStatus = null;
+  payment.followUpDate = null;
+};
+
+const addFollowUpDetails = (commentData, payment, followUpDate) => {
+  commentData.followStatus = 'follow-up';
+  commentData.followUpDate = followUpDate;
+  payment.followStatus = 'follow-up';
+  payment.followUpDate = followUpDate;
+};
 
 module.exports = {
   createComment,

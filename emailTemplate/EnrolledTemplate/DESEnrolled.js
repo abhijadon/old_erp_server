@@ -155,7 +155,7 @@ const DESEnrolled = async ({ full_name, email, enrollment, password, URL }) => {
     sendSmtpEmail.sender = { name: 'Distance Education School', email: instituteEmail };
     // Set the recipient information
     sendSmtpEmail.to = [{ "email": email }];
-    sendSmtpEmail.bcc = [{"email": "aashi@distanceeducationschool.com" }, { email: 'mail@highereducationschool.com' }];
+    sendSmtpEmail.bcc = [{"email": "admin@distanceeducationschool.com" },{ email: "admissionsode@gmail.com"}];
     // Call the sendTransacEmail method to send the email
     await apiInstance.sendTransacEmail(sendSmtpEmail);
     return true;

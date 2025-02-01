@@ -11,5 +11,6 @@ router.route('/info/delete/:id').delete(catchErrors(courseInfoControllers.delete
 router.route('/info/list').get(catchErrors(courseInfoControllers.list));
 router.route('/brochures/list').get(catchErrors(courseInfoControllers.fetchBrochures));
 router.post('/brochures/upload', checkRole('admin', 'subadmin', 'manager'), firebaseStorageUpload, saveImageUrls, catchErrors(courseInfoControllers.uploadBrochure));
+router.post('/brochures/delete', checkRole('admin', 'subadmin', 'manager'), catchErrors(courseInfoControllers.deleteBrochureFromDatabase));
 
 module.exports = router;

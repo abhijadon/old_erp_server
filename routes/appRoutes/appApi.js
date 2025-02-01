@@ -13,6 +13,7 @@ const history = require('@/controllers/historyControllers/history');
 const { deleteImage } = require('@/controllers/middlewaresControllers/createCRUDController/imageController');
 const { checkRole } = require('@/middlewares/checkRole');
 const authMiddleware = require('@/middlewares/paymentQuery');
+const { resendCommunication } = require('@/controllers/middlewaresControllers/createCRUDController/resendCommunication');
 
 // //_________________________________ API for employees_____________________
 
@@ -26,6 +27,7 @@ router.route('/lead/updatePayment/:id').put(hasPermission('update'), firebaseSto
 router.route('/lead/uploadDocument/:id').put(firebaseStorageUpload(), saveImageUrls, catchErrors(uploadDocumentController.uploadDocument));
 router.route('/lead/delete/:id').delete(hasPermission('delete'), catchErrors(leadController.delete));
 router.route('/lead/search').get(catchErrors(leadController.search));
+router.route('/lead/resend/:id').put(hasPermission('update'), catchErrors(resendCommunication));
 router.route('/lead/list').get(authMiddleware, catchErrors(leadController.list));
 router.route('/lead/teamfilter').get(catchErrors(leadController.teamfilter));
 router.route('/lead/getComment/:applicationId').get(catchErrors(getCommentsByStudent));

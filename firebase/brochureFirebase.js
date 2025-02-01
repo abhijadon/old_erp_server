@@ -1,7 +1,6 @@
 const { initializeApp } = require('firebase/app');
-const { getStorage, ref, uploadBytes, getDownloadURL } = require('firebase/storage');
+const { getStorage, ref, uploadBytes, getDownloadURL, updateMetadata } = require('firebase/storage');
 const multer = require('multer');
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyDWswHF0Oukc6LNXllkwmx2PWg3dKn62-8",
@@ -40,12 +39,23 @@ const saveImageUrls = async (req, res, next) => {
 
         for (const file of files) {
           const fileName = file.originalname;
-          const fileRef = ref(storage, 'brochures/' + req.body.university + '/' + fileName);
+          const fileRef = ref(storage, fieldName + '/' + req.body.university + '/' + fileName);
 
           await uploadBytes(fileRef, file.buffer);
+
+          // Set metadata to force inline viewing only for brochures
+          if (fieldName === 'brochure') {
+            const metadata = {
+              contentType: 'application/pdf',
+              contentDisposition: 'inline'
+            };
+            await updateMetadata(fileRef, metadata);
+          }
+
           const downloadURL = await getDownloadURL(fileRef);
-          const previewURL = `${req.protocol}://${req.get('host')}/preview/${encodeURIComponent(fileName)}`;
-          req.imageUrls[fieldName].push({ originalFileName: fileName, downloadURL: downloadURL, previewURL: previewURL });
+          const previewURL = (fieldName === 'brochure') ? downloadURL : downloadURL;
+
+          req.imageUrls[fieldName].push({ originalFileName: fileName, downloadURL, previewURL });
         }
       }
     } else {
@@ -59,3 +69,4 @@ const saveImageUrls = async (req, res, next) => {
 };
 
 module.exports = { firebaseStorageUpload, saveImageUrls };
+

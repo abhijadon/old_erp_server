@@ -9,7 +9,9 @@ const create = async (req, res) => {
     try {
         const creatorUserId = req.user._id;
         const { applicationId } = req.params; // Get the application ID from the route parameter
+        const { resendEmail } = req.query; // Get the resendEmail query parameter
         let lms = await LMS.findOne({ applicationId }); // Use let instead of const
+
         // Retrieve application and user details
         const [application, creatorUser] = await Promise.all([
             Applications.findById(applicationId),
@@ -33,6 +35,27 @@ const create = async (req, res) => {
 
         if (data.customfields.university_name !== 'SPU') {
             return res.status(400).json({ message: 'LMS can only be created for SPU university.' });
+        }
+
+        if (resendEmail === 'true') {
+            let emailStatus = 'failed';
+            let emailErrorMessage = '';
+            try {
+                const emailSent = await HesMail(data.full_name, data.contact.email, data.lead_id, moment(data.customfields.dob).format('DDMMYYYY'));
+                if (emailSent) {
+                    emailStatus = 'success';
+                }
+            } catch (emailError) {
+                emailErrorMessage = emailError.message;
+                console.error('Error sending LMS template email:', emailError);
+            }
+
+            // Save email status to LMS
+            lms.data.push({ status: 'resend', userId: creatorUserId, updatedAt: new Date() });
+            
+            await lms.save(); 
+
+            return res.status(200).json({ message: 'Email resent successfully.', emailStatus });
         }
 
         // Format previousData dates
@@ -127,7 +150,9 @@ const create = async (req, res) => {
             lms.emailStatuses.push({
                 status: emailStatus,
                 errorMessage: emailErrorMessage,
-                createdAt: new Date()
+                createdAt: new Date(),
+                userId: creatorUserId,
+                action: 'sent'
             });
             await lms.save();
         } else if (lms.emailStatuses.some(status => status.status === 'success')) {
